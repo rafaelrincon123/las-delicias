@@ -31,7 +31,11 @@
       "Bash(gh --version)",
       "Bash(git init *)",
       "Bash(git config *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m 'Initial commit: Ganadería Las Delicias con Supabase backend *)",
+      "Bash(where winget *)",
+      "Bash(winget --version)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
