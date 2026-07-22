@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:controlganadero.app)",
+      "Bash(mkdir -p \"/c/Users/EQUIPO/Ganaderia las delicias/.claude\")",
+      "Bash(npm install *)",
+      "Bash(markitdown \"C:/Users/EQUIPO/Downloads/Ganaderia las delicias.xlsx\")",
+      "Bash(python -c \"import markitdown\")",
+      "Bash(pip install *)",
+      "Bash(python -c \"import openpyxl; print\\(openpyxl.__version__\\)\")",
+      "Bash(python -m pip install --user openpyxl)",
+      "Bash(py -m pip install openpyxl)",
+      "Bash(py -c ' *)",
+      "Bash(ls '/c/Users/EQUIPO/.claude/projects/C--Users-EQUIPO-Ganaderia-las-delicias/memory/' 2>/dev/null; echo '---'; ls '/c/Users/EQUIPO/Ganaderia las delicias/' 2>/dev/null)",
+      "Bash(ls '/c/Users/EQUIPO/Ganaderia las delicias/web/public/' 2>/dev/null; echo '---'; ls '/c/Users/EQUIPO/AppData/Local/Temp/claude/' 2>/dev/null | head -20)",
+      "mcp__claude-in-chrome__list_connected_browsers",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "mcp__claude-in-chrome__navigate",
+      "mcp__claude-in-chrome__javascript_tool",
+      "Bash(ls -la \"C:/Users/EQUIPO/Downloads/Ganaderia las delicias \\(1\\).xlsx\" 2>&1)",
+      "Bash(python -c ' *)",
+      "Bash(python -m pip install openpyxl pandas)",
+      "Bash(where python *)",
+      "Bash(\"C:/Users/EQUIPO/AppData/Local/Programs/Python/Python312/python.exe\" -c \"import openpyxl; print\\(openpyxl.__version__\\)\")",
+      "Bash(C:/Users/EQUIPO/AppData/Local/Programs/Python/Python312/python.exe -c ' *)",
+      "mcp__claude-in-chrome__resize_window",
+      "Bash(curl -s -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmbHVpdGdhcnF0ZGpkYnh1Z21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2OTIxODEsImV4cCI6MjEwMDI2ODE4MX0.koyexpJr6kBoGpI0co21YjfzgalRRgKYVl3jFJhty6o\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmbHVpdGdhcnF0ZGpkYnh1Z21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2OTIxODEsImV4cCI6MjEwMDI2ODE4MX0.koyexpJr6kBoGpI0co21YjfzgalRRgKYVl3jFJhty6o\" \"https://tfluitgarqtdjdbxugmq.supabase.co/rest/v1/propietarios?select=id,nombre,email\")",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmbHVpdGdhcnF0ZGpkYnh1Z21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2OTIxODEsImV4cCI6MjEwMDI2ODE4MX0.koyexpJr6kBoGpI0co21YjfzgalRRgKYVl3jFJhty6o\" \"https://tfluitgarqtdjdbxugmq.supabase.co/rest/v1/tabla_que_no_existe?select=*\")",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(git add *)"
+    ]
+  }
+}
