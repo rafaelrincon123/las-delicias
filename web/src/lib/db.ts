@@ -1,5 +1,6 @@
 "use client";
 
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { DBState } from "./types";
 import { getSupabase } from "./supabase";
 
@@ -250,6 +251,9 @@ function emptyDB(): DBState {
 
 let _cache: DBState | null = null;
 let _initPromise: Promise<void> | null = null;
+let _channels: RealtimeChannel[] = [];
+/** IDs de operaciones locales pendientes de reflejo Realtime — evita rebotes. */
+const _localOps = new Set<string>();
 
 const EVENT = "db:changed";
 function emit(): void {
@@ -296,6 +300,7 @@ export function initDB(): Promise<void> {
     }
 
     _cache = next;
+    subscribeRealtime();
     emit();
   })();
   return _initPromise;
@@ -303,15 +308,84 @@ export function initDB(): Promise<void> {
 
 /** Re-carga todo desde Supabase (útil tras cambios manuales en la base). */
 export async function refreshDB(): Promise<void> {
+  unsubscribeRealtime();
   _initPromise = null;
   _cache = null;
   await initDB();
 }
 
 export function clearDB(): void {
+  unsubscribeRealtime();
   _cache = null;
   _initPromise = null;
   emit();
+}
+
+// ---------------------------------------------------------------------------
+//  Realtime: postgres_changes → cache local
+// ---------------------------------------------------------------------------
+
+function subscribeRealtime(): void {
+  if (_channels.length > 0) return;
+  const sb = getSupabase();
+  (Object.keys(TABLE_DEFS) as (keyof DBState)[]).forEach((key) => {
+    const def = TABLE_DEFS[key];
+    const channel = sb
+      .channel(`db:${def.table}`)
+      .on(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        "postgres_changes" as any,
+        { event: "*", schema: "public", table: def.table },
+        (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
+          applyRealtimeEvent(key, payload);
+        }
+      )
+      .subscribe();
+    _channels.push(channel);
+  });
+}
+
+function unsubscribeRealtime(): void {
+  if (_channels.length === 0) return;
+  const sb = getSupabase();
+  for (const ch of _channels) {
+    void sb.removeChannel(ch);
+  }
+  _channels = [];
+}
+
+function applyRealtimeEvent<K extends keyof DBState>(
+  key: K,
+  payload: RealtimePostgresChangesPayload<Record<string, unknown>>
+): void {
+  if (!_cache) return;
+  const def = TABLE_DEFS[key];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const list = _cache[key] as any[];
+
+  if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+    const item = fromRow(payload.new as Record<string, unknown>, def.map);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const id = (item as any).id as string | undefined;
+    if (!id) return;
+    const opKey = `${def.table}:upsert:${id}`;
+    if (_localOps.delete(opKey)) return; // ya aplicado localmente
+    const idx = list.findIndex((x) => x.id === id);
+    if (idx >= 0) list[idx] = item;
+    else list.push(item);
+    emit();
+  } else if (payload.eventType === "DELETE") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const id = (payload.old as any)?.id as string | undefined;
+    if (!id) return;
+    const opKey = `${def.table}:delete:${id}`;
+    if (_localOps.delete(opKey)) return;
+    const idx = list.findIndex((x) => x.id === id);
+    if (idx >= 0) {
+      list.splice(idx, 1);
+      emit();
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -353,15 +427,21 @@ async function syncCollection<K extends keyof DBState>(
   (newList as any[]).forEach((it) => { newById[it.id] = it; });
 
   const upserts: Record<string, unknown>[] = [];
+  const upsertIds: string[] = [];
   Object.keys(newById).forEach((id) => {
     const item = newById[id];
     const prev = oldById[id];
     if (!prev || JSON.stringify(prev) !== JSON.stringify(item)) {
       upserts.push(toRow(item, def.map));
+      upsertIds.push(id);
     }
   });
 
   const deletes: string[] = Object.keys(oldById).filter((id) => !(id in newById));
+
+  // Marcar como locales para que Realtime no los re-aplique
+  upsertIds.forEach((id) => _localOps.add(`${def.table}:upsert:${id}`));
+  deletes.forEach((id) => _localOps.add(`${def.table}:delete:${id}`));
 
   try {
     if (upserts.length > 0) {
