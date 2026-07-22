@@ -38,7 +38,7 @@ export function loadDB(): DBState {
   return getCachedDB() ?? emptyDB();
 }
 
-export function saveDB(_db: DBState): void {
+export function saveDB(): void {
   console.warn("[storage] saveDB() ya no aplica — cambios se sincronizan vía updateCollection");
 }
 

@@ -352,7 +352,7 @@ function ServicioForm({
     if (!form.hembraId) return alert("Selecciona la hembra");
     if (!form.machoIdOReferencia.trim()) return alert("Indica el macho o el semen usado");
     // Calcular fecha probable de parto (~283 días desde el servicio) si no está seteada y quedó preñada
-    let payload = { ...form };
+    const payload = { ...form };
     if (payload.resultado === "prenada" && !payload.fechaProbableParto) {
       const d = new Date(payload.fechaServicio);
       d.setDate(d.getDate() + 283);
@@ -498,7 +498,7 @@ function PartoForm({
   function save(e: React.FormEvent) {
     e.preventDefault();
     if (!form.madreId) return alert("Selecciona la madre");
-    let payload = { ...form };
+    const payload = { ...form };
 
     if (crearTernero && !initial) {
       if (!nroTernero.trim()) return alert("Ingresa el número del ternero");

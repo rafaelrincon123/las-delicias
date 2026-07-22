@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Propietario } from "./types";
 import { getSupabase } from "./supabase";
-import { getCachedDB, initDB, clearDB } from "./db";
+import { initDB, clearDB } from "./db";
 import { findPropietarioForAuthUser, AUTH_EVENT_NAME } from "./auth";
 
 interface State {
