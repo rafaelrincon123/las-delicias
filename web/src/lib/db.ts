@@ -345,25 +345,23 @@ async function syncCollection<K extends keyof DBState>(
   const def = TABLE_DEFS[key];
   const sb = getSupabase();
 
-  const oldById = new Map<string, Record<string, unknown>>();
+  const oldById: Record<string, Record<string, unknown>> = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  for (const it of oldList as any[]) oldById.set(it.id, it);
-  const newById = new Map<string, Record<string, unknown>>();
+  (oldList as any[]).forEach((it) => { oldById[it.id] = it; });
+  const newById: Record<string, Record<string, unknown>> = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  for (const it of newList as any[]) newById.set(it.id, it);
+  (newList as any[]).forEach((it) => { newById[it.id] = it; });
 
   const upserts: Record<string, unknown>[] = [];
-  for (const [id, item] of newById.entries()) {
-    const prev = oldById.get(id);
+  Object.keys(newById).forEach((id) => {
+    const item = newById[id];
+    const prev = oldById[id];
     if (!prev || JSON.stringify(prev) !== JSON.stringify(item)) {
       upserts.push(toRow(item, def.map));
     }
-  }
+  });
 
-  const deletes: string[] = [];
-  for (const id of oldById.keys()) {
-    if (!newById.has(id)) deletes.push(id);
-  }
+  const deletes: string[] = Object.keys(oldById).filter((id) => !(id in newById));
 
   try {
     if (upserts.length > 0) {

@@ -5,6 +5,7 @@ import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
 import { fmtDate, diasHasta } from "@/lib/format";
 import {
+  CategoriaAnimal,
   Parto,
   ResultadoServicio,
   ServicioReproductivo,
@@ -511,7 +512,7 @@ function PartoForm({
         raza: madre?.raza ?? "",
         fechaNacimiento: payload.fecha,
         madreId: form.madreId,
-        categoria: (payload.sexoTernero === "macho" ? "ternero" : "ternera") as const,
+        categoria: (payload.sexoTernero === "macho" ? "ternero" : "ternera") as CategoriaAnimal,
         estado: "activo" as const,
         potreroId: madre?.potreroId,
         createdAt: nowISO(),
