@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Propietario } from "./types";
 import { getSupabase } from "./supabase";
-import { initDB, clearDB } from "./db";
+import { initDB, clearDB, getCachedDB } from "./db";
 import { findPropietarioForAuthUser, AUTH_EVENT_NAME } from "./auth";
 
 interface State {
@@ -31,7 +31,8 @@ export function useAuth(): State {
       const { data } = await sb.auth.getSession();
       const session = data.session;
       if (!session) {
-        clearDB();
+        // Solo limpiar cache si había datos cargados (para evitar loops con db:changed)
+        if (getCachedDB() !== null) clearDB();
         if (mounted) {
           setState({
             hasSession: false,
@@ -70,18 +71,15 @@ export function useAuth(): State {
     });
 
     const onLocalAuth = () => void refresh();
-    const onDBChange = () => {
-      // El cache de propietarios pudo cambiar; re-derivar user
-      void refresh();
-    };
+    // Ojo: NO nos suscribimos a "db:changed" aquí porque `refresh()` puede
+    // dispararlo (via clearDB/initDB), creando un loop infinito.
+
     window.addEventListener(AUTH_EVENT_NAME, onLocalAuth);
-    window.addEventListener("db:changed", onDBChange);
 
     return () => {
       mounted = false;
       sub.subscription.unsubscribe();
       window.removeEventListener(AUTH_EVENT_NAME, onLocalAuth);
-      window.removeEventListener("db:changed", onDBChange);
     };
   }, []);
 

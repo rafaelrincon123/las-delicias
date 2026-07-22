@@ -39,7 +39,8 @@
       "Bash(git remote *)",
       "Bash(git push *)",
       "Bash(git rev-list *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(curl -s -X POST https://tfluitgarqtdjdbxugmq.supabase.co/auth/v1/token?grant_type=password -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmbHVpdGdhcnF0ZGpkYnh1Z21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2OTIxODEsImV4cCI6MjEwMDI2ODE4MX0.koyexpJr6kBoGpI0co21YjfzgalRRgKYVl3jFJhty6o' -H 'Content-Type: application/json' -d '{\"email\":\"rafael@lasdelicias.co\",\"password\":\"test\"}')"
     ]
   }
 }
