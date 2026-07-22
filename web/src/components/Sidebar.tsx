@@ -21,6 +21,7 @@ import {
   IconLogout,
   IconClose,
   IconHome,
+  IconScale,
 } from "./icons";
 
 const NAV = [
@@ -30,6 +31,7 @@ const NAV = [
   { href: "/mi-operacion", label: "Mi operación", section: "General", Icon: IconUser },
   { href: "/animales", label: "Animales", section: "Hato", Icon: IconCow },
   { href: "/potreros", label: "Potreros", section: "Hato", Icon: IconPasture },
+  { href: "/peso", label: "Control de peso", section: "Hato", Icon: IconScale },
   { href: "/sanidad", label: "Sanidad", section: "Salud", Icon: IconHealth },
   { href: "/reproduccion", label: "Reproducción", section: "Salud", Icon: IconRepro },
   { href: "/produccion", label: "Producción", section: "Números", Icon: IconMilk },

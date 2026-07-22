@@ -60,6 +60,16 @@ export const IconMilk = ({ className, size }: Props) => (
   </svg>
 );
 
+export const IconScale = ({ className, size }: Props) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 3v18" />
+    <path d="M5 21h14" />
+    <path d="M8 7h8" />
+    <path d="M6 12l2-5 2 5a2 2 0 0 1-4 0z" />
+    <path d="M14 12l2-5 2 5a2 2 0 0 1-4 0z" />
+  </svg>
+);
+
 export const IconMoney = ({ className, size }: Props) => (
   <svg {...base(size)} className={className}>
     <rect x="3" y="6" width="18" height="12" rx="1.5" />

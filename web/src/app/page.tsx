@@ -16,6 +16,7 @@ import {
   IconMilk,
   IconMoney,
   IconBox,
+  IconScale,
 } from "@/components/icons";
 
 type TileTone = "primary" | "accent" | "rose" | "info" | "sage" | "neutral";
@@ -171,6 +172,13 @@ export default function Home() {
       Icon: IconPasture,
       tone: "primary",
       metric: stats.potreros,
+    },
+    {
+      href: "/peso",
+      label: "Control de peso",
+      sub: "pesajes y curvas",
+      Icon: IconScale,
+      tone: "sage",
     },
     {
       href: "/sanidad",
