@@ -35,7 +35,10 @@
       "Bash(git commit -m 'Initial commit: Ganadería Las Delicias con Supabase backend *)",
       "Bash(where winget *)",
       "Bash(winget --version)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(git rev-list *)"
     ]
   }
 }
