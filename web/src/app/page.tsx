@@ -3,8 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useDB } from "@/lib/useDB";
-import { useAuth } from "@/lib/useAuth";
-import { fmtCOP, diasHasta } from "@/lib/format";
+import { diasHasta } from "@/lib/format";
 import {
   IconPanel,
   IconTask,
@@ -73,7 +72,6 @@ const TONES: Record<TileTone, { icon: string; iconBg: string; ink: string; ring:
 
 export default function Home() {
   const { db, ready } = useDB();
-  const { user } = useAuth();
 
   const stats = useMemo(() => {
     if (!db) return null;
@@ -95,19 +93,6 @@ export default function Home() {
     }).length;
     const stockBajo = db.insumos.filter((i) => i.stock < i.minimo).length;
 
-    const desde = new Date();
-    desde.setDate(desde.getDate() - 30);
-    const gastos30 = db.gastos
-      .filter((g) => new Date(g.fecha) >= desde)
-      .reduce((s, g) => s + g.monto, 0);
-    const ingresos30 = db.ingresos
-      .filter((i) => new Date(i.fecha) >= desde)
-      .reduce((s, i) => s + i.monto, 0);
-    const balance30 = ingresos30 - gastos30;
-
-    const potreros = db.potreros.length;
-    const propietarios = db.propietarios.length;
-
     return {
       activos,
       pendientes,
@@ -115,9 +100,7 @@ export default function Home() {
       proximosPartos,
       sanidadCercana,
       stockBajo,
-      balance30,
-      potreros,
-      propietarios,
+      potreros: db.potreros.length,
     };
   }, [db]);
 
@@ -129,16 +112,6 @@ export default function Home() {
       </div>
     );
   }
-
-  const hoy = new Date();
-  const hora = hoy.getHours();
-  const saludo =
-    hora < 12 ? "Buenos días" : hora < 19 ? "Buenas tardes" : "Buenas noches";
-  const fecha = hoy.toLocaleDateString("es-CO", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
 
   const tiles: Tile[] = [
     {
@@ -223,134 +196,21 @@ export default function Home() {
     {
       href: "/mi-operacion",
       label: "Mi operación",
-      sub: user?.nombre ?? "tu vista",
+      sub: "tu vista",
       Icon: IconUser,
       tone: "neutral",
     },
   ];
 
   return (
-    <div className="space-y-6 md:space-y-8 relative z-10">
-      {/* Greeting */}
+    <div className="relative z-10">
       <section>
-        <div className="flex items-center gap-2 mb-2">
-          <span
-            className="w-1.5 h-1.5 rounded-full bg-primary"
-            style={{ boxShadow: "0 0 8px var(--primary)" }}
-          />
-          <span className="text-[0.65rem] font-mono uppercase tracking-widest text-muted capitalize">
-            {fecha}
-          </span>
-        </div>
-        <h1 className="display-hero text-fg text-balance">
-          {saludo},{" "}
-          <span
-            className="text-primary"
-            style={{ textShadow: "0 0 24px var(--primary-glow)" }}
-          >
-            {user?.nombre ?? "socio"}
-          </span>
-        </h1>
-        <p className="text-muted text-[0.9rem] md:text-base mt-2 max-w-lg">
-          {stats.pendientes > 0
-            ? `Tienes ${stats.pendientes} ${stats.pendientes === 1 ? "tarea pendiente" : "tareas pendientes"}${
-                stats.vencidas > 0
-                  ? `, ${stats.vencidas} ${stats.vencidas === 1 ? "vencida" : "vencidas"}`
-                  : ""
-              }.`
-            : "Todo al día."}
-        </p>
-      </section>
-
-      {/* Quick pulse */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-        <PulseCard
-          label="Hato"
-          value={stats.activos}
-          hint="cabezas"
-          accent="primary"
-        />
-        <PulseCard
-          label="Tareas"
-          value={stats.pendientes}
-          hint={stats.vencidas > 0 ? `${stats.vencidas} vencidas` : "pendientes"}
-          accent={stats.vencidas > 0 ? "danger" : "accent"}
-        />
-        <PulseCard
-          label="Sanidad"
-          value={stats.sanidadCercana}
-          hint="eventos cercanos"
-          accent="accent"
-        />
-        <PulseCard
-          label="Balance 30 d"
-          value={fmtCOP(stats.balance30).replace("COP", "").trim()}
-          hint={stats.balance30 >= 0 ? "positivo" : "negativo"}
-          accent={stats.balance30 >= 0 ? "success" : "danger"}
-          compact
-        />
-      </section>
-
-      {/* Tiles grid */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-mono uppercase tracking-[0.14em] text-subtle">
-            Módulos
-          </h2>
-          <span className="text-xs text-subtle">
-            {tiles.length} secciones
-          </span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 md:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 md:gap-3">
           {tiles.map((t) => (
             <TileCard key={t.href} tile={t} />
           ))}
         </div>
       </section>
-    </div>
-  );
-}
-
-function PulseCard({
-  label,
-  value,
-  hint,
-  accent,
-  compact,
-}: {
-  label: string;
-  value: React.ReactNode;
-  hint: string;
-  accent: "primary" | "accent" | "danger" | "success";
-  compact?: boolean;
-}) {
-  const color =
-    accent === "danger"
-      ? "var(--danger)"
-      : accent === "success"
-      ? "var(--success)"
-      : accent === "accent"
-      ? "var(--accent)"
-      : "var(--primary)";
-  return (
-    <div className="card card-tight relative overflow-hidden">
-      <div
-        className="absolute inset-x-0 top-0 h-[2px]"
-        style={{ background: color, opacity: 0.5 }}
-      />
-      <div className="eyebrow" style={{ color }}>
-        {label}
-      </div>
-      <div
-        className={
-          "num mt-1.5 tabular-nums whitespace-nowrap " +
-          (compact ? "text-lg md:text-xl" : "text-3xl md:text-4xl")
-        }
-        style={{ color: "var(--fg)" }}
-      >
-        {value}
-      </div>
-      <div className="text-[0.68rem] text-muted mt-1">{hint}</div>
     </div>
   );
 }

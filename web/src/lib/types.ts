@@ -171,9 +171,13 @@ export interface Tarea {
   categoria: CategoriaTarea;
   completada: boolean;
   completadaFecha?: string;
+  /** @deprecated usar animalIds */
   animalId?: string;
+  animalIds?: string[];
   potreroId?: string;
+  /** @deprecated usar asignadoAIds */
   asignadoAId?: string;
+  asignadoAIds?: string[];
   createdAt: string;
 }
 

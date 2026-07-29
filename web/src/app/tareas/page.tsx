@@ -450,17 +450,36 @@ function TareaForm({
   onCancel: () => void;
 }) {
   const { db } = useDB();
-  const [form, setForm] = useState<Tarea>(
-    initial ?? {
+  const [form, setForm] = useState<Tarea>(() => {
+    if (initial) {
+      // normaliza legacy: si venía singular pero sin array, lo promueve.
+      const asignadoIds =
+        initial.asignadoAIds && initial.asignadoAIds.length > 0
+          ? initial.asignadoAIds
+          : initial.asignadoAId
+          ? [initial.asignadoAId]
+          : [];
+      const animalIds =
+        initial.animalIds && initial.animalIds.length > 0
+          ? initial.animalIds
+          : initial.animalId
+          ? [initial.animalId]
+          : [];
+      return { ...initial, asignadoAIds: asignadoIds, animalIds };
+    }
+    return {
       id: uid(),
       titulo: "",
       fecha: new Date().toISOString().slice(0, 10),
       prioridad: "media",
       categoria: "manejo",
       completada: false,
+      asignadoAIds: [],
+      animalIds: [],
       createdAt: nowISO(),
-    }
-  );
+    };
+  });
+  const [animalSearch, setAnimalSearch] = useState("");
 
   function save(e: React.FormEvent) {
     e.preventDefault();
@@ -468,12 +487,50 @@ function TareaForm({
       alert("Falta el título de la tarea");
       return;
     }
+    const asignadoAIds = form.asignadoAIds ?? [];
+    const animalIds = form.animalIds ?? [];
+    const clean: Tarea = {
+      ...form,
+      asignadoAIds,
+      animalIds,
+      // mantiene compatibilidad con lectura legacy (primer elemento)
+      asignadoAId: asignadoAIds[0],
+      animalId: animalIds[0],
+    };
     updateCollection("tareas", (list) => [
-      ...list.filter((t) => t.id !== form.id),
-      form,
+      ...list.filter((t) => t.id !== clean.id),
+      clean,
     ]);
     onSaved();
   }
+
+  function toggleAsignado(id: string) {
+    const prev = form.asignadoAIds ?? [];
+    setForm({
+      ...form,
+      asignadoAIds: prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    });
+  }
+
+  function toggleAnimal(id: string) {
+    const prev = form.animalIds ?? [];
+    setForm({
+      ...form,
+      animalIds: prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    });
+  }
+
+  const animalesActivos = (db?.animales ?? []).filter((a) => a.estado === "activo");
+  const q = animalSearch.trim().toLowerCase();
+  const animalesFiltrados = q
+    ? animalesActivos.filter(
+        (a) =>
+          a.nroIdentificacion.toLowerCase().includes(q) ||
+          (a.nombre ?? "").toLowerCase().includes(q)
+      )
+    : animalesActivos;
+  const seleccionAsignado = form.asignadoAIds ?? [];
+  const seleccionAnimales = form.animalIds ?? [];
 
   function remove() {
     if (!initial) return;
@@ -527,37 +584,94 @@ function TareaForm({
           ))}
         </select>
       </FormRow>
-      <FormRow label="Asignado a">
-        <select
-          value={form.asignadoAId ?? ""}
-          onChange={(e) =>
-            setForm({ ...form, asignadoAId: e.target.value || undefined })
-          }
-        >
-          <option value="">— sin asignar —</option>
-          {db?.propietarios.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.nombre}
-            </option>
-          ))}
-        </select>
+      <FormRow label={`Quiénes hicieron la tarea${seleccionAsignado.length > 0 ? ` (${seleccionAsignado.length})` : ""}`} colspan={2}>
+        {(db?.propietarios ?? []).length === 0 ? (
+          <div className="text-xs text-muted">Aún no hay propietarios registrados.</div>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {db?.propietarios.map((p) => {
+              const on = seleccionAsignado.includes(p.id);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => toggleAsignado(p.id)}
+                  className="btn"
+                  style={{
+                    padding: "0.35rem 0.75rem",
+                    fontSize: "0.78rem",
+                    background: on ? "var(--primary)" : "var(--surface-2)",
+                    color: on ? "var(--primary-ink)" : "var(--fg)",
+                    border: `1px solid ${on ? "var(--primary)" : "var(--rule)"}`,
+                  }}
+                  aria-pressed={on}
+                >
+                  {on ? "✓ " : ""}
+                  {p.nombre}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </FormRow>
-      <FormRow label="Animal (opcional)">
-        <select
-          value={form.animalId ?? ""}
-          onChange={(e) =>
-            setForm({ ...form, animalId: e.target.value || undefined })
-          }
-        >
-          <option value="">— ninguno —</option>
-          {db?.animales
-            .filter((a) => a.estado === "activo")
-            .map((a) => (
-              <option key={a.id} value={a.id}>
-                #{a.nroIdentificacion} {a.nombre ?? ""}
-              </option>
-            ))}
-        </select>
+      <FormRow label={`Animales (opcional)${seleccionAnimales.length > 0 ? ` — ${seleccionAnimales.length} seleccionados` : ""}`} colspan={2}>
+        {animalesActivos.length === 0 ? (
+          <div className="text-xs text-muted">No hay animales activos.</div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                type="search"
+                value={animalSearch}
+                onChange={(e) => setAnimalSearch(e.target.value)}
+                placeholder="Buscar por # o nombre…"
+                className="!w-auto flex-1"
+                style={{ minWidth: "160px" }}
+              />
+              {seleccionAnimales.length > 0 && (
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  style={{ padding: "0.35rem 0.7rem", fontSize: "0.75rem" }}
+                  onClick={() => setForm({ ...form, animalIds: [] })}
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
+            <div
+              className="flex flex-wrap gap-1.5 max-h-56 overflow-y-auto p-2 rounded-md"
+              style={{ border: "1px solid var(--rule)", background: "var(--surface-2)" }}
+            >
+              {animalesFiltrados.length === 0 ? (
+                <div className="text-xs text-muted p-1">Sin coincidencias.</div>
+              ) : (
+                animalesFiltrados.map((a) => {
+                  const on = seleccionAnimales.includes(a.id);
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => toggleAnimal(a.id)}
+                      className="btn"
+                      style={{
+                        padding: "0.3rem 0.65rem",
+                        fontSize: "0.75rem",
+                        background: on ? "var(--primary)" : "var(--surface)",
+                        color: on ? "var(--primary-ink)" : "var(--fg)",
+                        border: `1px solid ${on ? "var(--primary)" : "var(--rule)"}`,
+                      }}
+                      aria-pressed={on}
+                    >
+                      {on ? "✓ " : ""}#{a.nroIdentificacion}
+                      {a.nombre ? ` · ${a.nombre}` : ""}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
       </FormRow>
       <FormRow label="Potrero (opcional)">
         <select

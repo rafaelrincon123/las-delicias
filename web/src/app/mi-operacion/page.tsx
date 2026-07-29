@@ -40,11 +40,16 @@ export default function MiOperacionPage() {
       (i) => i.animalId && misAnimalIds.has(i.animalId)
     );
 
-    const misTareas = db.tareas.filter(
-      (t) =>
-        t.asignadoAId === myId ||
-        (t.animalId && misAnimalIds.has(t.animalId))
-    );
+    const misTareas = db.tareas.filter((t) => {
+      const asignados = t.asignadoAIds && t.asignadoAIds.length > 0
+        ? t.asignadoAIds
+        : t.asignadoAId ? [t.asignadoAId] : [];
+      if (asignados.includes(myId)) return true;
+      const animales = t.animalIds && t.animalIds.length > 0
+        ? t.animalIds
+        : t.animalId ? [t.animalId] : [];
+      return animales.some((id) => misAnimalIds.has(id));
+    });
 
     const misSanidad = db.sanidad.filter((s) => misAnimalIds.has(s.animalId));
 

@@ -207,13 +207,20 @@ create table if not exists tareas (
   completada        boolean not null default false,
   completada_fecha  timestamptz,
   animal_id         text references animales(id) on delete set null,
+  animal_ids        text[] not null default '{}',
   potrero_id        text references potreros(id) on delete set null,
   asignado_a_id     text references propietarios(id) on delete set null,
+  asignado_a_ids    text[] not null default '{}',
   created_at        timestamptz not null default now()
 );
+-- Migración para tablas existentes (idempotente):
+alter table tareas add column if not exists animal_ids     text[] not null default '{}';
+alter table tareas add column if not exists asignado_a_ids text[] not null default '{}';
 create index if not exists idx_tareas_fecha       on tareas(fecha);
 create index if not exists idx_tareas_completada  on tareas(completada);
 create index if not exists idx_tareas_asignado    on tareas(asignado_a_id);
+create index if not exists idx_tareas_animal_ids    on tareas using gin(animal_ids);
+create index if not exists idx_tareas_asignado_ids on tareas using gin(asignado_a_ids);
 
 -- ---------------------------------------------------------------------------
 -- Insumos + Movimientos
