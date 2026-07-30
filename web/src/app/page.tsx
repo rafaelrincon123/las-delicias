@@ -34,7 +34,7 @@ interface Tile {
   href: string;
   label: string;
   sub?: string;
-  Icon: React.ComponentType<{ size?: number; className?: string }>;
+  Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
   tone: TileTone;
   metric?: string | number;
   alert?: boolean;
@@ -249,15 +249,13 @@ function TileCard({ tile }: { tile: Tile }) {
       aria-label={tile.label}
     >
       {tile.alert && <span className="tile-dot" aria-label="alerta" />}
+      {showMetric && <div className="tile-metric">{tile.metric}</div>}
 
-      <div className="flex items-start justify-between gap-2">
-        <div className="icon-orb">
-          <tile.Icon size={tile.hero ? 26 : 22} />
-        </div>
-        {showMetric && <div className="tile-metric">{tile.metric}</div>}
+      <div className="icon-orb">
+        <tile.Icon size={tile.hero ? 38 : 30} strokeWidth={2} />
       </div>
 
-      <div className="mt-auto pt-2">
+      <div>
         <div className="tile-label">{tile.label}</div>
         {tile.sub && <div className="tile-sub">{tile.sub}</div>}
       </div>
