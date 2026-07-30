@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
-import { fmtDate, fmtCOP, fmtNumber } from "@/lib/format";
+import { fmtDate, fmtCOP, fmtNumber, todayISO } from "@/lib/format";
 import {
   Insumo,
   MovimientoInsumo,
@@ -524,7 +524,7 @@ function MovimientoForm({
   const [form, setForm] = useState<MovimientoInsumo>({
     id: uid(),
     insumoId: insumoIdPreseleccionado ?? "",
-    fecha: new Date().toISOString().slice(0, 10),
+    fecha: todayISO(),
     tipo: "entrada",
     cantidad: 0,
     createdAt: nowISO(),

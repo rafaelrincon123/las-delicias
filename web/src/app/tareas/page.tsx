@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
-import { fmtDate, diasHasta } from "@/lib/format";
+import { fmtDate, diasHasta, todayISO, ymdLocal } from "@/lib/format";
 import {
   Tarea,
   CATEGORIAS_TAREA,
@@ -470,7 +470,7 @@ function TareaForm({
     return {
       id: uid(),
       titulo: "",
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: todayISO(),
       prioridad: "media",
       categoria: "manejo",
       completada: false,
@@ -726,13 +726,6 @@ const MONTH_LABELS = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ];
 const DAY_LABELS_SHORT = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-
-function ymdLocal(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 
 function MonthCalendar({
   month,

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
-import { fmtDate, fmtNumber } from "@/lib/format";
+import { fmtDate, fmtNumber, todayISO } from "@/lib/format";
 import { Pesaje, TipoPesaje } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
@@ -437,7 +437,7 @@ function PesajeForm({
     initial ?? {
       id: uid(),
       animalId: "",
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: todayISO(),
       pesoKg: 0,
       tipo: "periodico",
       createdAt: nowISO(),

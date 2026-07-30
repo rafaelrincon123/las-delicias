@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
-import { fmtDate, fmtNumber } from "@/lib/format";
+import { fmtDate, fmtNumber, todayISO, ymdLocal } from "@/lib/format";
 import { ProduccionLeche } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
@@ -49,7 +49,7 @@ export default function ProduccionPage() {
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
+      const key = ymdLocal(d);
       out.push({ fecha: key, litros: map.get(key) ?? 0 });
     }
     return out;
@@ -215,7 +215,7 @@ function LecheForm({
     initial ?? {
       id: uid(),
       animalId: "",
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: todayISO(),
       litrosManana: 0,
       litrosTarde: 0,
       createdAt: nowISO(),

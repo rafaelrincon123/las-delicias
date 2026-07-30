@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
-import { fmtDate, diasHasta } from "@/lib/format";
+import { fmtDate, diasHasta, todayISO, ymdLocal, parseDateLocal } from "@/lib/format";
 import {
   CategoriaAnimal,
   Parto,
@@ -342,7 +342,7 @@ function ServicioForm({
       hembraId: "",
       machoIdOReferencia: "",
       tipo: "monta_natural",
-      fechaServicio: new Date().toISOString().slice(0, 10),
+      fechaServicio: todayISO(),
       resultado: "pendiente",
       createdAt: nowISO(),
     }
@@ -355,9 +355,11 @@ function ServicioForm({
     // Calcular fecha probable de parto (~283 días desde el servicio) si no está seteada y quedó preñada
     const payload = { ...form };
     if (payload.resultado === "prenada" && !payload.fechaProbableParto) {
-      const d = new Date(payload.fechaServicio);
-      d.setDate(d.getDate() + 283);
-      payload.fechaProbableParto = d.toISOString().slice(0, 10);
+      const base = parseDateLocal(payload.fechaServicio);
+      if (base) {
+        base.setDate(base.getDate() + 283);
+        payload.fechaProbableParto = ymdLocal(base);
+      }
     }
     updateCollection("servicios", (list) => [
       ...list.filter((s) => s.id !== payload.id),
@@ -488,7 +490,7 @@ function PartoForm({
     initial ?? {
       id: uid(),
       madreId: "",
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: todayISO(),
       createdAt: nowISO(),
     }
   );

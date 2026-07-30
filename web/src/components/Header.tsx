@@ -8,10 +8,12 @@ import { IconRefresh, IconMenu } from "./icons";
 const TITLES: Record<string, { title: string; sub: string }> = {
   "/": { title: "Inicio", sub: "Todos los módulos" },
   "/panel": { title: "Panel", sub: "Estado del hato en un vistazo" },
-  "/tareas": { title: "Tareas del día", sub: "Pendientes, vencidas y programadas" },
+  "/tareas": { title: "Actividades", sub: "Pendientes, vencidas y programadas" },
   "/mi-operacion": { title: "Mi operación", sub: "Lo que te toca a ti" },
+  "/hato": { title: "Hato", sub: "Animales, potreros y salud" },
   "/animales": { title: "Animales", sub: "Inventario del hato" },
   "/potreros": { title: "Potreros", sub: "Ubicaciones y capacidad" },
+  "/peso": { title: "Control de peso", sub: "Pesajes y curvas" },
   "/sanidad": { title: "Sanidad", sub: "Vacunas, tratamientos y calendario" },
   "/reproduccion": { title: "Reproducción", sub: "Servicios, preñeces y partos" },
   "/produccion": { title: "Producción", sub: "Ordeño diario y pesajes" },

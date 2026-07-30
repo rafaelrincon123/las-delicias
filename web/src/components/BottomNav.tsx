@@ -6,16 +6,54 @@ import {
   IconHome,
   IconTask,
   IconCow,
-  IconHealth,
   IconMoney,
+  IconUser,
 } from "./icons";
 
-const ITEMS = [
-  { href: "/", label: "Inicio", Icon: IconHome },
-  { href: "/tareas", label: "Tareas", Icon: IconTask },
-  { href: "/animales", label: "Hato", Icon: IconCow },
-  { href: "/sanidad", label: "Sanidad", Icon: IconHealth },
-  { href: "/gastos", label: "Gastos", Icon: IconMoney },
+// Rutas que se agrupan bajo cada tab (para resaltar el activo).
+const HATO_ROUTES = [
+  "/hato",
+  "/animales",
+  "/potreros",
+  "/peso",
+  "/sanidad",
+  "/reproduccion",
+  "/produccion",
+  "/inventario",
+];
+const MIOP_ROUTES = ["/mi-operacion", "/panel"];
+
+const ITEMS: {
+  href: string;
+  label: string;
+  Icon: typeof IconHome;
+  match: (path: string) => boolean;
+}[] = [
+  { href: "/", label: "Inicio", Icon: IconHome, match: (p) => p === "/" },
+  {
+    href: "/tareas",
+    label: "Actividades",
+    Icon: IconTask,
+    match: (p) => p.startsWith("/tareas"),
+  },
+  {
+    href: "/hato",
+    label: "Hato",
+    Icon: IconCow,
+    match: (p) => HATO_ROUTES.some((r) => p === r || p.startsWith(r + "/")),
+  },
+  {
+    href: "/gastos",
+    label: "Gastos",
+    Icon: IconMoney,
+    match: (p) => p.startsWith("/gastos"),
+  },
+  {
+    href: "/mi-operacion",
+    label: "Mi op.",
+    Icon: IconUser,
+    match: (p) => MIOP_ROUTES.some((r) => p === r || p.startsWith(r + "/")),
+  },
 ];
 
 export default function BottomNav() {
@@ -34,9 +72,8 @@ export default function BottomNav() {
         className="flex justify-around items-stretch px-1"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {ITEMS.map(({ href, label, Icon }) => {
-          const active =
-            href === "/" ? path === "/" : path.startsWith(href);
+        {ITEMS.map(({ href, label, Icon, match }) => {
+          const active = match(path);
           return (
             <Link
               key={href}

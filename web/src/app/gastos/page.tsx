@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
-import { fmtCOP, fmtDate } from "@/lib/format";
+import { fmtCOP, fmtDate, todayISO } from "@/lib/format";
 import {
   CATEGORIAS_GASTO,
   CategoriaGasto,
@@ -324,7 +324,7 @@ function GastoForm({
   const [form, setForm] = useState<Gasto>(
     initial ?? {
       id: uid(),
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: todayISO(),
       categoria: "alimentacion",
       concepto: "",
       monto: 0,
@@ -542,7 +542,7 @@ function IngresoForm({
   const [form, setForm] = useState<Ingreso>(
     initial ?? {
       id: uid(),
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: todayISO(),
       tipo: "venta_leche",
       concepto: "",
       monto: 0,

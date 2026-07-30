@@ -373,8 +373,10 @@ function applyRealtimeEvent<K extends keyof DBState>(
     const opKey = `${def.table}:upsert:${id}`;
     if (_localOps.delete(opKey)) return; // ya aplicado localmente
     const idx = list.findIndex((x) => x.id === id);
-    if (idx >= 0) list[idx] = item;
-    else list.push(item);
+    const newList = list.slice();
+    if (idx >= 0) newList[idx] = item;
+    else newList.push(item);
+    _cache = { ..._cache, [key]: newList as DBState[K] };
     emit();
   } else if (payload.eventType === "DELETE") {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -384,7 +386,9 @@ function applyRealtimeEvent<K extends keyof DBState>(
     if (_localOps.delete(opKey)) return;
     const idx = list.findIndex((x) => x.id === id);
     if (idx >= 0) {
-      list.splice(idx, 1);
+      const newList = list.slice();
+      newList.splice(idx, 1);
+      _cache = { ..._cache, [key]: newList as DBState[K] };
       emit();
     }
   }
@@ -406,8 +410,9 @@ export function updateCollection<K extends keyof DBState>(
   }
   const oldList = _cache[key] as DBState[K];
   const newList = updater(oldList);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (_cache[key] as any) = newList;
+  // Reemplazar la referencia raíz para que React detecte el cambio
+  // (Object.is en setState hace bail-out si mutamos en sitio).
+  _cache = { ..._cache, [key]: newList };
   emit();
   void syncCollection(key, oldList, newList);
   return _cache;

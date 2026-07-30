@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
-import { fmtDate, fmtCOP, diasHasta } from "@/lib/format";
+import { fmtDate, fmtCOP, diasHasta, todayISO } from "@/lib/format";
 import { SanidadEvento, TIPOS_SANIDAD, TipoSanidad } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
@@ -287,7 +287,7 @@ function SanidadForm({
       animalId: "",
       tipo: "vacuna",
       producto: "",
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: todayISO(),
       createdAt: nowISO(),
     }
   );

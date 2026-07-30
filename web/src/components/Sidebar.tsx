@@ -26,17 +26,18 @@ import {
 
 const NAV = [
   { href: "/", label: "Inicio", section: "General", Icon: IconHome },
-  { href: "/panel", label: "Panel", section: "General", Icon: IconPanel },
-  { href: "/tareas", label: "Tareas del día", section: "General", Icon: IconTask },
-  { href: "/mi-operacion", label: "Mi operación", section: "General", Icon: IconUser },
+  { href: "/tareas", label: "Actividades", section: "General", Icon: IconTask },
+  { href: "/gastos", label: "Gastos", section: "General", Icon: IconMoney },
+  { href: "/hato", label: "Hato (resumen)", section: "Hato", Icon: IconCow },
   { href: "/animales", label: "Animales", section: "Hato", Icon: IconCow },
   { href: "/potreros", label: "Potreros", section: "Hato", Icon: IconPasture },
   { href: "/peso", label: "Control de peso", section: "Hato", Icon: IconScale },
-  { href: "/sanidad", label: "Sanidad", section: "Salud", Icon: IconHealth },
-  { href: "/reproduccion", label: "Reproducción", section: "Salud", Icon: IconRepro },
-  { href: "/produccion", label: "Producción", section: "Números", Icon: IconMilk },
-  { href: "/gastos", label: "Gastos", section: "Números", Icon: IconMoney },
-  { href: "/inventario", label: "Inventario", section: "Números", Icon: IconBox },
+  { href: "/sanidad", label: "Sanidad", section: "Hato", Icon: IconHealth },
+  { href: "/reproduccion", label: "Reproducción", section: "Hato", Icon: IconRepro },
+  { href: "/produccion", label: "Producción", section: "Hato", Icon: IconMilk },
+  { href: "/inventario", label: "Inventario", section: "Hato", Icon: IconBox },
+  { href: "/mi-operacion", label: "Mi operación", section: "Mi operación", Icon: IconUser },
+  { href: "/panel", label: "Panel general", section: "Mi operación", Icon: IconPanel },
 ];
 
 type SidebarProps = {

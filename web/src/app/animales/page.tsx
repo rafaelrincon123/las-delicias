@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
-import { edadTexto, fmtDate, fmtCOP, fmtNumber, diasHasta } from "@/lib/format";
+import { edadTexto, fmtDate, fmtCOP, fmtNumber, diasHasta, todayISO } from "@/lib/format";
 import {
   Animal,
   CATEGORIAS_ANIMAL,
@@ -732,7 +732,7 @@ function AnimalForm({
       nombre: "",
       sexo: "hembra",
       raza: "",
-      fechaNacimiento: new Date().toISOString().slice(0, 10),
+      fechaNacimiento: todayISO(),
       categoria: "vaca",
       estado: "activo",
       createdAt: nowISO(),

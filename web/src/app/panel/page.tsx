@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useDB } from "@/lib/useDB";
 import StatCard from "@/components/StatCard";
 import PastureMap from "@/components/PastureMap";
-import { fmtCOP, fmtDate, fmtNumber, diasHasta } from "@/lib/format";
+import { fmtCOP, fmtDate, fmtNumber, diasHasta, ymdLocal } from "@/lib/format";
 
 export default function Dashboard() {
   const { db, ready } = useDB();
@@ -49,7 +49,7 @@ export default function Dashboard() {
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
+      const key = ymdLocal(d);
       const total = db.leche
         .filter((l) => l.fecha.slice(0, 10) === key)
         .reduce((s, l) => s + l.litrosManana + l.litrosTarde, 0);

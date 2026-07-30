@@ -121,14 +121,22 @@ export default function MiOperacionPage() {
     <div className="space-y-6">
       {/* Hero */}
       <section className="hero-card">
-        <div className="flex items-center gap-2 mb-4">
-          <span
-            className="w-1.5 h-1.5 rounded-full bg-primary"
-            style={{ boxShadow: "0 0 8px var(--primary)" }}
-          />
-          <span className="text-[0.72rem] font-mono uppercase tracking-widest text-muted capitalize">
-            {hoyLabel}
-          </span>
+        <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span
+              className="w-1.5 h-1.5 rounded-full bg-primary"
+              style={{ boxShadow: "0 0 8px var(--primary)" }}
+            />
+            <span className="text-[0.72rem] font-mono uppercase tracking-widest text-muted capitalize">
+              {hoyLabel}
+            </span>
+          </div>
+          <Link
+            href="/panel"
+            className="text-[0.68rem] font-mono uppercase tracking-widest text-primary hover:underline"
+          >
+            Ver panel general →
+          </Link>
         </div>
         <div className="flex items-start justify-between gap-6 flex-wrap">
           <div className="min-w-0 flex-1">
