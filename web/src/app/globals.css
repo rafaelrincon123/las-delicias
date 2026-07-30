@@ -617,6 +617,25 @@ select {
   background: rgba(255, 255, 255, 0.16);
 }
 
+/* Variante con ilustración grande (para Home): sin orb, imagen protagónica. */
+.tile-mod.tile-art { padding-top: 1.25rem; gap: 0.6rem; }
+.tile-mod.tile-art .tile-art-wrap {
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 10px rgba(20, 30, 20, 0.18));
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tile-mod.tile-art .tile-art-wrap svg { width: 100%; height: 100%; display: block; }
+@media (min-width: 768px) {
+  .tile-mod.tile-art .tile-art-wrap { width: 104px; height: 104px; }
+}
+.tile-mod.tile-art:hover .tile-art-wrap {
+  transform: translateY(-3px) scale(1.05);
+}
+
 .card-head {
   display: flex;
   align-items: flex-start;

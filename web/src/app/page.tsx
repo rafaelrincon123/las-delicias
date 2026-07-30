@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useDB } from "@/lib/useDB";
 import { diasHasta } from "@/lib/format";
 import {
-  IconTask,
-  IconUser,
-  IconCow,
-  IconMoney,
-} from "@/components/icons";
+  ArtActividades,
+  ArtHato,
+  ArtGastos,
+  ArtMi,
+} from "@/components/HomeArt";
 
 type TileTone = "forest" | "copper" | "moss" | "citrus";
 
@@ -17,11 +17,10 @@ interface Tile {
   href: string;
   label: string;
   sub?: string;
-  Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+  Art: React.ComponentType<{ size?: number; className?: string }>;
   tone: TileTone;
   metric?: string | number;
   alert?: boolean;
-  hero?: boolean;
 }
 
 const TONES: Record<TileTone, { from: string; to: string; ink: string; fg: string; shadow: string }> = {
@@ -56,11 +55,7 @@ export default function Home() {
       return d !== null && d < 0;
     }).length;
 
-    return {
-      activos,
-      pendientes,
-      vencidas,
-    };
+    return { activos, pendientes, vencidas };
   }, [db]);
 
   if (!ready || !stats) {
@@ -77,17 +72,16 @@ export default function Home() {
       href: "/tareas",
       label: "Actividades",
       sub: stats.vencidas > 0 ? `${stats.vencidas} vencidas` : "pendientes",
-      Icon: IconTask,
+      Art: ArtActividades,
       tone: "copper",
       metric: stats.pendientes,
       alert: stats.vencidas > 0,
-      hero: true,
     },
     {
       href: "/hato",
       label: "Hato",
-      sub: "animales, potreros, sanidad…",
-      Icon: IconCow,
+      sub: "animales y potreros",
+      Art: ArtHato,
       tone: "moss",
       metric: stats.activos,
     },
@@ -95,21 +89,21 @@ export default function Home() {
       href: "/gastos",
       label: "Gastos",
       sub: "ingresos y contabilidad",
-      Icon: IconMoney,
+      Art: ArtGastos,
       tone: "citrus",
     },
     {
       href: "/mi-operacion",
       label: "Mi operación",
       sub: "panel y tu vista",
-      Icon: IconUser,
+      Art: ArtMi,
       tone: "forest",
     },
   ];
 
   return (
     <div className="relative z-10">
-      <div className="grid grid-cols-2 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-5 max-w-3xl mx-auto">
         {tiles.map((t) => (
           <TileCard key={t.href} tile={t} />
         ))}
@@ -124,7 +118,7 @@ function TileCard({ tile }: { tile: Tile }) {
   return (
     <Link
       href={tile.href}
-      className={"tile-mod" + (tile.hero ? " tile-hero" : "")}
+      className="tile-mod tile-art"
       style={
         {
           "--t-from": t.from,
@@ -139,8 +133,8 @@ function TileCard({ tile }: { tile: Tile }) {
       {tile.alert && <span className="tile-dot" aria-label="alerta" />}
       {showMetric && <div className="tile-metric">{tile.metric}</div>}
 
-      <div className="icon-orb">
-        <tile.Icon size={tile.hero ? 38 : 30} strokeWidth={2} />
+      <div className="tile-art-wrap">
+        <tile.Art />
       </div>
 
       <div>
