@@ -427,6 +427,171 @@ select {
   .tile { min-height: 148px; padding: 1.15rem; border-radius: 20px; }
 }
 
+/* ═══════════════════════ MOD TILES · Revolut/Robinhood style ══════════
+   Colored gradient cards. Each tile carries its own tone via CSS vars.
+   ───────────────────────────────────────────────────────────────────── */
+.tile-mod {
+  --t-from: #E6F0D9;
+  --t-to:   #C9DDB5;
+  --t-fg:   #1A2418;
+  --t-ink:  #2E5F3A;
+  --t-shadow: rgba(46, 95, 58, 0.28);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  aspect-ratio: 1 / 1;
+  padding: 1rem;
+  border-radius: 22px;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--t-fg);
+  background:
+    radial-gradient(120% 100% at 100% 0%, color-mix(in oklab, white 30%, var(--t-from)) 0%, transparent 55%),
+    linear-gradient(155deg, var(--t-from) 0%, var(--t-to) 100%);
+  border: 1px solid color-mix(in oklab, var(--t-ink) 12%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 -14px 30px -12px color-mix(in oklab, var(--t-ink) 22%, transparent) inset,
+    0 1px 2px rgba(20, 30, 20, 0.04),
+    0 6px 16px -8px var(--t-shadow),
+    0 22px 40px -22px var(--t-shadow);
+  transition:
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 260ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tile-mod::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0) 40%);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+.tile-mod:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 -14px 30px -12px color-mix(in oklab, var(--t-ink) 24%, transparent) inset,
+    0 2px 4px rgba(20, 30, 20, 0.05),
+    0 12px 24px -8px var(--t-shadow),
+    0 30px 60px -22px var(--t-shadow);
+}
+.tile-mod:active { transform: translateY(0) scale(0.99); transition-duration: 120ms; }
+
+@media (min-width: 768px) {
+  .tile-mod { padding: 1.3rem; border-radius: 26px; }
+}
+
+.tile-mod .icon-orb {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t-ink);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.04) inset,
+    0 4px 10px -4px color-mix(in oklab, var(--t-ink) 24%, transparent);
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@media (min-width: 768px) {
+  .tile-mod .icon-orb { width: 52px; height: 52px; border-radius: 16px; }
+}
+.tile-mod:hover .icon-orb { transform: rotate(-4deg) scale(1.05); }
+
+.tile-mod .tile-metric {
+  font-family: var(--font-geist-sans);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-weight: 600;
+  font-size: 1.75rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--t-ink);
+}
+@media (min-width: 768px) {
+  .tile-mod .tile-metric { font-size: 2.1rem; }
+}
+
+.tile-mod .tile-label {
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  color: var(--t-fg);
+}
+@media (min-width: 768px) {
+  .tile-mod .tile-label { font-size: 1.12rem; }
+}
+.tile-mod .tile-sub {
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: color-mix(in oklab, var(--t-fg) 60%, transparent);
+  letter-spacing: -0.005em;
+  margin-top: 0.2rem;
+}
+
+.tile-mod .tile-dot {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.6), 0 0 12px var(--danger);
+}
+
+/* Featured / wide tile — spans 2 columns and is taller */
+.tile-mod.tile-hero {
+  aspect-ratio: auto;
+  grid-column: span 2;
+  min-height: 168px;
+  padding: 1.4rem;
+  border-radius: 26px;
+}
+@media (min-width: 768px) {
+  .tile-mod.tile-hero { min-height: 200px; padding: 1.7rem; border-radius: 30px; }
+}
+.tile-mod.tile-hero .icon-orb { width: 56px; height: 56px; border-radius: 18px; }
+@media (min-width: 768px) {
+  .tile-mod.tile-hero .icon-orb { width: 64px; height: 64px; border-radius: 20px; }
+}
+.tile-mod.tile-hero .tile-label { font-size: 1.35rem; }
+@media (min-width: 768px) {
+  .tile-mod.tile-hero .tile-label { font-size: 1.6rem; }
+}
+.tile-mod.tile-hero .tile-metric { font-size: 2.2rem; }
+@media (min-width: 768px) {
+  .tile-mod.tile-hero .tile-metric { font-size: 2.6rem; }
+}
+
+/* Dark theme adaptations */
+:root:not([data-theme="light"]) .tile-mod {
+  background:
+    radial-gradient(120% 100% at 100% 0%, color-mix(in oklab, white 8%, var(--t-from)) 0%, transparent 55%),
+    linear-gradient(155deg, color-mix(in oklab, black 25%, var(--t-from)) 0%, color-mix(in oklab, black 35%, var(--t-to)) 100%);
+  color: white;
+  border-color: color-mix(in oklab, white 10%, transparent);
+}
+:root:not([data-theme="light"]) .tile-mod .tile-label,
+:root:not([data-theme="light"]) .tile-mod .tile-metric { color: white; }
+:root:not([data-theme="light"]) .tile-mod .tile-sub { color: rgba(255,255,255,0.7); }
+:root:not([data-theme="light"]) .tile-mod .icon-orb {
+  color: white;
+  background: rgba(255, 255, 255, 0.16);
+}
+
 .card-head {
   display: flex;
   align-items: flex-start;

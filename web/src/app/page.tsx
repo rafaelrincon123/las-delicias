@@ -18,55 +18,71 @@ import {
   IconScale,
 } from "@/components/icons";
 
-type TileTone = "primary" | "accent" | "rose" | "info" | "sage" | "neutral";
+type TileTone =
+  | "forest"
+  | "copper"
+  | "coral"
+  | "sky"
+  | "moss"
+  | "sand"
+  | "plum"
+  | "citrus"
+  | "sea"
+  | "clay";
 
 interface Tile {
   href: string;
   label: string;
-  sub: string;
+  sub?: string;
   Icon: React.ComponentType<{ size?: number; className?: string }>;
   tone: TileTone;
   metric?: string | number;
   alert?: boolean;
+  hero?: boolean;
 }
 
-// Family-consistent palette — earthy, closer to brand tokens.
-const TONES: Record<TileTone, { icon: string; iconBg: string; ink: string; ring: string }> = {
-  primary: {
-    icon: "#2E5F3A",
-    iconBg: "linear-gradient(135deg, #E6F0D9 0%, #C9DDB5 100%)",
-    ink: "#1A2418",
-    ring: "rgba(46, 95, 58, 0.30)",
+/* Vivid but earthy palette — Revolut-style gradient tokens per tone.
+   Each tone → soft top color, deeper bottom color, ink/text color, shadow.  */
+const TONES: Record<TileTone, { from: string; to: string; ink: string; fg: string; shadow: string }> = {
+  forest: {
+    from: "#D9EFD1", to: "#89C57B", ink: "#1E4A2A", fg: "#0F2A17",
+    shadow: "rgba(46, 106, 60, 0.32)",
   },
-  accent: {
-    icon: "#8A5A2E",
-    iconBg: "linear-gradient(135deg, #F5E5D0 0%, #E8CDA6 100%)",
-    ink: "#3E2A15",
-    ring: "rgba(138, 90, 46, 0.30)",
+  copper: {
+    from: "#F8E1C1", to: "#E4A46A", ink: "#7A4A1E", fg: "#3E230C",
+    shadow: "rgba(196, 128, 60, 0.32)",
   },
-  rose: {
-    icon: "#B34A3A",
-    iconBg: "linear-gradient(135deg, #F7DED6 0%, #EEBFB3 100%)",
-    ink: "#4A1D14",
-    ring: "rgba(179, 74, 58, 0.28)",
+  coral: {
+    from: "#FBDACF", to: "#F19277", ink: "#8A3B24", fg: "#4A1B0F",
+    shadow: "rgba(220, 110, 80, 0.32)",
   },
-  info: {
-    icon: "#446B84",
-    iconBg: "linear-gradient(135deg, #DCE7EE 0%, #B9CDD9 100%)",
-    ink: "#1E3140",
-    ring: "rgba(68, 107, 132, 0.28)",
+  sky: {
+    from: "#D6E7F2", to: "#7DB3D2", ink: "#1E4A6B", fg: "#0F2A40",
+    shadow: "rgba(90, 140, 180, 0.32)",
   },
-  sage: {
-    icon: "#556B47",
-    iconBg: "linear-gradient(135deg, #E5EBDC 0%, #C6D2B4 100%)",
-    ink: "#232D1A",
-    ring: "rgba(85, 107, 71, 0.30)",
+  moss: {
+    from: "#E4EED4", to: "#A9C177", ink: "#3E5A24", fg: "#1D2F10",
+    shadow: "rgba(120, 150, 80, 0.30)",
   },
-  neutral: {
-    icon: "#52584E",
-    iconBg: "linear-gradient(135deg, #ECEAE2 0%, #D6D3C6 100%)",
-    ink: "#2A2E25",
-    ring: "rgba(82, 88, 78, 0.24)",
+  sand: {
+    from: "#F0EADA", to: "#CBB98D", ink: "#5A4A22", fg: "#2E240F",
+    shadow: "rgba(160, 140, 90, 0.28)",
+  },
+  plum: {
+    from: "#E9D9E6", to: "#B48AB0", ink: "#5A2C57", fg: "#2E1230",
+    shadow: "rgba(150, 100, 150, 0.30)",
+  },
+  citrus: {
+    from: "#F6EFC2", to: "#DFC85E", ink: "#6B5410", fg: "#2E2306",
+    shadow: "rgba(180, 160, 60, 0.30)",
+  },
+  sea: {
+    from: "#D5EBE4", to: "#7EBFA9", ink: "#1E5A48", fg: "#0F2E23",
+    shadow: "rgba(90, 160, 140, 0.30)",
+  },
+  clay: {
+    from: "#EBE0D1", to: "#B99A7A", ink: "#5A3C20", fg: "#2E1D0C",
+    shadow: "rgba(160, 120, 90, 0.28)",
   },
 };
 
@@ -117,16 +133,17 @@ export default function Home() {
     {
       href: "/panel",
       label: "Panel",
-      sub: "Vistazo general",
+      sub: "Vistazo general del hato",
       Icon: IconPanel,
-      tone: "primary",
+      tone: "forest",
+      hero: true,
     },
     {
       href: "/tareas",
       label: "Tareas",
       sub: stats.vencidas > 0 ? `${stats.vencidas} vencidas` : "pendientes",
       Icon: IconTask,
-      tone: "accent",
+      tone: "copper",
       metric: stats.pendientes,
       alert: stats.vencidas > 0,
     },
@@ -135,61 +152,61 @@ export default function Home() {
       label: "Hato",
       sub: "cabezas activas",
       Icon: IconCow,
-      tone: "sage",
+      tone: "moss",
       metric: stats.activos,
     },
     {
       href: "/potreros",
       label: "Potreros",
-      sub: "lotes en uso",
+      sub: "lotes",
       Icon: IconPasture,
-      tone: "primary",
+      tone: "sea",
       metric: stats.potreros,
     },
     {
       href: "/peso",
-      label: "Control de peso",
+      label: "Peso",
       sub: "pesajes y curvas",
       Icon: IconScale,
-      tone: "sage",
+      tone: "sand",
     },
     {
       href: "/sanidad",
       label: "Sanidad",
       sub: "eventos cercanos",
       Icon: IconHealth,
-      tone: "rose",
+      tone: "coral",
       metric: stats.sanidadCercana,
       alert: stats.sanidadCercana > 0,
     },
     {
       href: "/reproduccion",
       label: "Reproducción",
-      sub: "preñeces activas",
+      sub: "preñeces",
       Icon: IconRepro,
-      tone: "rose",
+      tone: "plum",
       metric: stats.proximosPartos,
     },
     {
       href: "/produccion",
       label: "Producción",
-      sub: "ordeño y pesajes",
+      sub: "ordeño diario",
       Icon: IconMilk,
-      tone: "info",
+      tone: "sky",
     },
     {
       href: "/gastos",
       label: "Gastos",
       sub: "contabilidad",
       Icon: IconMoney,
-      tone: "accent",
+      tone: "citrus",
     },
     {
       href: "/inventario",
       label: "Inventario",
-      sub: "bajo mínimo",
+      sub: "insumos",
       Icon: IconBox,
-      tone: "sage",
+      tone: "clay",
       metric: stats.stockBajo,
       alert: stats.stockBajo > 0,
     },
@@ -198,19 +215,17 @@ export default function Home() {
       label: "Mi operación",
       sub: "tu vista",
       Icon: IconUser,
-      tone: "neutral",
+      tone: "forest",
     },
   ];
 
   return (
     <div className="relative z-10">
-      <section>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 md:gap-3">
-          {tiles.map((t) => (
-            <TileCard key={t.href} tile={t} />
-          ))}
-        </div>
-      </section>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+        {tiles.map((t) => (
+          <TileCard key={t.href} tile={t} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -221,59 +236,30 @@ function TileCard({ tile }: { tile: Tile }) {
   return (
     <Link
       href={tile.href}
-      className="tile group"
-      style={{
-        // subtle CSS-var so the hover ring can pick up the tile's own tint
-        // @ts-expect-error CSS variable
-        "--tile-ring": t.ring,
-      }}
+      className={"tile-mod" + (tile.hero ? " tile-hero" : "")}
+      style={
+        {
+          "--t-from": t.from,
+          "--t-to": t.to,
+          "--t-ink": t.ink,
+          "--t-fg": t.fg,
+          "--t-shadow": t.shadow,
+        } as React.CSSProperties
+      }
+      aria-label={tile.label}
     >
-      {tile.alert && (
-        <span
-          className="absolute top-3 right-3 w-2 h-2 rounded-full"
-          style={{
-            background: "var(--danger)",
-            boxShadow: "0 0 8px var(--danger)",
-          }}
-          aria-label="alerta"
-        />
-      )}
+      {tile.alert && <span className="tile-dot" aria-label="alerta" />}
 
       <div className="flex items-start justify-between gap-2">
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-          style={{
-            background: t.iconBg,
-            color: t.icon,
-            border: "1px solid rgba(255,255,255,0.5)",
-            boxShadow: "0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.6)",
-          }}
-        >
-          <tile.Icon size={22} />
+        <div className="icon-orb">
+          <tile.Icon size={tile.hero ? 26 : 22} />
         </div>
-        {showMetric && (
-          <div
-            className="num text-3xl md:text-4xl leading-none tabular-nums"
-            style={{ color: t.icon }}
-          >
-            {tile.metric}
-          </div>
-        )}
+        {showMetric && <div className="tile-metric">{tile.metric}</div>}
       </div>
 
-      <div className="mt-auto pt-3">
-        <div
-          className="text-[1.02rem] md:text-[1.08rem] font-semibold tracking-tight leading-tight"
-          style={{ color: "var(--fg)" }}
-        >
-          {tile.label}
-        </div>
-        <div
-          className="text-[0.72rem] md:text-[0.75rem] mt-1 text-muted truncate lowercase"
-          style={{ letterSpacing: "0.01em" }}
-        >
-          {tile.sub}
-        </div>
+      <div className="mt-auto pt-2">
+        <div className="tile-label">{tile.label}</div>
+        {tile.sub && <div className="tile-sub">{tile.sub}</div>}
       </div>
     </Link>
   );
