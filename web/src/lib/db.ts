@@ -139,6 +139,7 @@ const TABLE_DEFS: Record<keyof DBState, TableDef> = {
       proveedor: "proveedor",
       pagadoPor: "pagado_por",
       participantes: "participantes",
+      pagadoPorIds: "pagado_por_ids",
       animalId: "animal_id",
       potreroId: "potrero_id",
       notas: "notas",

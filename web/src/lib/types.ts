@@ -123,8 +123,15 @@ export interface Gasto {
   concepto: string;
   monto: number;
   proveedor?: string;
+  /** Quién adelantó la plata al proveedor. */
   pagadoPor?: string;
+  /** Socios que participan del gasto (comparten el costo). */
   participantes?: string[];
+  /**
+   * IDs de participantes que ya pagaron/reembolsaron su parte a quien puso la
+   * plata. El `pagadoPor` cuenta como pagado por defecto si es participante.
+   */
+  pagadoPorIds?: string[];
   animalId?: string;
   potreroId?: string;
   notas?: string;

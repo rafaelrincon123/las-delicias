@@ -9,11 +9,38 @@ import {
   CategoriaGasto,
   Gasto,
   Ingreso,
+  Propietario,
   TipoIngreso,
 } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import StatCard from "@/components/StatCard";
+
+/**
+ * Devuelve el conjunto efectivo de participantes que ya pagaron su parte.
+ * Quien puso la plata (pagadoPor) cuenta como pagado si es participante.
+ */
+function participantesPagados(g: Gasto): Set<string> {
+  const paid = new Set(g.pagadoPorIds ?? []);
+  const parts = g.participantes ?? [];
+  if (g.pagadoPor && parts.includes(g.pagadoPor)) paid.add(g.pagadoPor);
+  return paid;
+}
+
+/** Alterna el estado de pago de un participante en un gasto y persiste. */
+function toggleParticipantePagado(g: Gasto, propietarioId: string): void {
+  const parts = g.participantes ?? [];
+  if (!parts.includes(propietarioId)) return;
+  // No permitir marcar como "debe" a quien puso la plata (lo puso él mismo).
+  if (g.pagadoPor === propietarioId) return;
+  const set = new Set(g.pagadoPorIds ?? []);
+  if (set.has(propietarioId)) set.delete(propietarioId);
+  else set.add(propietarioId);
+  const next: Gasto = { ...g, pagadoPorIds: Array.from(set) };
+  updateCollection("gastos", (list) =>
+    list.map((x) => (x.id === g.id ? next : x))
+  );
+}
 
 const TIPOS_INGRESO: { value: TipoIngreso; label: string }[] = [
   { value: "venta_leche", label: "Venta de leche" },
@@ -149,95 +176,126 @@ export default function GastosPage() {
       </div>
 
       {tab === "gastos" && (
-        <div className="card p-0 overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Categoría</th>
-                <th>Concepto</th>
-                <th>Pagó</th>
-                <th>Participantes</th>
-                <th className="text-right">Monto</th>
-                <th className="text-right">Por c/u</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {gastos.map((g) => {
-                const socio = db!.propietarios.find((p) => p.id === g.pagadoPor);
-                const participantes = g.participantes ?? [];
-                const nParticipantes = participantes.length;
-                const porPersona = nParticipantes > 0 ? g.monto / nParticipantes : g.monto;
-                return (
-                  <tr key={g.id}>
-                    <td>{fmtDate(g.fecha)}</td>
-                    <td>
-                      <span className="chip">
-                        {CATEGORIAS_GASTO.find((c) => c.value === g.categoria)?.label}
-                      </span>
-                    </td>
-                    <td>
-                      <div>{g.concepto}</div>
-                      {g.proveedor && (
-                        <div className="text-muted text-xs">{g.proveedor}</div>
-                      )}
-                    </td>
-                    <td className="text-xs">{socio?.nombre ?? "—"}</td>
-                    <td>
-                      {nParticipantes === 0 ? (
-                        <span className="text-muted text-xs">—</span>
-                      ) : nParticipantes === db!.propietarios.length ? (
-                        <span className="chip primary" style={{ fontSize: "0.62rem" }}>
-                          Todos ({nParticipantes})
+        <>
+          <DeudasResumen gastos={gastos} propietarios={db!.propietarios} />
+          <div className="card p-0 overflow-x-auto">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Categoría</th>
+                  <th>Concepto</th>
+                  <th>Pagó</th>
+                  <th>Estado de pago</th>
+                  <th className="text-right">Monto</th>
+                  <th className="text-right">Por c/u</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {gastos.map((g) => {
+                  const socio = db!.propietarios.find((p) => p.id === g.pagadoPor);
+                  const participantes = g.participantes ?? [];
+                  const nParticipantes = participantes.length;
+                  const porPersona = nParticipantes > 0 ? g.monto / nParticipantes : g.monto;
+                  const pagados = participantesPagados(g);
+                  const nPagados = participantes.filter((id) => pagados.has(id)).length;
+                  const todosPagaron = nParticipantes > 0 && nPagados === nParticipantes;
+                  return (
+                    <tr key={g.id}>
+                      <td>{fmtDate(g.fecha)}</td>
+                      <td>
+                        <span className="chip">
+                          {CATEGORIAS_GASTO.find((c) => c.value === g.categoria)?.label}
                         </span>
-                      ) : (
-                        <div className="flex flex-wrap gap-1">
-                          {participantes.map((pid) => {
-                            const p = db!.propietarios.find((x) => x.id === pid);
-                            if (!p) return null;
-                            return (
-                              <span
-                                key={pid}
-                                className="chip"
-                                style={{
-                                  fontSize: "0.6rem",
-                                  padding: "0.1rem 0.5rem",
-                                }}
-                                title={p.nombre}
-                              >
-                                {p.nombre.slice(0, 2).toUpperCase()}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </td>
-                    <td className="text-right font-mono tabular-nums">{fmtCOP(g.monto)}</td>
-                    <td className="text-right font-mono tabular-nums text-xs">
-                      {nParticipantes > 1 ? (
-                        <span className="text-primary">{fmtCOP(porPersona)}</span>
-                      ) : (
-                        <span className="text-muted">—</span>
-                      )}
-                    </td>
-                    <td className="text-right">
-                      <button
-                        className="text-xs text-accent hover:underline"
-                        onClick={() => {
-                          setEditG(g);
-                          setOpenG(true);
-                        }}
-                      >
-                        editar
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                      <td>
+                        <div>{g.concepto}</div>
+                        {g.proveedor && (
+                          <div className="text-muted text-xs">{g.proveedor}</div>
+                        )}
+                      </td>
+                      <td className="text-xs">{socio?.nombre ?? "—"}</td>
+                      <td>
+                        {nParticipantes === 0 ? (
+                          <span className="text-muted text-xs">—</span>
+                        ) : (
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex flex-wrap gap-1">
+                              {participantes.map((pid) => {
+                                const p = db!.propietarios.find((x) => x.id === pid);
+                                if (!p) return null;
+                                const on = pagados.has(pid);
+                                const esPagador = g.pagadoPor === pid;
+                                return (
+                                  <button
+                                    key={pid}
+                                    type="button"
+                                    onClick={() => toggleParticipantePagado(g, pid)}
+                                    disabled={esPagador}
+                                    className="rounded-full text-[0.6rem] font-mono font-semibold px-2 py-0.5 transition"
+                                    style={{
+                                      background: on ? "var(--success, #4CA45A)" : "transparent",
+                                      color: on ? "#fff" : "var(--muted)",
+                                      border: `1px solid ${on ? "var(--success, #4CA45A)" : "var(--rule-strong)"}`,
+                                      cursor: esPagador ? "default" : "pointer",
+                                      opacity: esPagador ? 0.85 : 1,
+                                    }}
+                                    title={
+                                      esPagador
+                                        ? `${p.nombre} · adelantó la plata`
+                                        : on
+                                        ? `${p.nombre} · ya pagó (click para desmarcar)`
+                                        : `${p.nombre} · debe (click para marcar pagado)`
+                                    }
+                                  >
+                                    {on ? "✓ " : ""}
+                                    {p.nombre.slice(0, 2).toUpperCase()}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <span
+                              className="text-[0.6rem] font-mono uppercase tracking-wider"
+                              style={{
+                                color: todosPagaron
+                                  ? "var(--success, #4CA45A)"
+                                  : nPagados === 0
+                                  ? "var(--danger)"
+                                  : "var(--accent)",
+                              }}
+                            >
+                              {nPagados}/{nParticipantes} {todosPagaron ? "· al día" : "pagados"}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="text-right font-mono tabular-nums">{fmtCOP(g.monto)}</td>
+                      <td className="text-right font-mono tabular-nums text-xs">
+                        {nParticipantes > 1 ? (
+                          <span className="text-primary">{fmtCOP(porPersona)}</span>
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
+                      </td>
+                      <td className="text-right">
+                        <button
+                          className="text-xs text-accent hover:underline"
+                          onClick={() => {
+                            setEditG(g);
+                            setOpenG(true);
+                          }}
+                        >
+                          editar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {tab === "ingresos" && (
@@ -311,6 +369,107 @@ export default function GastosPage() {
   );
 }
 
+function DeudasResumen({
+  gastos,
+  propietarios,
+}: {
+  gastos: Gasto[];
+  propietarios: Propietario[];
+}) {
+  const balances = useMemo(() => {
+    // Por cada socio: cuánto le deben (positivo) y cuánto debe (negativo)
+    const debe: Record<string, number> = {};
+    const leDeben: Record<string, number> = {};
+    for (const p of propietarios) {
+      debe[p.id] = 0;
+      leDeben[p.id] = 0;
+    }
+
+    for (const g of gastos) {
+      const parts = g.participantes ?? [];
+      if (parts.length === 0 || !g.pagadoPor) continue;
+      const cuota = g.monto / parts.length;
+      const pagados = participantesPagados(g);
+
+      for (const pid of parts) {
+        if (pid === g.pagadoPor) continue; // el pagador no se debe a sí mismo
+        if (pagados.has(pid)) continue; // ya reembolsó
+        // pid le debe cuota a g.pagadoPor
+        debe[pid] = (debe[pid] ?? 0) + cuota;
+        leDeben[g.pagadoPor] = (leDeben[g.pagadoPor] ?? 0) + cuota;
+      }
+    }
+
+    return propietarios
+      .map((p) => ({
+        socio: p,
+        debe: debe[p.id] ?? 0,
+        leDeben: leDeben[p.id] ?? 0,
+        neto: (leDeben[p.id] ?? 0) - (debe[p.id] ?? 0),
+      }))
+      .filter((r) => r.debe > 0 || r.leDeben > 0);
+  }, [gastos, propietarios]);
+
+  if (balances.length === 0) return null;
+
+  return (
+    <section className="card">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold tracking-tight">
+          Cuentas entre socios
+        </h2>
+        <span className="text-[0.65rem] font-mono uppercase tracking-widest text-subtle">
+          basado en participantes y pagos
+        </span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+        {balances.map(({ socio, debe, leDeben, neto }) => {
+          const alDia = debe === 0 && leDeben === 0;
+          const acreedor = neto > 0;
+          return (
+            <div
+              key={socio.id}
+              className="flex items-center justify-between gap-3 p-3 rounded-lg"
+              style={{
+                background: "var(--surface-2)",
+                border: `1px solid ${
+                  alDia
+                    ? "var(--rule)"
+                    : acreedor
+                    ? "var(--success, #4CA45A)"
+                    : "var(--danger)"
+                }`,
+              }}
+            >
+              <div className="min-w-0">
+                <div className="font-medium truncate">{socio.nombre}</div>
+                <div className="text-[0.62rem] font-mono uppercase tracking-wider text-subtle mt-0.5">
+                  {debe > 0 && <>debe {fmtCOP(debe)}</>}
+                  {debe > 0 && leDeben > 0 && " · "}
+                  {leDeben > 0 && <>le deben {fmtCOP(leDeben)}</>}
+                  {alDia && "al día"}
+                </div>
+              </div>
+              <div
+                className="font-mono tabular-nums text-sm font-semibold shrink-0"
+                style={{
+                  color: acreedor
+                    ? "var(--success, #4CA45A)"
+                    : neto < 0
+                    ? "var(--danger)"
+                    : "var(--muted)",
+                }}
+              >
+                {neto === 0 ? "±0" : `${acreedor ? "+" : ""}${fmtCOP(neto)}`}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function GastoForm({
   initial,
   onSaved,
@@ -335,6 +494,18 @@ function GastoForm({
   const participantes = form.participantes ?? [];
   const nParticipantes = participantes.length;
   const porPersona = nParticipantes > 0 ? form.monto / nParticipantes : 0;
+  const pagadosSet = new Set(form.pagadoPorIds ?? []);
+  if (form.pagadoPor && participantes.includes(form.pagadoPor)) {
+    pagadosSet.add(form.pagadoPor);
+  }
+
+  function toggleParticipantePago(id: string) {
+    if (id === form.pagadoPor) return;
+    const set = new Set(form.pagadoPorIds ?? []);
+    if (set.has(id)) set.delete(id);
+    else set.add(id);
+    setForm({ ...form, pagadoPorIds: Array.from(set) });
+  }
 
   function toggleParticipante(id: string) {
     const set = new Set(participantes);
@@ -498,6 +669,71 @@ function GastoForm({
           </p>
         )}
       </div>
+
+      {nParticipantes > 0 && form.monto > 0 && (
+        <div className="md:col-span-2 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="eyebrow">
+              Quién ya pagó su parte
+              <span className="text-muted normal-case tracking-normal font-sans ml-2">
+                ({pagadosSet.size}/{nParticipantes})
+              </span>
+            </span>
+            <span className="text-[0.65rem] text-subtle">
+              {fmtCOP(porPersona)} c/u
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {participantes.map((pid) => {
+              const p = db?.propietarios.find((x) => x.id === pid);
+              if (!p) return null;
+              const on = pagadosSet.has(pid);
+              const esPagador = form.pagadoPor === pid;
+              return (
+                <button
+                  type="button"
+                  key={pid}
+                  onClick={() => toggleParticipantePago(pid)}
+                  disabled={esPagador}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition"
+                  style={{
+                    background: on
+                      ? "color-mix(in oklab, var(--success, #4CA45A) 14%, transparent)"
+                      : "var(--surface)",
+                    borderColor: on ? "var(--success, #4CA45A)" : "var(--rule)",
+                    color: on ? "var(--success, #4CA45A)" : "var(--fg)",
+                    cursor: esPagador ? "default" : "pointer",
+                    opacity: esPagador ? 0.9 : 1,
+                  }}
+                  title={
+                    esPagador
+                      ? "Adelantó la plata — cuenta como pagado automáticamente"
+                      : on
+                      ? "Marcado como pagado (click para desmarcar)"
+                      : "Debe su parte (click para marcar pagado)"
+                  }
+                >
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-mono font-semibold shrink-0"
+                    style={{
+                      background: on ? "var(--success, #4CA45A)" : "var(--surface-2)",
+                      color: on ? "#fff" : "var(--muted)",
+                    }}
+                  >
+                    {on ? "✓" : p.nombre.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm truncate">{p.nombre}</div>
+                    <div className="text-[0.6rem] text-subtle">
+                      {esPagador ? "adelantó la plata" : on ? "al día" : "debe"}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <FormRow label="Proveedor" colspan={2}>
         <input
