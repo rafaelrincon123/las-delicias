@@ -45,6 +45,7 @@ export default function TareasPage() {
   const { db, ready } = useDB();
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<Tarea | null>(null);
+  const [modalMode, setModalMode] = useState<"view" | "edit">("view");
   const [createMode, setCreateMode] = useState<CreateMode>("programada");
   const [tab, setTab] = useState<"pendientes" | "hechas">("pendientes");
   const [filtroCat, setFiltroCat] = useState<CategoriaTarea | "todas">("todas");
@@ -239,6 +240,7 @@ export default function TareasPage() {
             onClick={() => {
               setEdit(null);
               setCreateMode("realizada");
+              setModalMode("edit");
               setOpen(true);
             }}
             title="Registrar algo que ya se hizo"
@@ -250,6 +252,7 @@ export default function TareasPage() {
             onClick={() => {
               setEdit(null);
               setCreateMode("programada");
+              setModalMode("edit");
               setOpen(true);
             }}
             title="Programar una tarea pendiente"
@@ -273,9 +276,19 @@ export default function TareasPage() {
                   key={item.key}
                   item={item}
                   onToggle={() => toggleTarea(item)}
+                  onView={() => {
+                    if (item.tarea) {
+                      setEdit(item.tarea);
+                      setModalMode("view");
+                      setOpen(true);
+                    } else if (item.href) {
+                      window.location.href = item.href;
+                    }
+                  }}
                   onEdit={() => {
                     if (item.tarea) {
                       setEdit(item.tarea);
+                      setModalMode("edit");
                       setOpen(true);
                     }
                   }}
@@ -291,6 +304,7 @@ export default function TareasPage() {
           items={visiblesCal}
           onEditTarea={(t) => {
             setEdit(t);
+            setModalMode("view");
             setOpen(true);
           }}
         />
@@ -301,16 +315,30 @@ export default function TareasPage() {
         onClose={() => setOpen(false)}
         title={
           edit
-            ? "Editar tarea"
+            ? modalMode === "view"
+              ? "Detalle de tarea"
+              : "Editar tarea"
             : createMode === "realizada"
             ? "Registrar actividad realizada"
             : "Programar tarea"
         }
         eyebrow="Actividades"
       >
+        {edit && modalMode === "view" && (
+          <div className="flex justify-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => setModalMode("edit")}
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem" }}
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <TareaForm
           initial={edit}
           mode={edit ? undefined : createMode}
+          readOnly={!!edit && modalMode === "view"}
           onSaved={() => setOpen(false)}
           onCancel={() => setOpen(false)}
         />
@@ -347,10 +375,12 @@ function MiniStat({
 function TareaRow({
   item,
   onToggle,
+  onView,
   onEdit,
 }: {
   item: UnifiedItem;
   onToggle: () => void;
+  onView: () => void;
   onEdit: () => void;
 }) {
   const vencida = !item.completada && item.dias !== null && item.dias < 0;
@@ -359,9 +389,23 @@ function TareaRow({
   const isManual = item.fuente === "manual";
 
   return (
-    <li className="flex items-start gap-3 px-4 py-3.5 border-b border-rule last:border-b-0 hover:bg-surface-2 transition group">
+    <li
+      className="flex items-start gap-3 px-4 py-3.5 border-b border-rule last:border-b-0 hover:bg-surface-2 transition group cursor-pointer"
+      onClick={onView}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onView();
+        }
+      }}
+    >
       <button
-        onClick={onToggle}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
         disabled={!isManual}
         aria-label={item.completada ? "Marcar pendiente" : "Marcar como hecha"}
         className="mt-0.5 shrink-0 w-6 h-6 rounded-md border flex items-center justify-center transition"
@@ -446,14 +490,18 @@ function TareaRow({
         {item.href ? (
           <Link
             href={item.href}
+            onClick={(e) => e.stopPropagation()}
             className="text-[0.68rem] text-primary hover:underline font-mono uppercase tracking-wider"
           >
             abrir →
           </Link>
         ) : isManual ? (
           <button
-            onClick={onEdit}
-            className="text-[0.68rem] text-primary hover:underline font-mono uppercase tracking-wider opacity-0 group-hover:opacity-100 transition"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="text-[0.68rem] text-primary hover:underline font-mono uppercase tracking-wider md:opacity-0 md:group-hover:opacity-100 transition"
           >
             editar
           </button>
@@ -466,11 +514,13 @@ function TareaRow({
 function TareaForm({
   initial,
   mode,
+  readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: Tarea | null;
   mode?: CreateMode;
+  readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -568,6 +618,7 @@ function TareaForm({
 
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+      <fieldset disabled={readOnly} className="contents">
       <FormRow label="Título" required colspan={2}>
         <input
           value={form.titulo}
@@ -745,23 +796,33 @@ function TareaForm({
           placeholder="Detalles, materiales, notas…"
         />
       </FormRow>
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <div>
-          {initial ? (
-            <button type="button" className="btn btn-danger" onClick={remove}>
-              Eliminar
+      </fieldset>
+      {!readOnly && (
+        <div className="md:col-span-2 flex items-center justify-between pt-2">
+          <div>
+            {initial ? (
+              <button type="button" className="btn btn-danger" onClick={remove}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>
+              Cancelar
             </button>
-          ) : null}
+            <button type="submit" className="btn btn-primary">
+              Guardar
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
+      )}
+      {readOnly && (
+        <div className="md:col-span-2 flex justify-end pt-2">
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary">
-            Guardar
+            Cerrar
           </button>
         </div>
-      </div>
+      )}
     </form>
   );
 }
