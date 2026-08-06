@@ -39,10 +39,13 @@ const CAT_COLOR: Record<CategoriaTarea, string> = {
   otros: "var(--muted)",
 };
 
+type CreateMode = "programada" | "realizada";
+
 export default function TareasPage() {
   const { db, ready } = useDB();
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<Tarea | null>(null);
+  const [createMode, setCreateMode] = useState<CreateMode>("programada");
   const [tab, setTab] = useState<"pendientes" | "hechas">("pendientes");
   const [filtroCat, setFiltroCat] = useState<CategoriaTarea | "todas">("todas");
   const [view, setView] = useState<"lista" | "calendario">("lista");
@@ -232,13 +235,26 @@ export default function TareasPage() {
             ))}
           </select>
           <button
+            className="btn btn-ghost"
+            onClick={() => {
+              setEdit(null);
+              setCreateMode("realizada");
+              setOpen(true);
+            }}
+            title="Registrar algo que ya se hizo"
+          >
+            ✓ Registrar realizada
+          </button>
+          <button
             className="btn btn-primary"
             onClick={() => {
               setEdit(null);
+              setCreateMode("programada");
               setOpen(true);
             }}
+            title="Programar una tarea pendiente"
           >
-            + Nueva tarea
+            + Programar tarea
           </button>
         </div>
       </div>
@@ -283,11 +299,18 @@ export default function TareasPage() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={edit ? "Editar tarea" : "Nueva tarea"}
-        eyebrow="Tareas"
+        title={
+          edit
+            ? "Editar tarea"
+            : createMode === "realizada"
+            ? "Registrar actividad realizada"
+            : "Programar tarea"
+        }
+        eyebrow="Actividades"
       >
         <TareaForm
           initial={edit}
+          mode={edit ? undefined : createMode}
           onSaved={() => setOpen(false)}
           onCancel={() => setOpen(false)}
         />
@@ -442,14 +465,17 @@ function TareaRow({
 
 function TareaForm({
   initial,
+  mode,
   onSaved,
   onCancel,
 }: {
   initial: Tarea | null;
+  mode?: CreateMode;
   onSaved: () => void;
   onCancel: () => void;
 }) {
   const { db } = useDB();
+  const isRealizada = mode === "realizada";
   const [form, setForm] = useState<Tarea>(() => {
     if (initial) {
       // normaliza legacy: si venía singular pero sin array, lo promueve.
@@ -473,7 +499,8 @@ function TareaForm({
       fecha: todayISO(),
       prioridad: "media",
       categoria: "manejo",
-      completada: false,
+      completada: isRealizada,
+      completadaFecha: isRealizada ? nowISO() : undefined,
       asignadoAIds: [],
       animalIds: [],
       createdAt: nowISO(),
@@ -584,7 +611,7 @@ function TareaForm({
           ))}
         </select>
       </FormRow>
-      <FormRow label={`Quiénes hicieron la tarea${seleccionAsignado.length > 0 ? ` (${seleccionAsignado.length})` : ""}`} colspan={2}>
+      <FormRow label={`${isRealizada ? "Quiénes la realizaron" : "Asignada a"}${seleccionAsignado.length > 0 ? ` (${seleccionAsignado.length})` : ""}`} colspan={2}>
         {(db?.propietarios ?? []).length === 0 ? (
           <div className="text-xs text-muted">Aún no hay propietarios registrados.</div>
         ) : (
