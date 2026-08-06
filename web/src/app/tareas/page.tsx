@@ -54,6 +54,7 @@ export default function TareasPage() {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
+  const [dayModal, setDayModal] = useState<{ dateISO: string; items: UnifiedItem[] } | null>(null);
 
   const unified: UnifiedItem[] = useMemo(() => {
     if (!db) return [];
@@ -275,7 +276,6 @@ export default function TareasPage() {
                 <TareaRow
                   key={item.key}
                   item={item}
-                  onToggle={() => toggleTarea(item)}
                   onView={() => {
                     if (item.tarea) {
                       setEdit(item.tarea);
@@ -307,6 +307,9 @@ export default function TareasPage() {
             setModalMode("view");
             setOpen(true);
           }}
+          onDayClick={(dateISO, dayItems) => {
+            setDayModal({ dateISO, items: dayItems });
+          }}
         />
       )}
 
@@ -325,7 +328,33 @@ export default function TareasPage() {
         eyebrow="Actividades"
       >
         {edit && modalMode === "view" && (
-          <div className="flex justify-end mb-3">
+          <div className="flex justify-between items-center mb-3 gap-2 flex-wrap">
+            <button
+              className="btn"
+              onClick={() => {
+                toggleTarea({
+                  key: "",
+                  fuente: "manual",
+                  titulo: edit.titulo,
+                  fecha: edit.fecha,
+                  dias: null,
+                  categoria: edit.categoria,
+                  prioridad: edit.prioridad,
+                  completada: edit.completada,
+                  tarea: edit,
+                });
+                setOpen(false);
+              }}
+              style={{
+                padding: "0.4rem 0.9rem",
+                fontSize: "0.8rem",
+                background: edit.completada ? "var(--surface-2)" : "var(--primary-soft)",
+                color: edit.completada ? "var(--muted)" : "var(--primary)",
+                border: `1px solid ${edit.completada ? "var(--rule)" : "var(--primary)"}`,
+              }}
+            >
+              {edit.completada ? "↺ Marcar pendiente" : "✓ Marcar realizada"}
+            </button>
             <button
               className="btn btn-primary"
               onClick={() => setModalMode("edit")}
@@ -343,6 +372,112 @@ export default function TareasPage() {
           onCancel={() => setOpen(false)}
         />
       </Modal>
+
+      <Modal
+        open={!!dayModal}
+        onClose={() => setDayModal(null)}
+        title={dayModal ? fmtDate(dayModal.dateISO) : ""}
+        eyebrow="Resumen del día"
+      >
+        {dayModal && (
+          <DayResumen
+            items={dayModal.items}
+            onOpenItem={(it) => {
+              if (it.tarea) {
+                setEdit(it.tarea);
+                setModalMode("view");
+                setDayModal(null);
+                setOpen(true);
+              } else if (it.href) {
+                window.location.href = it.href;
+              }
+            }}
+            onClose={() => setDayModal(null)}
+          />
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+function DayResumen({
+  items,
+  onOpenItem,
+  onClose,
+}: {
+  items: UnifiedItem[];
+  onOpenItem: (it: UnifiedItem) => void;
+  onClose: () => void;
+}) {
+  const hechas = items.filter((i) => i.completada);
+  const pendientes = items.filter((i) => !i.completada);
+
+  function Section({ title, list }: { title: string; list: UnifiedItem[] }) {
+    if (list.length === 0) return null;
+    return (
+      <div>
+        <div className="eyebrow mb-2">
+          {title} ({list.length})
+        </div>
+        <ul className="space-y-1.5">
+          {list.map((it) => (
+            <li
+              key={it.key}
+              className="rounded-md border p-3 cursor-pointer hover:bg-surface-2 transition"
+              style={{
+                borderColor: "var(--rule)",
+                borderLeft: `3px solid ${CAT_COLOR[it.categoria]}`,
+              }}
+              onClick={() => onOpenItem(it)}
+            >
+              <div className="flex items-start gap-2">
+                <StatusIcon completada={it.completada} />
+                <div className="flex-1 min-w-0">
+                  <div
+                    className={
+                      "font-medium text-sm " +
+                      (it.completada ? "line-through opacity-60" : "")
+                    }
+                  >
+                    {it.titulo}
+                  </div>
+                  {it.subtitulo && (
+                    <div className="text-xs text-muted mt-0.5">{it.subtitulo}</div>
+                  )}
+                  <div className="text-[0.62rem] font-mono uppercase tracking-wider text-subtle mt-1">
+                    {it.fuente === "manual"
+                      ? CATEGORIAS_TAREA.find((c) => c.value === it.categoria)?.label ?? it.categoria
+                      : it.fuente === "sanidad"
+                      ? "Sanidad"
+                      : "Reproducción"}
+                    {it.prioridad === "alta" && !it.completada ? " · prioridad alta" : ""}
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {items.length === 0 ? (
+        <div className="text-center text-muted text-sm py-6">
+          Sin actividades este día.
+        </div>
+      ) : (
+        <>
+          <Section title="Pendientes" list={pendientes} />
+          <Section title="Realizadas" list={hechas} />
+        </>
+      )}
+      <div className="flex justify-end pt-2 border-t border-rule">
+        <button type="button" className="btn btn-ghost" onClick={onClose}>
+          Cerrar
+        </button>
+      </div>
     </div>
   );
 }
@@ -372,14 +507,35 @@ function MiniStat({
   );
 }
 
+function StatusIcon({ completada }: { completada: boolean }) {
+  if (completada) {
+    return (
+      <span
+        className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded-full"
+        style={{ background: "var(--primary)", color: "var(--primary-ink)" }}
+        title="Realizada"
+        aria-label="Realizada"
+      >
+        <IconCheck size={12} strokeWidth={3} />
+      </span>
+    );
+  }
+  return (
+    <span
+      className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded-full"
+      style={{ border: "1.5px dashed var(--rule-strong)", color: "var(--muted)" }}
+      title="Pendiente"
+      aria-label="Pendiente"
+    />
+  );
+}
+
 function TareaRow({
   item,
-  onToggle,
   onView,
   onEdit,
 }: {
   item: UnifiedItem;
-  onToggle: () => void;
   onView: () => void;
   onEdit: () => void;
 }) {
@@ -401,32 +557,6 @@ function TareaRow({
         }
       }}
     >
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle();
-        }}
-        disabled={!isManual}
-        aria-label={item.completada ? "Marcar pendiente" : "Marcar como hecha"}
-        className="mt-0.5 shrink-0 w-6 h-6 rounded-md border flex items-center justify-center transition"
-        style={{
-          borderColor: item.completada ? "var(--primary)" : "var(--rule-strong)",
-          background: item.completada ? "var(--primary)" : "transparent",
-          color: item.completada ? "var(--primary-ink)" : "var(--muted)",
-          cursor: isManual ? "pointer" : "not-allowed",
-          opacity: isManual ? 1 : 0.5,
-        }}
-        title={
-          isManual
-            ? item.completada
-              ? "Marcar pendiente"
-              : "Marcar como hecha"
-            : "Este evento se gestiona desde su propio módulo"
-        }
-      >
-        {item.completada ? <IconCheck size={14} /> : null}
-      </button>
-
       <div
         className="w-0.5 self-stretch rounded-full shrink-0 mt-0.5"
         style={{ background: catColor, opacity: item.completada ? 0.3 : 0.7 }}
@@ -434,6 +564,7 @@ function TareaRow({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
+          <StatusIcon completada={item.completada} />
           <div
             className={
               "font-medium text-fg " +
@@ -842,11 +973,13 @@ function MonthCalendar({
   setMonth,
   items,
   onEditTarea,
+  onDayClick,
 }: {
   month: Date;
   setMonth: (d: Date) => void;
   items: UnifiedItem[];
   onEditTarea: (t: Tarea) => void;
+  onDayClick: (dateISO: string, dayItems: UnifiedItem[]) => void;
 }) {
   const year = month.getFullYear();
   const monthIdx = month.getMonth();
@@ -926,7 +1059,21 @@ function MonthCalendar({
           return (
             <div
               key={idx}
-              className="min-h-[58px] md:min-h-[92px] rounded-md md:rounded-lg p-1 md:p-1.5 flex flex-col gap-0.5 md:gap-1 relative overflow-hidden"
+              className={
+                "min-h-[58px] md:min-h-[92px] rounded-md md:rounded-lg p-1 md:p-1.5 flex flex-col gap-0.5 md:gap-1 relative overflow-hidden " +
+                (inMonth ? "cursor-pointer hover:brightness-95" : "")
+              }
+              onClick={() => {
+                if (inMonth && key) onDayClick(key, dayItems);
+              }}
+              role={inMonth ? "button" : undefined}
+              tabIndex={inMonth ? 0 : undefined}
+              onKeyDown={(e) => {
+                if (inMonth && key && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  onDayClick(key, dayItems);
+                }
+              }}
               style={{
                 background: inMonth
                   ? isToday
@@ -963,16 +1110,11 @@ function MonthCalendar({
                   )}
                 </div>
               )}
-              {/* Mobile: dots only */}
-              <div className="md:hidden flex flex-wrap gap-0.5 mt-auto">
+              {/* Mobile: dots only (tap the cell for details) */}
+              <div className="md:hidden flex flex-wrap gap-0.5 mt-auto pointer-events-none">
                 {dayItems.slice(0, 4).map((it) => (
-                  <button
+                  <span
                     key={it.key}
-                    type="button"
-                    onClick={() => {
-                      if (it.tarea) onEditTarea(it.tarea);
-                      else if (it.href) window.location.href = it.href;
-                    }}
                     aria-label={it.titulo}
                     title={it.titulo}
                     className="w-1.5 h-1.5 rounded-full"
@@ -992,7 +1134,8 @@ function MonthCalendar({
                   <button
                     key={it.key}
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (it.tarea) onEditTarea(it.tarea);
                       else if (it.href) window.location.href = it.href;
                     }}
