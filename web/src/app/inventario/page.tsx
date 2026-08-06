@@ -23,6 +23,7 @@ export default function InventarioPage() {
   const [filtroCat, setFiltroCat] = useState<CategoriaInsumo | "todas">("todas");
   const [openInsumo, setOpenInsumo] = useState(false);
   const [editInsumo, setEditInsumo] = useState<Insumo | null>(null);
+  const [modeInsumo, setModeInsumo] = useState<"view" | "edit">("view");
   const [openMov, setOpenMov] = useState(false);
   const [movInsumoId, setMovInsumoId] = useState<string | undefined>();
 
@@ -120,6 +121,7 @@ export default function InventarioPage() {
             className="btn btn-primary"
             onClick={() => {
               setEditInsumo(null);
+              setModeInsumo("edit");
               setOpenInsumo(true);
             }}
           >
@@ -154,7 +156,15 @@ export default function InventarioPage() {
                   const valor = (i.costoUnitario ?? 0) * i.stock;
                   const cat = CATEGORIAS_INSUMO.find((c) => c.value === i.categoria);
                   return (
-                    <tr key={i.id}>
+                    <tr
+                      key={i.id}
+                      onClick={() => {
+                        setEditInsumo(i);
+                        setModeInsumo("view");
+                        setOpenInsumo(true);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
                       <td>
                         <div className="flex items-center gap-2">
                           {(sinStock || bajo) && (
@@ -205,7 +215,8 @@ export default function InventarioPage() {
                       <td className="text-right whitespace-nowrap">
                         <button
                           className="text-xs text-primary hover:underline mr-3"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setMovInsumoId(i.id);
                             setOpenMov(true);
                           }}
@@ -214,8 +225,10 @@ export default function InventarioPage() {
                         </button>
                         <button
                           className="text-xs text-accent hover:underline"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setEditInsumo(i);
+                            setModeInsumo("edit");
                             setOpenInsumo(true);
                           }}
                         >
@@ -313,11 +326,29 @@ export default function InventarioPage() {
       <Modal
         open={openInsumo}
         onClose={() => setOpenInsumo(false)}
-        title={editInsumo ? "Editar insumo" : "Nuevo insumo"}
+        title={
+          editInsumo
+            ? modeInsumo === "view"
+              ? "Detalle de insumo"
+              : "Editar insumo"
+            : "Nuevo insumo"
+        }
         eyebrow="Inventario"
       >
+        {editInsumo && modeInsumo === "view" && (
+          <div className="flex justify-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => setModeInsumo("edit")}
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem" }}
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <InsumoForm
           initial={editInsumo}
+          readOnly={!!editInsumo && modeInsumo === "view"}
           onSaved={() => setOpenInsumo(false)}
           onCancel={() => setOpenInsumo(false)}
         />
@@ -372,10 +403,12 @@ function MiniStat({
 
 function InsumoForm({
   initial,
+  readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: Insumo | null;
+  readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -413,6 +446,7 @@ function InsumoForm({
 
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+      <fieldset disabled={readOnly} className="contents">
       <FormRow label="Nombre" required colspan={2}>
         <input
           value={form.nombre}
@@ -490,23 +524,33 @@ function InsumoForm({
           onChange={(e) => setForm({ ...form, notas: e.target.value })}
         />
       </FormRow>
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <div>
-          {initial ? (
-            <button type="button" className="btn btn-danger" onClick={remove}>
-              Eliminar
+      </fieldset>
+      {!readOnly && (
+        <div className="md:col-span-2 flex items-center justify-between pt-2">
+          <div>
+            {initial ? (
+              <button type="button" className="btn btn-danger" onClick={remove}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>
+              Cancelar
             </button>
-          ) : null}
+            <button type="submit" className="btn btn-primary">
+              Guardar
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
+      )}
+      {readOnly && (
+        <div className="md:col-span-2 flex justify-end pt-2">
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary">
-            Guardar
+            Cerrar
           </button>
         </div>
-      </div>
+      )}
     </form>
   );
 }

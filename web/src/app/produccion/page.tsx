@@ -13,6 +13,7 @@ export default function ProduccionPage() {
   const { db, ready } = useDB();
   const [openLec, setOpenLec] = useState(false);
   const [editLec, setEditLec] = useState<ProduccionLeche | null>(null);
+  const [modeLec, setModeLec] = useState<"view" | "edit">("view");
   const [filtroAnimal, setFiltroAnimal] = useState("");
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
@@ -67,6 +68,7 @@ export default function ProduccionPage() {
           className="btn btn-primary"
           onClick={() => {
             setEditLec(null);
+            setModeLec("edit");
             setOpenLec(true);
           }}
         >
@@ -151,7 +153,15 @@ export default function ProduccionPage() {
                   const animal = db!.animales.find((a) => a.id === l.animalId);
                   const total = l.litrosManana + l.litrosTarde;
                   return (
-                    <tr key={l.id}>
+                    <tr
+                      key={l.id}
+                      onClick={() => {
+                        setEditLec(l);
+                        setModeLec("view");
+                        setOpenLec(true);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
                       <td>{fmtDate(l.fecha)}</td>
                       <td>
                         {animal?.nombre ?? "—"}{" "}
@@ -171,8 +181,10 @@ export default function ProduccionPage() {
                       <td className="text-right">
                         <button
                           className="text-xs text-accent hover:underline"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setEditLec(l);
+                            setModeLec("edit");
                             setOpenLec(true);
                           }}
                         >
@@ -189,10 +201,22 @@ export default function ProduccionPage() {
       <Modal
         open={openLec}
         onClose={() => setOpenLec(false)}
-        title={editLec ? "Editar ordeño" : "Registrar ordeño"}
+        title={editLec ? (modeLec === "view" ? "Detalle de ordeño" : "Editar ordeño") : "Registrar ordeño"}
       >
+        {editLec && modeLec === "view" && (
+          <div className="flex justify-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => setModeLec("edit")}
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem" }}
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <LecheForm
           initial={editLec}
+          readOnly={!!editLec && modeLec === "view"}
           onSaved={() => setOpenLec(false)}
           onCancel={() => setOpenLec(false)}
         />
@@ -203,10 +227,12 @@ export default function ProduccionPage() {
 
 function LecheForm({
   initial,
+  readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: ProduccionLeche | null;
+  readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -241,6 +267,7 @@ function LecheForm({
 
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+      <fieldset disabled={readOnly} className="contents">
       <FormRow label="Vaca" required colspan={2}>
         <select
           value={form.animalId}
@@ -286,19 +313,27 @@ function LecheForm({
           onChange={(e) => setForm({ ...form, notas: e.target.value })}
         />
       </FormRow>
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <div>
-          {initial ? (
-            <button type="button" className="btn btn-danger" onClick={remove}>
-              Eliminar
-            </button>
-          ) : null}
+      </fieldset>
+      {!readOnly && (
+        <div className="md:col-span-2 flex items-center justify-between pt-2">
+          <div>
+            {initial ? (
+              <button type="button" className="btn btn-danger" onClick={remove}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
+            <button type="submit" className="btn btn-primary">Guardar</button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
-          <button type="submit" className="btn btn-primary">Guardar</button>
+      )}
+      {readOnly && (
+        <div className="md:col-span-2 flex justify-end pt-2">
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cerrar</button>
         </div>
-      </div>
+      )}
     </form>
   );
 }

@@ -55,6 +55,8 @@ export default function GastosPage() {
   const [openI, setOpenI] = useState(false);
   const [editG, setEditG] = useState<Gasto | null>(null);
   const [editI, setEditI] = useState<Ingreso | null>(null);
+  const [modeG, setModeG] = useState<"view" | "edit">("view");
+  const [modeI, setModeI] = useState<"view" | "edit">("view");
 
   const gastos = useMemo(() => {
     if (!db) return [];
@@ -156,6 +158,7 @@ export default function GastosPage() {
               className="btn btn-primary"
               onClick={() => {
                 setEditG(null);
+                setModeG("edit");
                 setOpenG(true);
               }}
             >
@@ -166,6 +169,7 @@ export default function GastosPage() {
               className="btn btn-primary"
               onClick={() => {
                 setEditI(null);
+                setModeI("edit");
                 setOpenI(true);
               }}
             >
@@ -202,7 +206,15 @@ export default function GastosPage() {
                   const nPagados = participantes.filter((id) => pagados.has(id)).length;
                   const todosPagaron = nParticipantes > 0 && nPagados === nParticipantes;
                   return (
-                    <tr key={g.id}>
+                    <tr
+                      key={g.id}
+                      onClick={() => {
+                        setEditG(g);
+                        setModeG("view");
+                        setOpenG(true);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
                       <td>{fmtDate(g.fecha)}</td>
                       <td>
                         <span className="chip">
@@ -231,7 +243,10 @@ export default function GastosPage() {
                                   <button
                                     key={pid}
                                     type="button"
-                                    onClick={() => toggleParticipantePagado(g, pid)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleParticipantePagado(g, pid);
+                                    }}
                                     disabled={esPagador}
                                     className="rounded-full text-[0.6rem] font-mono font-semibold px-2 py-0.5 transition"
                                     style={{
@@ -281,8 +296,10 @@ export default function GastosPage() {
                       <td className="text-right">
                         <button
                           className="text-xs text-accent hover:underline"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setEditG(g);
+                            setModeG("edit");
                             setOpenG(true);
                           }}
                         >
@@ -313,7 +330,15 @@ export default function GastosPage() {
             </thead>
             <tbody>
               {ingresos.map((i) => (
-                <tr key={i.id}>
+                <tr
+                  key={i.id}
+                  onClick={() => {
+                    setEditI(i);
+                    setModeI("view");
+                    setOpenI(true);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
                   <td>{fmtDate(i.fecha)}</td>
                   <td>
                     <span className="chip">
@@ -328,8 +353,10 @@ export default function GastosPage() {
                   <td className="text-right">
                     <button
                       className="text-xs text-accent hover:underline"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setEditI(i);
+                        setModeI("edit");
                         setOpenI(true);
                       }}
                     >
@@ -346,10 +373,22 @@ export default function GastosPage() {
       <Modal
         open={openG}
         onClose={() => setOpenG(false)}
-        title={editG ? "Editar gasto" : "Nuevo gasto"}
+        title={editG ? (modeG === "view" ? "Detalle de gasto" : "Editar gasto") : "Nuevo gasto"}
       >
+        {editG && modeG === "view" && (
+          <div className="flex justify-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => setModeG("edit")}
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem" }}
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <GastoForm
           initial={editG}
+          readOnly={!!editG && modeG === "view"}
           onSaved={() => setOpenG(false)}
           onCancel={() => setOpenG(false)}
         />
@@ -357,10 +396,22 @@ export default function GastosPage() {
       <Modal
         open={openI}
         onClose={() => setOpenI(false)}
-        title={editI ? "Editar ingreso" : "Nuevo ingreso"}
+        title={editI ? (modeI === "view" ? "Detalle de ingreso" : "Editar ingreso") : "Nuevo ingreso"}
       >
+        {editI && modeI === "view" && (
+          <div className="flex justify-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => setModeI("edit")}
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem" }}
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <IngresoForm
           initial={editI}
+          readOnly={!!editI && modeI === "view"}
           onSaved={() => setOpenI(false)}
           onCancel={() => setOpenI(false)}
         />
@@ -472,10 +523,12 @@ function DeudasResumen({
 
 function GastoForm({
   initial,
+  readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: Gasto | null;
+  readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -544,6 +597,7 @@ function GastoForm({
 
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+      <fieldset disabled={readOnly} className="contents">
       <FormRow label="Fecha" required>
         <input
           type="date"
@@ -748,29 +802,39 @@ function GastoForm({
           onChange={(e) => setForm({ ...form, notas: e.target.value })}
         />
       </FormRow>
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <div>
-          {initial ? (
-            <button type="button" className="btn btn-danger" onClick={remove}>
-              Eliminar
-            </button>
-          ) : null}
+      </fieldset>
+      {!readOnly && (
+        <div className="md:col-span-2 flex items-center justify-between pt-2">
+          <div>
+            {initial ? (
+              <button type="button" className="btn btn-danger" onClick={remove}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
+            <button type="submit" className="btn btn-primary">Guardar</button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
-          <button type="submit" className="btn btn-primary">Guardar</button>
+      )}
+      {readOnly && (
+        <div className="md:col-span-2 flex justify-end pt-2">
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cerrar</button>
         </div>
-      </div>
+      )}
     </form>
   );
 }
 
 function IngresoForm({
   initial,
+  readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: Ingreso | null;
+  readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -806,6 +870,7 @@ function IngresoForm({
 
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+      <fieldset disabled={readOnly} className="contents">
       <FormRow label="Fecha" required>
         <input
           type="date"
@@ -864,19 +929,27 @@ function IngresoForm({
           onChange={(e) => setForm({ ...form, notas: e.target.value })}
         />
       </FormRow>
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <div>
-          {initial ? (
-            <button type="button" className="btn btn-danger" onClick={remove}>
-              Eliminar
-            </button>
-          ) : null}
+      </fieldset>
+      {!readOnly && (
+        <div className="md:col-span-2 flex items-center justify-between pt-2">
+          <div>
+            {initial ? (
+              <button type="button" className="btn btn-danger" onClick={remove}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
+            <button type="submit" className="btn btn-primary">Guardar</button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
-          <button type="submit" className="btn btn-primary">Guardar</button>
+      )}
+      {readOnly && (
+        <div className="md:col-span-2 flex justify-end pt-2">
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cerrar</button>
         </div>
-      </div>
+      )}
     </form>
   );
 }

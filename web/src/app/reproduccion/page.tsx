@@ -22,6 +22,8 @@ export default function ReproduccionPage() {
   const [openPar, setOpenPar] = useState(false);
   const [editServ, setEditServ] = useState<ServicioReproductivo | null>(null);
   const [editPar, setEditPar] = useState<Parto | null>(null);
+  const [modeServ, setModeServ] = useState<"view" | "edit">("view");
+  const [modePar, setModePar] = useState<"view" | "edit">("view");
   const [filtroAnimal, setFiltroAnimal] = useState("");
   const [filtroResultado, setFiltroResultado] = useState<ResultadoServicio | "">("");
   const [desde, setDesde] = useState("");
@@ -82,6 +84,7 @@ export default function ReproduccionPage() {
               className="btn btn-primary"
               onClick={() => {
                 setEditServ(null);
+                setModeServ("edit");
                 setOpenServ(true);
               }}
             >
@@ -92,6 +95,7 @@ export default function ReproduccionPage() {
               className="btn btn-primary"
               onClick={() => {
                 setEditPar(null);
+                setModePar("edit");
                 setOpenPar(true);
               }}
             >
@@ -178,7 +182,15 @@ export default function ReproduccionPage() {
                 const macho = db!.animales.find((a) => a.id === s.machoIdOReferencia);
                 const dias = s.fechaProbableParto ? diasHasta(s.fechaProbableParto) : null;
                 return (
-                  <tr key={s.id}>
+                  <tr
+                    key={s.id}
+                    onClick={() => {
+                      setEditServ(s);
+                      setModeServ("view");
+                      setOpenServ(true);
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
                     <td>{fmtDate(s.fechaServicio)}</td>
                     <td>
                       {hembra?.nombre ?? "—"}{" "}
@@ -225,8 +237,10 @@ export default function ReproduccionPage() {
                     <td className="text-right">
                       <button
                         className="text-xs text-accent hover:underline"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEditServ(s);
+                          setModeServ("edit");
                           setOpenServ(true);
                         }}
                       >
@@ -260,7 +274,15 @@ export default function ReproduccionPage() {
                 const madre = db!.animales.find((a) => a.id === p.madreId);
                 const ternero = db!.animales.find((a) => a.id === p.terneroId);
                 return (
-                  <tr key={p.id}>
+                  <tr
+                    key={p.id}
+                    onClick={() => {
+                      setEditPar(p);
+                      setModePar("view");
+                      setOpenPar(true);
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
                     <td>{fmtDate(p.fecha)}</td>
                     <td>
                       {madre?.nombre ?? "—"}{" "}
@@ -283,8 +305,10 @@ export default function ReproduccionPage() {
                     <td className="text-right">
                       <button
                         className="text-xs text-accent hover:underline"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEditPar(p);
+                          setModePar("edit");
                           setOpenPar(true);
                         }}
                       >
@@ -302,10 +326,22 @@ export default function ReproduccionPage() {
       <Modal
         open={openServ}
         onClose={() => setOpenServ(false)}
-        title={editServ ? "Editar servicio" : "Nuevo servicio reproductivo"}
+        title={editServ ? (modeServ === "view" ? "Detalle de servicio" : "Editar servicio") : "Nuevo servicio reproductivo"}
       >
+        {editServ && modeServ === "view" && (
+          <div className="flex justify-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => setModeServ("edit")}
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem" }}
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <ServicioForm
           initial={editServ}
+          readOnly={!!editServ && modeServ === "view"}
           onSaved={() => setOpenServ(false)}
           onCancel={() => setOpenServ(false)}
         />
@@ -314,10 +350,22 @@ export default function ReproduccionPage() {
       <Modal
         open={openPar}
         onClose={() => setOpenPar(false)}
-        title={editPar ? "Editar parto" : "Registrar parto"}
+        title={editPar ? (modePar === "view" ? "Detalle de parto" : "Editar parto") : "Registrar parto"}
       >
+        {editPar && modePar === "view" && (
+          <div className="flex justify-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => setModePar("edit")}
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem" }}
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <PartoForm
           initial={editPar}
+          readOnly={!!editPar && modePar === "view"}
           onSaved={() => setOpenPar(false)}
           onCancel={() => setOpenPar(false)}
         />
@@ -328,10 +376,12 @@ export default function ReproduccionPage() {
 
 function ServicioForm({
   initial,
+  readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: ServicioReproductivo | null;
+  readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -377,6 +427,7 @@ function ServicioForm({
 
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+      <fieldset disabled={readOnly} className="contents">
       <FormRow label="Hembra" required colspan={2}>
         <select
           value={form.hembraId}
@@ -459,29 +510,39 @@ function ServicioForm({
           onChange={(e) => setForm({ ...form, notas: e.target.value })}
         />
       </FormRow>
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <div>
-          {initial ? (
-            <button type="button" className="btn btn-danger" onClick={remove}>
-              Eliminar
-            </button>
-          ) : null}
+      </fieldset>
+      {!readOnly && (
+        <div className="md:col-span-2 flex items-center justify-between pt-2">
+          <div>
+            {initial ? (
+              <button type="button" className="btn btn-danger" onClick={remove}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
+            <button type="submit" className="btn btn-primary">Guardar</button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
-          <button type="submit" className="btn btn-primary">Guardar</button>
+      )}
+      {readOnly && (
+        <div className="md:col-span-2 flex justify-end pt-2">
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cerrar</button>
         </div>
-      </div>
+      )}
     </form>
   );
 }
 
 function PartoForm({
   initial,
+  readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: Parto | null;
+  readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -554,6 +615,7 @@ function PartoForm({
 
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+      <fieldset disabled={readOnly} className="contents">
       <FormRow label="Madre" required colspan={2}>
         <select
           value={form.madreId}
@@ -634,19 +696,27 @@ function PartoForm({
           )}
         </>
       )}
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <div>
-          {initial ? (
-            <button type="button" className="btn btn-danger" onClick={remove}>
-              Eliminar
-            </button>
-          ) : null}
+      </fieldset>
+      {!readOnly && (
+        <div className="md:col-span-2 flex items-center justify-between pt-2">
+          <div>
+            {initial ? (
+              <button type="button" className="btn btn-danger" onClick={remove}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
+            <button type="submit" className="btn btn-primary">Guardar</button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
-          <button type="submit" className="btn btn-primary">Guardar</button>
+      )}
+      {readOnly && (
+        <div className="md:col-span-2 flex justify-end pt-2">
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cerrar</button>
         </div>
-      </div>
+      )}
     </form>
   );
 }

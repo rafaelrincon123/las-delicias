@@ -12,6 +12,7 @@ export default function SanidadPage() {
   const { db, ready } = useDB();
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<SanidadEvento | null>(null);
+  const [mode, setMode] = useState<"view" | "edit">("view");
   const [tab, setTab] = useState<"historial" | "proximos">("historial");
   const [q, setQ] = useState("");
   const [filtroAnimal, setFiltroAnimal] = useState("");
@@ -84,6 +85,7 @@ export default function SanidadPage() {
           className="btn btn-primary"
           onClick={() => {
             setEdit(null);
+            setMode("edit");
             setOpen(true);
           }}
         >
@@ -175,7 +177,15 @@ export default function SanidadPage() {
                   const animal = db!.animales.find((a) => a.id === e.animalId);
                   const vencido = (e.dias ?? 0) < 0;
                   return (
-                    <tr key={e.id}>
+                    <tr
+                      key={e.id}
+                      onClick={() => {
+                        setEdit(e);
+                        setMode("view");
+                        setOpen(true);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
                       <td>{fmtDate(e.proximoEventoFecha)}</td>
                       <td>
                         {animal?.nombre ?? "—"}{" "}
@@ -221,7 +231,15 @@ export default function SanidadPage() {
               {eventos.map((e) => {
                 const animal = db!.animales.find((a) => a.id === e.animalId);
                 return (
-                  <tr key={e.id}>
+                  <tr
+                    key={e.id}
+                    onClick={() => {
+                      setEdit(e);
+                      setMode("view");
+                      setOpen(true);
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
                     <td>{fmtDate(e.fecha)}</td>
                     <td>
                       {animal?.nombre ?? "—"}{" "}
@@ -240,8 +258,10 @@ export default function SanidadPage() {
                     <td className="text-right">
                       <button
                         className="text-xs text-accent hover:underline"
-                        onClick={() => {
+                        onClick={(ev) => {
+                          ev.stopPropagation();
                           setEdit(e);
+                          setMode("edit");
                           setOpen(true);
                         }}
                       >
@@ -259,10 +279,22 @@ export default function SanidadPage() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={edit ? "Editar evento" : "Nuevo evento sanitario"}
+        title={edit ? (mode === "view" ? "Detalle de evento" : "Editar evento") : "Nuevo evento sanitario"}
       >
+        {edit && mode === "view" && (
+          <div className="flex justify-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => setMode("edit")}
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem" }}
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <SanidadForm
           initial={edit}
+          readOnly={!!edit && mode === "view"}
           onSaved={() => setOpen(false)}
           onCancel={() => setOpen(false)}
         />
@@ -273,10 +305,12 @@ export default function SanidadPage() {
 
 function SanidadForm({
   initial,
+  readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: SanidadEvento | null;
+  readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -318,6 +352,7 @@ function SanidadForm({
 
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+      <fieldset disabled={readOnly} className="contents">
       <FormRow label="Animal" required colspan={2}>
         <select
           value={form.animalId}
@@ -395,23 +430,33 @@ function SanidadForm({
           onChange={(e) => setForm({ ...form, notas: e.target.value })}
         />
       </FormRow>
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <div>
-          {initial ? (
-            <button type="button" className="btn btn-danger" onClick={remove}>
-              Eliminar
+      </fieldset>
+      {!readOnly && (
+        <div className="md:col-span-2 flex items-center justify-between pt-2">
+          <div>
+            {initial ? (
+              <button type="button" className="btn btn-danger" onClick={remove}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>
+              Cancelar
             </button>
-          ) : null}
+            <button type="submit" className="btn btn-primary">
+              Guardar
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
+      )}
+      {readOnly && (
+        <div className="md:col-span-2 flex justify-end pt-2">
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary">
-            Guardar
+            Cerrar
           </button>
         </div>
-      </div>
+      )}
     </form>
   );
 }

@@ -13,6 +13,7 @@ export default function PotrerosPage() {
   const { db, ready } = useDB();
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<Potrero | null>(null);
+  const [mode, setMode] = useState<"view" | "edit">("view");
 
   if (!ready) return <div className="text-muted">Cargando…</div>;
 
@@ -23,6 +24,7 @@ export default function PotrerosPage() {
           className="btn btn-primary"
           onClick={() => {
             setEdit(null);
+            setMode("edit");
             setOpen(true);
           }}
         >
@@ -40,13 +42,24 @@ export default function PotrerosPage() {
           const sobre = ocupacion > 100;
           const shares = participacionPorPotrero(p.id, db!.animales, db!.propietarios);
           return (
-            <div key={p.id} className="card">
+            <div
+              key={p.id}
+              className="card"
+              onClick={() => {
+                setEdit(p);
+                setMode("view");
+                setOpen(true);
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <div className="flex items-baseline justify-between">
                 <h3 className="text-base font-semibold tracking-tight">{p.nombre}</h3>
                 <button
                   className="text-xs text-accent hover:underline"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setEdit(p);
+                    setMode("edit");
                     setOpen(true);
                   }}
                 >
@@ -139,10 +152,22 @@ export default function PotrerosPage() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={edit ? `Editar ${edit.nombre}` : "Nuevo potrero"}
+        title={edit ? (mode === "view" ? `Detalle · ${edit.nombre}` : `Editar ${edit.nombre}`) : "Nuevo potrero"}
       >
+        {edit && mode === "view" && (
+          <div className="flex justify-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => setMode("edit")}
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem" }}
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <PotreroForm
           initial={edit}
+          readOnly={!!edit && mode === "view"}
           onSaved={() => setOpen(false)}
           onCancel={() => setOpen(false)}
         />
@@ -153,10 +178,12 @@ export default function PotrerosPage() {
 
 function PotreroForm({
   initial,
+  readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: Potrero | null;
+  readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -192,6 +219,7 @@ function PotreroForm({
 
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+      <fieldset disabled={readOnly} className="contents">
       <FormRow label="Nombre" required colspan={2}>
         <input
           value={form.nombre}
@@ -220,23 +248,33 @@ function PotreroForm({
           onChange={(e) => setForm({ ...form, notas: e.target.value })}
         />
       </FormRow>
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <div>
-          {initial ? (
-            <button type="button" className="btn btn-danger" onClick={remove}>
-              Eliminar
+      </fieldset>
+      {!readOnly && (
+        <div className="md:col-span-2 flex items-center justify-between pt-2">
+          <div>
+            {initial ? (
+              <button type="button" className="btn btn-danger" onClick={remove}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>
+              Cancelar
             </button>
-          ) : null}
+            <button type="submit" className="btn btn-primary">
+              Guardar
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
+      )}
+      {readOnly && (
+        <div className="md:col-span-2 flex justify-end pt-2">
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary">
-            Guardar
+            Cerrar
           </button>
         </div>
-      </div>
+      )}
     </form>
   );
 }

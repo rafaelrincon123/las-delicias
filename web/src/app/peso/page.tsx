@@ -20,6 +20,7 @@ export default function PesoPage() {
   const { db, ready } = useDB();
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<Pesaje | null>(null);
+  const [mode, setMode] = useState<"view" | "edit">("view");
   const [filtroAnimal, setFiltroAnimal] = useState("");
   const [filtroTipo, setFiltroTipo] = useState<TipoPesaje | "">("");
   const [desde, setDesde] = useState("");
@@ -135,6 +136,7 @@ export default function PesoPage() {
           className="btn btn-primary"
           onClick={() => {
             setEdit(null);
+            setMode("edit");
             setOpen(true);
           }}
         >
@@ -333,7 +335,15 @@ export default function PesoPage() {
                     gan = ((p.pesoKg - anterior.pesoKg) / dias) * 1000;
                 }
                 return (
-                  <tr key={p.id}>
+                  <tr
+                    key={p.id}
+                    onClick={() => {
+                      setEdit(p);
+                      setMode("view");
+                      setOpen(true);
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
                     <td>{fmtDate(p.fecha)}</td>
                     <td>
                       {animal?.nombre ?? "—"}{" "}
@@ -355,8 +365,10 @@ export default function PesoPage() {
                     <td className="text-right">
                       <button
                         className="text-xs text-accent hover:underline"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEdit(p);
+                          setMode("edit");
                           setOpen(true);
                         }}
                       >
@@ -374,10 +386,22 @@ export default function PesoPage() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={edit ? "Editar pesaje" : "Registrar pesaje"}
+        title={edit ? (mode === "view" ? "Detalle de pesaje" : "Editar pesaje") : "Registrar pesaje"}
       >
+        {edit && mode === "view" && (
+          <div className="flex justify-end mb-3">
+            <button
+              className="btn btn-primary"
+              onClick={() => setMode("edit")}
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.8rem" }}
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <PesajeForm
           initial={edit}
+          readOnly={!!edit && mode === "view"}
           onSaved={() => setOpen(false)}
           onCancel={() => setOpen(false)}
         />
@@ -425,10 +449,12 @@ function StatBox({
 
 function PesajeForm({
   initial,
+  readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: Pesaje | null;
+  readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -466,6 +492,7 @@ function PesajeForm({
 
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+      <fieldset disabled={readOnly} className="contents">
       <FormRow label="Animal" required colspan={2}>
         <select
           value={form.animalId}
@@ -522,23 +549,33 @@ function PesajeForm({
           onChange={(e) => setForm({ ...form, notas: e.target.value })}
         />
       </FormRow>
-      <div className="md:col-span-2 flex items-center justify-between pt-2">
-        <div>
-          {initial ? (
-            <button type="button" className="btn btn-danger" onClick={remove}>
-              Eliminar
+      </fieldset>
+      {!readOnly && (
+        <div className="md:col-span-2 flex items-center justify-between pt-2">
+          <div>
+            {initial ? (
+              <button type="button" className="btn btn-danger" onClick={remove}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>
+              Cancelar
             </button>
-          ) : null}
+            <button type="submit" className="btn btn-primary">
+              Guardar
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
+      )}
+      {readOnly && (
+        <div className="md:col-span-2 flex justify-end pt-2">
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary">
-            Guardar
+            Cerrar
           </button>
         </div>
-      </div>
+      )}
     </form>
   );
 }
