@@ -180,7 +180,7 @@ html, body {
 
 /* ═══════════════════════ FORMS ═══════════════════════ */
 input, select, textarea {
-  background: var(--surface);
+  background-color: var(--surface);
   color: var(--fg);
   border: 1px solid var(--rule);
   border-radius: 8px;
@@ -188,7 +188,7 @@ input, select, textarea {
   font-size: 0.9rem;
   width: 100%;
   font-family: inherit;
-  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
   backdrop-filter: blur(10px);
 }
 input::placeholder, textarea::placeholder { color: var(--subtle); }
@@ -197,18 +197,27 @@ input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-soft);
-  background: var(--surface-2);
+  background-color: var(--surface-2);
 }
 select {
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA39F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.7rem center;
   padding-right: 2rem;
 }
+select:focus {
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+}
 :root[data-theme="light"] select {
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2352584E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
+/* Evita que el webview de Android pinte su patron nativo detras del picker */
+select::-ms-expand { display: none; }
+select option { background-color: var(--surface); color: var(--fg); }
 
 *:focus-visible {
   outline: 2px solid var(--primary);

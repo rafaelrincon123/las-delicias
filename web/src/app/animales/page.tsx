@@ -869,30 +869,70 @@ function AnimalForm({
         </select>
       </FormRow>
       <FormRow label="Madre">
-        <select
-          value={form.madreId ?? ""}
-          onChange={(e) => setForm({ ...form, madreId: e.target.value || undefined })}
-        >
-          <option value="">— desconocida —</option>
-          {db?.animales.filter((a) => a.sexo === "hembra" && a.id !== form.id).map((a) => (
-            <option key={a.id} value={a.id}>
-              #{a.nroIdentificacion} {a.nombre}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-col gap-1.5">
+          <select
+            value={form.madreId ?? ""}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                madreId: e.target.value || undefined,
+                madreNombre: e.target.value ? undefined : form.madreNombre,
+              })
+            }
+          >
+            <option value="">Del hato…</option>
+            {db?.animales.filter((a) => a.sexo === "hembra" && a.id !== form.id).map((a) => (
+              <option key={a.id} value={a.id}>
+                #{a.nroIdentificacion} {a.nombre}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={form.madreNombre ?? ""}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                madreNombre: e.target.value || undefined,
+                madreId: e.target.value ? undefined : form.madreId,
+              })
+            }
+            placeholder="…o escribir otro nombre (madre externa)"
+          />
+        </div>
       </FormRow>
       <FormRow label="Padre">
-        <select
-          value={form.padreId ?? ""}
-          onChange={(e) => setForm({ ...form, padreId: e.target.value || undefined })}
-        >
-          <option value="">— desconocido —</option>
-          {db?.animales.filter((a) => a.sexo === "macho" && a.id !== form.id).map((a) => (
-            <option key={a.id} value={a.id}>
-              #{a.nroIdentificacion} {a.nombre}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-col gap-1.5">
+          <select
+            value={form.padreId ?? ""}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                padreId: e.target.value || undefined,
+                padreNombre: e.target.value ? undefined : form.padreNombre,
+              })
+            }
+          >
+            <option value="">Del hato…</option>
+            {db?.animales.filter((a) => a.sexo === "macho" && a.id !== form.id).map((a) => (
+              <option key={a.id} value={a.id}>
+                #{a.nroIdentificacion} {a.nombre}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={form.padreNombre ?? ""}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                padreNombre: e.target.value || undefined,
+                padreId: e.target.value ? undefined : form.padreId,
+              })
+            }
+            placeholder="…o escribir otro nombre (padre externo)"
+          />
+        </div>
       </FormRow>
       <FormRow label="Notas" colspan={2}>
         <textarea
