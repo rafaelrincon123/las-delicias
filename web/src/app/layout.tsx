@@ -6,8 +6,21 @@ import NavShell from "@/components/NavShell";
 import AuthGate from "@/components/AuthGate";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://las-delicias-mddw.vercel.app"),
   title: "Las Delicias · Sistema ganadero",
   description: "Sistema de gestión del hato de Las Delicias",
+  openGraph: {
+    title: "Ganadería Las Delicias",
+    description: "Tradición familiar, genética y progreso.",
+    type: "website",
+    locale: "es_CO",
+    siteName: "Las Delicias",
+  },
+  twitter: {
+    card: "summary",
+    title: "Ganadería Las Delicias",
+    description: "Tradición familiar, genética y progreso.",
+  },
 };
 
 export const viewport: Viewport = {
