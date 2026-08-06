@@ -584,32 +584,54 @@ function TareaForm({
         />
       </FormRow>
       <FormRow label="Prioridad" required>
-        <select
-          value={form.prioridad}
-          onChange={(e) =>
-            setForm({ ...form, prioridad: e.target.value as PrioridadTarea })
-          }
-        >
-          {PRIORIDADES_TAREA.map((p) => (
-            <option key={p.value} value={p.value}>
-              {p.label}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-wrap gap-1.5">
+          {PRIORIDADES_TAREA.map((p) => {
+            const on = form.prioridad === p.value;
+            return (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setForm({ ...form, prioridad: p.value })}
+                className="btn"
+                style={{
+                  padding: "0.35rem 0.9rem",
+                  fontSize: "0.78rem",
+                  background: on ? "var(--primary)" : "var(--surface-2)",
+                  color: on ? "var(--primary-ink)" : "var(--fg)",
+                  border: `1px solid ${on ? "var(--primary)" : "var(--rule)"}`,
+                }}
+                aria-pressed={on}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
       </FormRow>
       <FormRow label="Categoría" required>
-        <select
-          value={form.categoria}
-          onChange={(e) =>
-            setForm({ ...form, categoria: e.target.value as CategoriaTarea })
-          }
-        >
-          {CATEGORIAS_TAREA.map((c) => (
-            <option key={c.value} value={c.value}>
-              {c.label}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-wrap gap-1.5">
+          {CATEGORIAS_TAREA.map((c) => {
+            const on = form.categoria === c.value;
+            return (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => setForm({ ...form, categoria: c.value })}
+                className="btn"
+                style={{
+                  padding: "0.35rem 0.75rem",
+                  fontSize: "0.78rem",
+                  background: on ? "var(--primary)" : "var(--surface-2)",
+                  color: on ? "var(--primary-ink)" : "var(--fg)",
+                  border: `1px solid ${on ? "var(--primary)" : "var(--rule)"}`,
+                }}
+                aria-pressed={on}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
       </FormRow>
       <FormRow label={`${isRealizada ? "Quiénes la realizaron" : "Asignada a"}${seleccionAsignado.length > 0 ? ` (${seleccionAsignado.length})` : ""}`} colspan={2}>
         {(db?.propietarios ?? []).length === 0 ? (
