@@ -16,6 +16,7 @@ import {
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import PhotoInput from "@/components/PhotoInput";
+import HeroStat from "@/components/HeroStat";
 
 const ESTADOS: { value: EstadoAnimal; label: string }[] = [
   { value: "activo", label: "Activo" },
@@ -50,10 +51,30 @@ export default function AnimalesPage() {
       .sort((a, b) => a.nroIdentificacion.localeCompare(b.nroIdentificacion));
   }, [db, q, filtroCat, filtroEstado]);
 
-  if (!ready) return <div className="text-muted">Cargando…</div>;
+  const stats = useMemo(() => {
+    if (!db) return null;
+    const activos = db.animales.filter((a) => a.estado === "activo");
+    const vacas = activos.filter((a) => a.categoria === "vaca").length;
+    const crias = activos.filter(
+      (a) => a.categoria === "ternero" || a.categoria === "ternera"
+    ).length;
+    const machos = activos.filter(
+      (a) => a.categoria === "toro" || a.categoria === "novillo"
+    ).length;
+    return { total: activos.length, vacas, crias, machos };
+  }, [db]);
+
+  if (!ready || !stats) return <div className="text-muted">Cargando…</div>;
 
   return (
     <div className="space-y-4">
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-3">
+        <HeroStat label="Total activos" value={stats.total} tone="forest" />
+        <HeroStat label="Vacas" value={stats.vacas} tone="moss" />
+        <HeroStat label="Crías" value={stats.crias} tone="citrus" />
+        <HeroStat label="Machos" value={stats.machos} tone="copper" />
+      </section>
+
       <div className="flex flex-wrap items-center gap-2 justify-between">
         <div className="flex items-center gap-2 flex-wrap">
           <input

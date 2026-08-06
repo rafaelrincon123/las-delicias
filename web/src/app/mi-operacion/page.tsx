@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/useAuth";
 import { fmtDate, fmtCOP, fmtNumber, fmtPct, edadTexto, diasHasta } from "@/lib/format";
 import { CATEGORIAS_ANIMAL, CATEGORIAS_GASTO } from "@/lib/types";
 import { miParticipacion } from "@/lib/participacion";
+import HeroStat from "@/components/HeroStat";
 
 export default function MiOperacionPage() {
   const { user } = useAuth();
@@ -180,37 +181,37 @@ export default function MiOperacionPage() {
       </section>
 
       {/* KPIs */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KPI
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-3">
+        <HeroStat
           label="Mis animales"
           value={data.misAnimalesActivos.length}
+          tone="forest"
           sub={
             data.misAnimales.length > data.misAnimalesActivos.length
-              ? `+ ${data.misAnimales.length - data.misAnimalesActivos.length} inactivos`
+              ? `+${data.misAnimales.length - data.misAnimalesActivos.length} inactivos`
               : "todos activos"
           }
-          accent="primary"
         />
-        <KPI
+        <HeroStat
           label="Mis gastos 30 d"
-          value={fmtCOP(data.gastos30).replace("COP", "").trim()}
-          sub={`Histórico: ${fmtCOP(data.gastosTotales)}`}
-          accent="danger"
-          isText
+          value={fmtCOP(data.gastos30)}
+          tone="coral"
+          size="sm"
+          sub={`Total: ${fmtCOP(data.gastosTotales)}`}
         />
-        <KPI
+        <HeroStat
           label="Mis ingresos 30 d"
-          value={fmtCOP(data.ingresos30).replace("COP", "").trim()}
-          sub={`Histórico: ${fmtCOP(data.ingresosTotales)}`}
-          accent="primary"
-          isText
+          value={fmtCOP(data.ingresos30)}
+          tone="moss"
+          size="sm"
+          sub={`Total: ${fmtCOP(data.ingresosTotales)}`}
         />
-        <KPI
+        <HeroStat
           label="Balance 30 d"
-          value={fmtCOP(data.balance30).replace("COP", "").trim()}
+          value={fmtCOP(data.balance30)}
+          tone={data.balance30 >= 0 ? "citrus" : "coral"}
+          size="sm"
           sub={`Total: ${fmtCOP(data.balanceTotal)}`}
-          accent={data.balance30 >= 0 ? "primary" : "danger"}
-          isText
         />
       </section>
 
@@ -456,31 +457,6 @@ export default function MiOperacionPage() {
           />
         </div>
       </section>
-    </div>
-  );
-}
-
-function KPI({
-  label,
-  value,
-  sub,
-  accent,
-  isText,
-}: {
-  label: string;
-  value: number | string;
-  sub?: React.ReactNode;
-  accent: "primary" | "danger";
-  isText?: boolean;
-}) {
-  const color = accent === "danger" ? "var(--danger)" : "var(--primary)";
-  return (
-    <div className="card-tight card">
-      <div className="eyebrow">{label}</div>
-      <div className={"num mt-1 " + (isText ? "text-2xl" : "text-4xl")} style={{ color }}>
-        {value}
-      </div>
-      {sub ? <div className="text-xs text-muted mt-2">{sub}</div> : null}
     </div>
   );
 }

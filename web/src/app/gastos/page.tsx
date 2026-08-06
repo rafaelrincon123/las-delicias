@@ -14,7 +14,7 @@ import {
 } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
-import StatCard from "@/components/StatCard";
+import HeroStat from "@/components/HeroStat";
 
 /**
  * Devuelve el conjunto efectivo de participantes que ya pagaron su parte.
@@ -95,20 +95,23 @@ export default function GastosPage() {
   return (
     <div className="space-y-4">
       <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <StatCard
+        <HeroStat
           label="Ingresos 30 d"
           value={fmtCOP(totales.totalI)}
-          accent="success"
+          tone="moss"
+          size="sm"
         />
-        <StatCard
+        <HeroStat
           label="Gastos 30 d"
           value={fmtCOP(totales.totalG)}
-          accent="danger"
+          tone="coral"
+          size="sm"
         />
-        <StatCard
+        <HeroStat
           label="Balance 30 d"
-          value={<span className={totales.balance >= 0 ? "text-success" : "text-danger"}>{fmtCOP(totales.balance)}</span>}
-          accent={totales.balance >= 0 ? "success" : "danger"}
+          value={fmtCOP(totales.balance)}
+          tone={totales.balance >= 0 ? "citrus" : "coral"}
+          size="sm"
         />
       </section>
 

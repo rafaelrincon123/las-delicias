@@ -14,6 +14,7 @@ import {
 } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
+import HeroStat from "@/components/HeroStat";
 import { IconCheck, IconAlert, IconHealth, IconRepro } from "@/components/icons";
 
 type UnifiedItem = {
@@ -37,18 +38,6 @@ const CAT_COLOR: Record<CategoriaTarea, string> = {
   reproduccion: "var(--primary)",
   infraestructura: "var(--muted)",
   otros: "var(--muted)",
-};
-
-// ─── Paleta HeroStat (tomada del home) ────────────────────────────────────
-type StatTone = "moss" | "coral" | "citrus" | "copper";
-const STAT_TONES: Record<
-  StatTone,
-  { from: string; to: string; ink: string; fg: string; shadow: string }
-> = {
-  moss:   { from: "#E4EED4", to: "#A9C177", ink: "#3E5A24", fg: "#1D2F10", shadow: "rgba(120,150,80,0.30)" },
-  coral:  { from: "#F8D5D0", to: "#E48A82", ink: "#7A2A21", fg: "#3E110C", shadow: "rgba(196,90,80,0.30)" },
-  citrus: { from: "#F6EFC2", to: "#DFC85E", ink: "#6B5410", fg: "#2E2306", shadow: "rgba(180,160,60,0.30)" },
-  copper: { from: "#F8E1C1", to: "#E4A46A", ink: "#7A4A1E", fg: "#3E230C", shadow: "rgba(196,128,60,0.32)" },
 };
 
 export default function TareasPage() {
@@ -391,35 +380,6 @@ export default function TareasPage() {
           />
         )}
       </Modal>
-    </div>
-  );
-}
-
-function HeroStat({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: StatTone;
-}) {
-  const t = STAT_TONES[tone];
-  return (
-    <div
-      className="hero-stat"
-      style={
-        {
-          "--hs-from": t.from,
-          "--hs-to": t.to,
-          "--hs-ink": t.ink,
-          "--hs-fg": t.fg,
-          "--hs-shadow": t.shadow,
-        } as React.CSSProperties
-      }
-    >
-      <div className="hero-stat-label">{label}</div>
-      <div className="hero-stat-num">{value}</div>
     </div>
   );
 }

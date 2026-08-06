@@ -731,6 +731,11 @@ select {
   letter-spacing: 0.14em;
   color: color-mix(in oklab, var(--hs-fg) 62%, transparent);
 }
+.hero-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
 .hero-stat-num {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
@@ -740,9 +745,21 @@ select {
   letter-spacing: -0.02em;
   color: var(--hs-ink);
 }
+.hero-stat-num.sm {
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+.hero-stat-sub {
+  font-size: 0.65rem;
+  line-height: 1.25;
+  color: color-mix(in oklab, var(--hs-fg) 55%, transparent);
+  margin-top: 0.15rem;
+}
 @media (min-width: 768px) {
   .hero-stat { min-height: 92px; padding: 0.85rem 1rem 0.95rem; }
   .hero-stat-num { font-size: 2rem; }
+  .hero-stat-num.sm { font-size: 1.35rem; }
+  .hero-stat-sub { font-size: 0.68rem; }
 }
 :root:not([data-theme="light"]) .hero-stat {
   background:
@@ -753,6 +770,7 @@ select {
 }
 :root:not([data-theme="light"]) .hero-stat-label { color: rgba(255, 255, 255, 0.7); }
 :root:not([data-theme="light"]) .hero-stat-num { color: white; }
+:root:not([data-theme="light"]) .hero-stat-sub { color: rgba(255, 255, 255, 0.62); }
 
 /* ═══════════════════════ TABLES ═══════════════════════ */
 .table {
