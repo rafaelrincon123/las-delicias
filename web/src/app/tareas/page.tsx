@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
@@ -39,17 +39,26 @@ const CAT_COLOR: Record<CategoriaTarea, string> = {
   otros: "var(--muted)",
 };
 
-type CreateMode = "programada" | "realizada";
+// ─── Paleta HeroStat (tomada del home) ────────────────────────────────────
+type StatTone = "moss" | "coral" | "citrus" | "copper";
+const STAT_TONES: Record<
+  StatTone,
+  { from: string; to: string; ink: string; fg: string; shadow: string }
+> = {
+  moss:   { from: "#E4EED4", to: "#A9C177", ink: "#3E5A24", fg: "#1D2F10", shadow: "rgba(120,150,80,0.30)" },
+  coral:  { from: "#F8D5D0", to: "#E48A82", ink: "#7A2A21", fg: "#3E110C", shadow: "rgba(196,90,80,0.30)" },
+  citrus: { from: "#F6EFC2", to: "#DFC85E", ink: "#6B5410", fg: "#2E2306", shadow: "rgba(180,160,60,0.30)" },
+  copper: { from: "#F8E1C1", to: "#E4A46A", ink: "#7A4A1E", fg: "#3E230C", shadow: "rgba(196,128,60,0.32)" },
+};
 
 export default function TareasPage() {
   const { db, ready } = useDB();
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<Tarea | null>(null);
   const [modalMode, setModalMode] = useState<"view" | "edit">("view");
-  const [createMode, setCreateMode] = useState<CreateMode>("programada");
   const [tab, setTab] = useState<"pendientes" | "hechas">("pendientes");
   const [filtroCat, setFiltroCat] = useState<CategoriaTarea | "todas">("todas");
-  const [view, setView] = useState<"lista" | "calendario">("lista");
+  const [view, setView] = useState<"lista" | "calendario">("calendario");
   const [calMonth, setCalMonth] = useState<Date>(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -173,61 +182,49 @@ export default function TareasPage() {
     );
   }
 
+  function openNueva() {
+    setEdit(null);
+    setModalMode("edit");
+    setOpen(true);
+  }
+
   return (
     <div className="space-y-4">
-      {/* Stat row */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <MiniStat label="Pendientes" value={stats.total} accent="primary" />
-        <MiniStat label="Vencidas" value={stats.vencidas} accent="danger" />
-        <MiniStat label="Para hoy" value={stats.hoy} accent="accent" />
-        <MiniStat label="Esta semana" value={stats.semana} accent="primary" />
+      {/* Stat row · colored gradient tiles */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-3">
+        <HeroStat label="Pendientes" value={stats.total} tone="moss" />
+        <HeroStat label="Vencidas" value={stats.vencidas} tone="coral" />
+        <HeroStat label="Para hoy" value={stats.hoy} tone="citrus" />
+        <HeroStat label="Esta semana" value={stats.semana} tone="copper" />
       </section>
 
-      {/* Controls */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex gap-2 items-center">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center gap-2 flex-wrap">
           <div
             className="inline-flex rounded-lg p-0.5"
             style={{ background: "var(--surface-2)", border: "1px solid var(--rule)" }}
           >
             <button
-              className={"btn " + (view === "lista" ? "btn-primary" : "btn-ghost")}
-              style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
-              onClick={() => setView("lista")}
-            >
-              Lista
-            </button>
-            <button
               className={"btn " + (view === "calendario" ? "btn-primary" : "btn-ghost")}
-              style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
+              style={{ padding: "0.4rem 0.85rem", fontSize: "0.82rem" }}
               onClick={() => setView("calendario")}
             >
               Calendario
             </button>
+            <button
+              className={"btn " + (view === "lista" ? "btn-primary" : "btn-ghost")}
+              style={{ padding: "0.4rem 0.85rem", fontSize: "0.82rem" }}
+              onClick={() => setView("lista")}
+            >
+              Lista
+            </button>
           </div>
-          {view === "lista" && (
-            <>
-              <button
-                className={"btn " + (tab === "pendientes" ? "btn-primary" : "btn-ghost")}
-                onClick={() => setTab("pendientes")}
-              >
-                Pendientes ({unified.filter((i) => !i.completada).length})
-              </button>
-              <button
-                className={"btn " + (tab === "hechas" ? "btn-primary" : "btn-ghost")}
-                onClick={() => setTab("hechas")}
-              >
-                Hechas ({unified.filter((i) => i.completada).length})
-              </button>
-            </>
-          )}
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
           <select
             value={filtroCat}
             onChange={(e) => setFiltroCat(e.target.value as CategoriaTarea | "todas")}
             className="!w-auto"
-            style={{ minWidth: "160px" }}
+            style={{ minWidth: "160px", flex: 1 }}
           >
             <option value="todas">Todas las categorías</option>
             {CATEGORIAS_TAREA.map((c) => (
@@ -236,35 +233,50 @@ export default function TareasPage() {
               </option>
             ))}
           </select>
-          <button
-            className="btn btn-ghost"
-            onClick={() => {
-              setEdit(null);
-              setCreateMode("realizada");
-              setModalMode("edit");
-              setOpen(true);
-            }}
-            title="Registrar algo que ya se hizo"
-          >
-            ✓ Registrar realizada
-          </button>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setEdit(null);
-              setCreateMode("programada");
-              setModalMode("edit");
-              setOpen(true);
-            }}
-            title="Programar una tarea pendiente"
-          >
-            + Programar tarea
-          </button>
         </div>
+
+        {view === "lista" && (
+          <div className="flex gap-2 items-center">
+            <button
+              className={"btn " + (tab === "pendientes" ? "btn-primary" : "btn-ghost")}
+              onClick={() => setTab("pendientes")}
+            >
+              Pendientes ({unified.filter((i) => !i.completada).length})
+            </button>
+            <button
+              className={"btn " + (tab === "hechas" ? "btn-primary" : "btn-ghost")}
+              onClick={() => setTab("hechas")}
+            >
+              Hechas ({unified.filter((i) => i.completada).length})
+            </button>
+          </div>
+        )}
+
+        <button
+          className="btn btn-primary w-full md:w-auto md:self-start"
+          onClick={openNueva}
+          style={{ padding: "0.65rem 1.1rem", fontSize: "0.92rem", fontWeight: 600 }}
+        >
+          + Nueva actividad
+        </button>
       </div>
 
-      {/* List or calendar */}
-      {view === "lista" ? (
+      {/* Main content */}
+      {view === "calendario" ? (
+        <MonthCalendar
+          month={calMonth}
+          setMonth={setCalMonth}
+          items={visiblesCal}
+          onEditTarea={(t) => {
+            setEdit(t);
+            setModalMode("view");
+            setOpen(true);
+          }}
+          onDayClick={(dateISO, dayItems) => {
+            setDayModal({ dateISO, items: dayItems });
+          }}
+        />
+      ) : (
         <div className="card p-0">
           {visibles.length === 0 ? (
             <div className="p-8 text-center text-muted text-sm">
@@ -297,20 +309,6 @@ export default function TareasPage() {
             </ul>
           )}
         </div>
-      ) : (
-        <MonthCalendar
-          month={calMonth}
-          setMonth={setCalMonth}
-          items={visiblesCal}
-          onEditTarea={(t) => {
-            setEdit(t);
-            setModalMode("view");
-            setOpen(true);
-          }}
-          onDayClick={(dateISO, dayItems) => {
-            setDayModal({ dateISO, items: dayItems });
-          }}
-        />
       )}
 
       <Modal
@@ -319,11 +317,9 @@ export default function TareasPage() {
         title={
           edit
             ? modalMode === "view"
-              ? "Detalle de tarea"
-              : "Editar tarea"
-            : createMode === "realizada"
-            ? "Registrar actividad realizada"
-            : "Programar tarea"
+              ? "Detalle de actividad"
+              : "Editar actividad"
+            : "Nueva actividad"
         }
         eyebrow="Actividades"
       >
@@ -366,7 +362,6 @@ export default function TareasPage() {
         )}
         <TareaForm
           initial={edit}
-          mode={edit ? undefined : createMode}
           readOnly={!!edit && modalMode === "view"}
           onSaved={() => setOpen(false)}
           onCancel={() => setOpen(false)}
@@ -396,6 +391,35 @@ export default function TareasPage() {
           />
         )}
       </Modal>
+    </div>
+  );
+}
+
+function HeroStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: StatTone;
+}) {
+  const t = STAT_TONES[tone];
+  return (
+    <div
+      className="hero-stat"
+      style={
+        {
+          "--hs-from": t.from,
+          "--hs-to": t.to,
+          "--hs-ink": t.ink,
+          "--hs-fg": t.fg,
+          "--hs-shadow": t.shadow,
+        } as React.CSSProperties
+      }
+    >
+      <div className="hero-stat-label">{label}</div>
+      <div className="hero-stat-num">{value}</div>
     </div>
   );
 }
@@ -477,31 +501,6 @@ function DayResumen({
         <button type="button" className="btn btn-ghost" onClick={onClose}>
           Cerrar
         </button>
-      </div>
-    </div>
-  );
-}
-
-function MiniStat({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number;
-  accent: "primary" | "danger" | "accent";
-}) {
-  const color =
-    accent === "danger"
-      ? "var(--danger)"
-      : accent === "accent"
-      ? "var(--accent)"
-      : "var(--primary)";
-  return (
-    <div className="card-tight card">
-      <div className="eyebrow">{label}</div>
-      <div className="num text-3xl mt-1" style={{ color: value > 0 ? color : "var(--muted)" }}>
-        {value}
       </div>
     </div>
   );
@@ -644,22 +643,18 @@ function TareaRow({
 
 function TareaForm({
   initial,
-  mode,
   readOnly = false,
   onSaved,
   onCancel,
 }: {
   initial: Tarea | null;
-  mode?: CreateMode;
   readOnly?: boolean;
   onSaved: () => void;
   onCancel: () => void;
 }) {
   const { db } = useDB();
-  const isRealizada = mode === "realizada";
   const [form, setForm] = useState<Tarea>(() => {
     if (initial) {
-      // normaliza legacy: si venía singular pero sin array, lo promueve.
       const asignadoIds =
         initial.asignadoAIds && initial.asignadoAIds.length > 0
           ? initial.asignadoAIds
@@ -680,19 +675,46 @@ function TareaForm({
       fecha: todayISO(),
       prioridad: "media",
       categoria: "manejo",
-      completada: isRealizada,
-      completadaFecha: isRealizada ? nowISO() : undefined,
+      completada: false,
+      completadaFecha: undefined,
       asignadoAIds: [],
       animalIds: [],
       createdAt: nowISO(),
     };
   });
   const [animalSearch, setAnimalSearch] = useState("");
+  // Si el usuario tocó manualmente el toggle Programada/Realizada, no lo
+  // pisamos con la auto-detección al cambiar la fecha.
+  const [estadoManual, setEstadoManual] = useState(!!initial);
+
+  // Auto-detect: fecha < hoy → realizada; fecha >= hoy → programada.
+  useEffect(() => {
+    if (estadoManual) return;
+    const soloFecha = (form.fecha || "").slice(0, 10);
+    const auto = soloFecha && soloFecha < todayISO();
+    if (auto !== form.completada) {
+      setForm((f) => ({
+        ...f,
+        completada: !!auto,
+        completadaFecha: auto ? f.completadaFecha ?? nowISO() : undefined,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.fecha, estadoManual]);
+
+  function setEstado(realizada: boolean) {
+    setEstadoManual(true);
+    setForm((f) => ({
+      ...f,
+      completada: realizada,
+      completadaFecha: realizada ? f.completadaFecha ?? nowISO() : undefined,
+    }));
+  }
 
   function save(e: React.FormEvent) {
     e.preventDefault();
     if (!form.titulo.trim()) {
-      alert("Falta el título de la tarea");
+      alert("Falta el título de la actividad");
       return;
     }
     const asignadoAIds = form.asignadoAIds ?? [];
@@ -701,7 +723,6 @@ function TareaForm({
       ...form,
       asignadoAIds,
       animalIds,
-      // mantiene compatibilidad con lectura legacy (primer elemento)
       asignadoAId: asignadoAIds[0],
       animalId: animalIds[0],
     };
@@ -742,7 +763,7 @@ function TareaForm({
 
   function remove() {
     if (!initial) return;
-    if (!confirm("¿Eliminar esta tarea?")) return;
+    if (!confirm("¿Eliminar esta actividad?")) return;
     updateCollection("tareas", (list) => list.filter((t) => t.id !== initial.id));
     onSaved();
   }
@@ -750,6 +771,40 @@ function TareaForm({
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
       <fieldset disabled={readOnly} className="contents">
+      <FormRow label="Estado" required colspan={2}>
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { value: false, label: "Programada", hint: "pendiente / futura" },
+            { value: true, label: "Ya realizada", hint: "registro histórico" },
+          ].map((opt) => {
+            const on = form.completada === opt.value;
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => setEstado(opt.value)}
+                className="btn"
+                style={{
+                  padding: "0.4rem 0.9rem",
+                  fontSize: "0.8rem",
+                  background: on ? "var(--primary)" : "var(--surface-2)",
+                  color: on ? "var(--primary-ink)" : "var(--fg)",
+                  border: `1px solid ${on ? "var(--primary)" : "var(--rule)"}`,
+                }}
+                aria-pressed={on}
+                title={opt.hint}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+          {!estadoManual && !readOnly && (
+            <span className="text-[0.65rem] text-subtle self-center ml-1">
+              (auto según fecha)
+            </span>
+          )}
+        </div>
+      </FormRow>
       <FormRow label="Título" required colspan={2}>
         <input
           value={form.titulo}
@@ -815,7 +870,7 @@ function TareaForm({
           })}
         </div>
       </FormRow>
-      <FormRow label={`${isRealizada ? "Quiénes la realizaron" : "Asignada a"}${seleccionAsignado.length > 0 ? ` (${seleccionAsignado.length})` : ""}`} colspan={2}>
+      <FormRow label={`${form.completada ? "Quiénes la realizaron" : "Asignada a"}${seleccionAsignado.length > 0 ? ` (${seleccionAsignado.length})` : ""}`} colspan={2}>
         {(db?.propietarios ?? []).length === 0 ? (
           <div className="text-xs text-muted">Aún no hay propietarios registrados.</div>
         ) : (
@@ -985,11 +1040,9 @@ function MonthCalendar({
   const monthIdx = month.getMonth();
   const first = new Date(year, monthIdx, 1);
   const lastDay = new Date(year, monthIdx + 1, 0).getDate();
-  // JS Sunday=0; force week start on Monday: (dayOfWeek+6)%7
   const leading = (first.getDay() + 6) % 7;
   const totalCells = Math.ceil((leading + lastDay) / 7) * 7;
 
-  // Group items by yyyy-mm-dd
   const byDay = new Map<string, UnifiedItem[]>();
   for (const it of items) {
     const key = it.fecha.slice(0, 10);

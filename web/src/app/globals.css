@@ -693,6 +693,67 @@ select {
   -webkit-overflow-scrolling: touch;
 }
 
+/* ═══════════════════════ HERO STATS · mini colored gradient cards ═════
+   Compact stat cards used at the top of section pages (e.g. Actividades).
+   Same visual language as the home tiles, but flat and horizontal.
+   ───────────────────────────────────────────────────────────────────── */
+.hero-stat {
+  --hs-from: #E4EED4;
+  --hs-to:   #A9C177;
+  --hs-fg:   #1D2F10;
+  --hs-ink:  #3E5A24;
+  --hs-shadow: rgba(120, 150, 80, 0.30);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.75rem 0.9rem 0.85rem;
+  border-radius: 16px;
+  min-height: 82px;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--hs-fg);
+  background:
+    radial-gradient(120% 100% at 100% 0%, color-mix(in oklab, white 30%, var(--hs-from)) 0%, transparent 55%),
+    linear-gradient(155deg, var(--hs-from) 0%, var(--hs-to) 100%);
+  border: 1px solid color-mix(in oklab, var(--hs-ink) 12%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 -10px 22px -10px color-mix(in oklab, var(--hs-ink) 22%, transparent) inset,
+    0 1px 2px rgba(20, 30, 20, 0.04),
+    0 6px 14px -8px var(--hs-shadow);
+}
+.hero-stat-label {
+  font-family: var(--font-geist-mono, ui-monospace, monospace);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: color-mix(in oklab, var(--hs-fg) 62%, transparent);
+}
+.hero-stat-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-weight: 700;
+  font-size: 1.75rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--hs-ink);
+}
+@media (min-width: 768px) {
+  .hero-stat { min-height: 92px; padding: 0.85rem 1rem 0.95rem; }
+  .hero-stat-num { font-size: 2rem; }
+}
+:root:not([data-theme="light"]) .hero-stat {
+  background:
+    radial-gradient(120% 100% at 100% 0%, color-mix(in oklab, white 8%, var(--hs-from)) 0%, transparent 55%),
+    linear-gradient(155deg, color-mix(in oklab, black 25%, var(--hs-from)) 0%, color-mix(in oklab, black 35%, var(--hs-to)) 100%);
+  color: white;
+  border-color: color-mix(in oklab, white 10%, transparent);
+}
+:root:not([data-theme="light"]) .hero-stat-label { color: rgba(255, 255, 255, 0.7); }
+:root:not([data-theme="light"]) .hero-stat-num { color: white; }
+
 /* ═══════════════════════ TABLES ═══════════════════════ */
 .table {
   width: 100%;
