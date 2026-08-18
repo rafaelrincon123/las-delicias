@@ -296,7 +296,7 @@ export default function PesoPage() {
               <th className="text-right">Peso (kg)</th>
               <th>Tipo</th>
               <th className="text-right">Gan. día (g)</th>
-              <th></th>
+              <th style={{ width: "4rem" }}></th>
             </tr>
           </thead>
           <tbody>
