@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
 import { fmtDate, diasHasta, todayISO, ymdLocal, parseDateLocal } from "@/lib/format";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
+import { IconCheck } from "@/components/icons";
 
 export default function ReproduccionPage() {
   const { db, ready } = useDB();
@@ -57,6 +58,21 @@ export default function ReproduccionPage() {
     setFiltroResultado("");
     setDesde("");
     setHasta("");
+  }
+
+  function toggleCompletadaServicio(s: ServicioReproductivo) {
+    const yaHecha = !!s.completada;
+    updateCollection("servicios", (list) =>
+      list.map((x) =>
+        x.id === s.id
+          ? {
+              ...x,
+              completada: !yaHecha,
+              completadaFecha: !yaHecha ? nowISO() : undefined,
+            }
+          : x
+      )
+    );
   }
 
   if (!ready) return <div className="text-muted">Cargando…</div>;
@@ -167,6 +183,7 @@ export default function ReproduccionPage() {
           <table className="table">
             <thead>
               <tr>
+                <th></th>
                 <th>Fecha servicio</th>
                 <th>Hembra</th>
                 <th>Macho / semen</th>
@@ -181,6 +198,7 @@ export default function ReproduccionPage() {
                 const hembra = db!.animales.find((a) => a.id === s.hembraId);
                 const macho = db!.animales.find((a) => a.id === s.machoIdOReferencia);
                 const dias = s.fechaProbableParto ? diasHasta(s.fechaProbableParto) : null;
+                const hecha = !!s.completada;
                 return (
                   <tr
                     key={s.id}
@@ -191,6 +209,25 @@ export default function ReproduccionPage() {
                     }}
                     style={{ cursor: "pointer" }}
                   >
+                    <td onClick={(ev) => ev.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => toggleCompletadaServicio(s)}
+                        title={hecha ? "Marcar pendiente" : "Marcar realizada"}
+                        aria-label={hecha ? "Marcar pendiente" : "Marcar realizada"}
+                        className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded-full"
+                        style={{
+                          background: hecha ? "var(--primary)" : "transparent",
+                          color: hecha ? "var(--primary-ink)" : "var(--muted)",
+                          border: hecha
+                            ? "1.5px solid var(--primary)"
+                            : "1.5px dashed var(--rule-strong)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {hecha ? <IconCheck size={12} strokeWidth={3} /> : null}
+                      </button>
+                    </td>
                     <td>{fmtDate(s.fechaServicio)}</td>
                     <td>
                       {hembra?.nombre ?? "—"}{" "}
@@ -329,7 +366,23 @@ export default function ReproduccionPage() {
         title={editServ ? (modeServ === "view" ? "Detalle de servicio" : "Editar servicio") : "Nuevo servicio reproductivo"}
       >
         {editServ && modeServ === "view" && (
-          <div className="flex justify-end mb-3">
+          <div className="flex justify-between items-center mb-3 gap-2 flex-wrap">
+            <button
+              className="btn"
+              onClick={() => {
+                toggleCompletadaServicio(editServ);
+                setOpenServ(false);
+              }}
+              style={{
+                padding: "0.4rem 0.9rem",
+                fontSize: "0.8rem",
+                background: editServ.completada ? "var(--surface-2)" : "var(--primary-soft)",
+                color: editServ.completada ? "var(--muted)" : "var(--primary)",
+                border: `1px solid ${editServ.completada ? "var(--rule)" : "var(--primary)"}`,
+              }}
+            >
+              {editServ.completada ? "↺ Marcar pendiente" : "✓ Marcar realizada"}
+            </button>
             <button
               className="btn btn-primary"
               onClick={() => setModeServ("edit")}
@@ -394,9 +447,36 @@ function ServicioForm({
       tipo: "monta_natural",
       fechaServicio: todayISO(),
       resultado: "pendiente",
+      completada: true,
+      completadaFecha: nowISO(),
       createdAt: nowISO(),
     }
   );
+  const [estadoManual, setEstadoManual] = useState(!!initial);
+
+  useEffect(() => {
+    if (estadoManual) return;
+    const soloFecha = (form.fechaServicio || "").slice(0, 10);
+    if (!soloFecha) return;
+    const auto = soloFecha <= todayISO();
+    if (auto !== form.completada) {
+      setForm((f) => ({
+        ...f,
+        completada: auto,
+        completadaFecha: auto ? f.completadaFecha ?? nowISO() : undefined,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.fechaServicio, estadoManual]);
+
+  function setEstado(realizada: boolean) {
+    setEstadoManual(true);
+    setForm((f) => ({
+      ...f,
+      completada: realizada,
+      completadaFecha: realizada ? f.completadaFecha ?? nowISO() : undefined,
+    }));
+  }
 
   function save(e: React.FormEvent) {
     e.preventDefault();
@@ -428,6 +508,40 @@ function ServicioForm({
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
       <fieldset disabled={readOnly} className="contents">
+      <FormRow label="Estado" required colspan={2}>
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { value: false, label: "Programada", hint: "aún no ejecutada" },
+            { value: true, label: "Ya realizada", hint: "registro histórico" },
+          ].map((opt) => {
+            const on = form.completada === opt.value;
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => setEstado(opt.value)}
+                className="btn"
+                style={{
+                  padding: "0.4rem 0.9rem",
+                  fontSize: "0.8rem",
+                  background: on ? "var(--primary)" : "var(--surface-2)",
+                  color: on ? "var(--primary-ink)" : "var(--fg)",
+                  border: `1px solid ${on ? "var(--primary)" : "var(--rule)"}`,
+                }}
+                aria-pressed={on}
+                title={opt.hint}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+          {!estadoManual && !readOnly && (
+            <span className="text-[0.65rem] text-subtle self-center ml-1">
+              (auto según fecha)
+            </span>
+          )}
+        </div>
+      </FormRow>
       <FormRow label="Hembra" required colspan={2}>
         <select
           value={form.hembraId}

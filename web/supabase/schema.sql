@@ -92,6 +92,8 @@ create table if not exists sanidad (
   veterinario           text,
   costo                 numeric(12,2),
   notas                 text,
+  completada            boolean not null default false,
+  completada_fecha      timestamptz,
   created_at            timestamptz not null default now()
 );
 create index if not exists idx_sanidad_animal on sanidad(animal_id);
@@ -110,6 +112,8 @@ create table if not exists servicios (
   resultado                resultado_servicio_enum not null default 'pendiente',
   fecha_probable_parto     date,
   notas                    text,
+  completada               boolean not null default false,
+  completada_fecha         timestamptz,
   created_at               timestamptz not null default now()
 );
 create index if not exists idx_servicios_hembra on servicios(hembra_id);

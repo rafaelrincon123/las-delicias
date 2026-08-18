@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
 import { fmtDate, fmtCOP, diasHasta, todayISO } from "@/lib/format";
 import { SanidadEvento, TIPOS_SANIDAD, TipoSanidad } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
+import { IconCheck } from "@/components/icons";
 
 export default function SanidadPage() {
   const { db, ready } = useDB();
@@ -50,6 +51,21 @@ export default function SanidadPage() {
       .filter((e) => e.dias !== null && e.dias! >= -30 && e.dias! <= 60)
       .sort((a, b) => (a.dias ?? 0) - (b.dias ?? 0));
   }, [eventos]);
+
+  function toggleCompletada(e: SanidadEvento) {
+    const yaHecha = !!e.completada;
+    updateCollection("sanidad", (list) =>
+      list.map((s) =>
+        s.id === e.id
+          ? {
+              ...s,
+              completada: !yaHecha,
+              completadaFecha: !yaHecha ? nowISO() : undefined,
+            }
+          : s
+      )
+    );
+  }
 
   const filtrosActivos =
     !!q || !!filtroAnimal || !!filtroTipo || !!desde || !!hasta;
@@ -218,6 +234,7 @@ export default function SanidadPage() {
           <table className="table">
             <thead>
               <tr>
+                <th></th>
                 <th>Fecha</th>
                 <th>Animal</th>
                 <th>Tipo</th>
@@ -230,6 +247,7 @@ export default function SanidadPage() {
             <tbody>
               {eventos.map((e) => {
                 const animal = db!.animales.find((a) => a.id === e.animalId);
+                const hecha = !!e.completada;
                 return (
                   <tr
                     key={e.id}
@@ -240,6 +258,25 @@ export default function SanidadPage() {
                     }}
                     style={{ cursor: "pointer" }}
                   >
+                    <td onClick={(ev) => ev.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => toggleCompletada(e)}
+                        title={hecha ? "Marcar pendiente" : "Marcar realizada"}
+                        aria-label={hecha ? "Marcar pendiente" : "Marcar realizada"}
+                        className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded-full"
+                        style={{
+                          background: hecha ? "var(--primary)" : "transparent",
+                          color: hecha ? "var(--primary-ink)" : "var(--muted)",
+                          border: hecha
+                            ? "1.5px solid var(--primary)"
+                            : "1.5px dashed var(--rule-strong)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {hecha ? <IconCheck size={12} strokeWidth={3} /> : null}
+                      </button>
+                    </td>
                     <td>{fmtDate(e.fecha)}</td>
                     <td>
                       {animal?.nombre ?? "—"}{" "}
@@ -252,7 +289,12 @@ export default function SanidadPage() {
                         {TIPOS_SANIDAD.find((t) => t.value === e.tipo)?.label}
                       </span>
                     </td>
-                    <td>{e.producto}</td>
+                    <td
+                      className={hecha ? "" : "font-medium"}
+                      style={hecha ? { textDecoration: "line-through", opacity: 0.6 } : undefined}
+                    >
+                      {e.producto}
+                    </td>
                     <td className="font-mono text-xs">{e.dosis ?? "—"}</td>
                     <td className="font-mono text-xs">{fmtCOP(e.costo)}</td>
                     <td className="text-right">
@@ -282,7 +324,23 @@ export default function SanidadPage() {
         title={edit ? (mode === "view" ? "Detalle de evento" : "Editar evento") : "Nuevo evento sanitario"}
       >
         {edit && mode === "view" && (
-          <div className="flex justify-end mb-3">
+          <div className="flex justify-between items-center mb-3 gap-2 flex-wrap">
+            <button
+              className="btn"
+              onClick={() => {
+                toggleCompletada(edit);
+                setOpen(false);
+              }}
+              style={{
+                padding: "0.4rem 0.9rem",
+                fontSize: "0.8rem",
+                background: edit.completada ? "var(--surface-2)" : "var(--primary-soft)",
+                color: edit.completada ? "var(--muted)" : "var(--primary)",
+                border: `1px solid ${edit.completada ? "var(--rule)" : "var(--primary)"}`,
+              }}
+            >
+              {edit.completada ? "↺ Marcar pendiente" : "✓ Marcar realizada"}
+            </button>
             <button
               className="btn btn-primary"
               onClick={() => setMode("edit")}
@@ -322,9 +380,36 @@ function SanidadForm({
       tipo: "vacuna",
       producto: "",
       fecha: todayISO(),
+      completada: true,
+      completadaFecha: nowISO(),
       createdAt: nowISO(),
     }
   );
+  const [estadoManual, setEstadoManual] = useState(!!initial);
+
+  useEffect(() => {
+    if (estadoManual) return;
+    const soloFecha = (form.fecha || "").slice(0, 10);
+    if (!soloFecha) return;
+    const auto = soloFecha <= todayISO();
+    if (auto !== form.completada) {
+      setForm((f) => ({
+        ...f,
+        completada: auto,
+        completadaFecha: auto ? f.completadaFecha ?? nowISO() : undefined,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.fecha, estadoManual]);
+
+  function setEstado(realizada: boolean) {
+    setEstadoManual(true);
+    setForm((f) => ({
+      ...f,
+      completada: realizada,
+      completadaFecha: realizada ? f.completadaFecha ?? nowISO() : undefined,
+    }));
+  }
 
   function save(e: React.FormEvent) {
     e.preventDefault();
@@ -353,6 +438,40 @@ function SanidadForm({
   return (
     <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
       <fieldset disabled={readOnly} className="contents">
+      <FormRow label="Estado" required colspan={2}>
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { value: false, label: "Programada", hint: "aún no ejecutada" },
+            { value: true, label: "Ya realizada", hint: "registro histórico" },
+          ].map((opt) => {
+            const on = form.completada === opt.value;
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => setEstado(opt.value)}
+                className="btn"
+                style={{
+                  padding: "0.4rem 0.9rem",
+                  fontSize: "0.8rem",
+                  background: on ? "var(--primary)" : "var(--surface-2)",
+                  color: on ? "var(--primary-ink)" : "var(--fg)",
+                  border: `1px solid ${on ? "var(--primary)" : "var(--rule)"}`,
+                }}
+                aria-pressed={on}
+                title={opt.hint}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+          {!estadoManual && !readOnly && (
+            <span className="text-[0.65rem] text-subtle self-center ml-1">
+              (auto según fecha)
+            </span>
+          )}
+        </div>
+      </FormRow>
       <FormRow label="Animal" required colspan={2}>
         <select
           value={form.animalId}

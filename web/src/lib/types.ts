@@ -55,6 +55,8 @@ export interface SanidadEvento {
   veterinario?: string;
   costo?: number;
   notas?: string;
+  completada?: boolean;
+  completadaFecha?: string;
   createdAt: string;
 }
 
@@ -63,6 +65,8 @@ export type ResultadoServicio = "pendiente" | "prenada" | "vacia";
 
 export interface ServicioReproductivo {
   id: string;
+  completada?: boolean;
+  completadaFecha?: string;
   hembraId: string;
   machoIdOReferencia: string;
   tipo: TipoServicio;

@@ -7,6 +7,8 @@ import { updateCollection, uid, nowISO } from "@/lib/storage";
 import { fmtDate, diasHasta, todayISO, ymdLocal } from "@/lib/format";
 import {
   Tarea,
+  SanidadEvento,
+  ServicioReproductivo,
   CATEGORIAS_TAREA,
   PRIORIDADES_TAREA,
   CategoriaTarea,
@@ -29,6 +31,8 @@ type UnifiedItem = {
   completada: boolean;
   href?: string;
   tarea?: Tarea;
+  sanidad?: SanidadEvento;
+  servicio?: ServicioReproductivo;
 };
 
 const CAT_COLOR: Record<CategoriaTarea, string> = {
@@ -74,22 +78,44 @@ export default function TareasPage() {
     }
 
     for (const s of db.sanidad) {
-      if (!s.proximoEventoFecha) continue;
-      const d = diasHasta(s.proximoEventoFecha);
-      if (d === null || d < -30 || d > 120) continue;
-      const animal = db.animales.find((a) => a.id === s.animalId);
-      items.push({
-        key: "s:" + s.id,
-        fuente: "sanidad",
-        titulo: `${s.producto} — ${animal?.nombre ?? "?"}`,
-        subtitulo: `#${animal?.nroIdentificacion ?? "?"} · ${s.tipo}`,
-        fecha: s.proximoEventoFecha,
-        dias: d,
-        categoria: "sanidad",
-        prioridad: d < 0 ? "alta" : d <= 7 ? "alta" : d <= 30 ? "media" : "baja",
-        completada: false,
-        href: "/sanidad",
-      });
+      // 1) Evento en sí mismo (programado o realizado)
+      const dSelf = diasHasta(s.fecha);
+      if (dSelf !== null && dSelf >= -30 && dSelf <= 120) {
+        const animal = db.animales.find((a) => a.id === s.animalId);
+        items.push({
+          key: "s:" + s.id,
+          fuente: "sanidad",
+          titulo: `${s.producto} — ${animal?.nombre ?? "?"}`,
+          subtitulo: `#${animal?.nroIdentificacion ?? "?"} · ${s.tipo}`,
+          fecha: s.fecha,
+          dias: dSelf,
+          categoria: "sanidad",
+          prioridad: dSelf < 0 ? "alta" : dSelf <= 7 ? "alta" : dSelf <= 30 ? "media" : "baja",
+          completada: !!s.completada,
+          href: "/sanidad",
+          sanidad: s,
+        });
+      }
+
+      // 2) Próximo evento (follow-up) sigue apareciendo como recordatorio
+      if (s.proximoEventoFecha) {
+        const d = diasHasta(s.proximoEventoFecha);
+        if (d !== null && d >= -30 && d <= 120) {
+          const animal = db.animales.find((a) => a.id === s.animalId);
+          items.push({
+            key: "sp:" + s.id,
+            fuente: "sanidad",
+            titulo: `Próximo: ${s.producto} — ${animal?.nombre ?? "?"}`,
+            subtitulo: `#${animal?.nroIdentificacion ?? "?"} · ${s.tipo}`,
+            fecha: s.proximoEventoFecha,
+            dias: d,
+            categoria: "sanidad",
+            prioridad: d < 0 ? "alta" : d <= 7 ? "alta" : d <= 30 ? "media" : "baja",
+            completada: false,
+            href: "/sanidad",
+          });
+        }
+      }
     }
 
     for (const s of db.servicios) {
@@ -110,8 +136,9 @@ export default function TareasPage() {
         dias: d,
         categoria: "reproduccion",
         prioridad: d <= 30 ? "alta" : "media",
-        completada: false,
+        completada: !!s.completada,
         href: "/reproduccion",
+        servicio: s,
       });
     }
 
@@ -156,19 +183,50 @@ export default function TareasPage() {
   if (!ready) return <div className="text-muted">Cargando…</div>;
 
   function toggleTarea(item: UnifiedItem) {
-    if (item.fuente !== "manual" || !item.tarea) return;
-    const t = item.tarea;
-    updateCollection("tareas", (list) =>
-      list.map((x) =>
-        x.id === t.id
-          ? {
-              ...x,
-              completada: !x.completada,
-              completadaFecha: !x.completada ? nowISO() : undefined,
-            }
-          : x
-      )
-    );
+    if (item.fuente === "manual" && item.tarea) {
+      const t = item.tarea;
+      updateCollection("tareas", (list) =>
+        list.map((x) =>
+          x.id === t.id
+            ? {
+                ...x,
+                completada: !x.completada,
+                completadaFecha: !x.completada ? nowISO() : undefined,
+              }
+            : x
+        )
+      );
+      return;
+    }
+    if (item.fuente === "sanidad" && item.sanidad) {
+      const s = item.sanidad;
+      updateCollection("sanidad", (list) =>
+        list.map((x) =>
+          x.id === s.id
+            ? {
+                ...x,
+                completada: !x.completada,
+                completadaFecha: !x.completada ? nowISO() : undefined,
+              }
+            : x
+        )
+      );
+      return;
+    }
+    if (item.fuente === "reproduccion" && item.servicio) {
+      const s = item.servicio;
+      updateCollection("servicios", (list) =>
+        list.map((x) =>
+          x.id === s.id
+            ? {
+                ...x,
+                completada: !x.completada,
+                completadaFecha: !x.completada ? nowISO() : undefined,
+              }
+            : x
+        )
+      );
+    }
   }
 
   function openNueva() {
@@ -293,6 +351,7 @@ export default function TareasPage() {
                       setOpen(true);
                     }
                   }}
+                  onToggle={() => toggleTarea(item)}
                 />
               ))}
             </ul>
@@ -376,6 +435,7 @@ export default function TareasPage() {
                 window.location.href = it.href;
               }
             }}
+            onToggleItem={(it) => toggleTarea(it)}
             onClose={() => setDayModal(null)}
           />
         )}
@@ -387,10 +447,12 @@ export default function TareasPage() {
 function DayResumen({
   items,
   onOpenItem,
+  onToggleItem,
   onClose,
 }: {
   items: UnifiedItem[];
   onOpenItem: (it: UnifiedItem) => void;
+  onToggleItem: (it: UnifiedItem) => void;
   onClose: () => void;
 }) {
   const hechas = items.filter((i) => i.completada);
@@ -404,42 +466,70 @@ function DayResumen({
           {title} ({list.length})
         </div>
         <ul className="space-y-1.5">
-          {list.map((it) => (
-            <li
-              key={it.key}
-              className="rounded-md border p-3 cursor-pointer hover:bg-surface-2 transition"
-              style={{
-                borderColor: "var(--rule)",
-                borderLeft: `3px solid ${CAT_COLOR[it.categoria]}`,
-              }}
-              onClick={() => onOpenItem(it)}
-            >
-              <div className="flex items-start gap-2">
-                <StatusIcon completada={it.completada} />
-                <div className="flex-1 min-w-0">
-                  <div
-                    className={
-                      "font-medium text-sm " +
-                      (it.completada ? "line-through opacity-60" : "")
-                    }
-                  >
-                    {it.titulo}
+          {list.map((it) => {
+            const puedeChulear =
+              (it.fuente === "manual" && it.tarea) ||
+              (it.fuente === "sanidad" && it.sanidad) ||
+              (it.fuente === "reproduccion" && it.servicio);
+            return (
+              <li
+                key={it.key}
+                className="rounded-md border p-3 cursor-pointer hover:bg-surface-2 transition"
+                style={{
+                  borderColor: "var(--rule)",
+                  borderLeft: `3px solid ${CAT_COLOR[it.categoria]}`,
+                }}
+                onClick={() => onOpenItem(it)}
+              >
+                <div className="flex items-start gap-2">
+                  <StatusIcon
+                    completada={it.completada}
+                    onToggle={puedeChulear ? () => onToggleItem(it) : undefined}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className={
+                        "font-medium text-sm " +
+                        (it.completada ? "line-through opacity-60" : "")
+                      }
+                    >
+                      {it.titulo}
+                    </div>
+                    {it.subtitulo && (
+                      <div className="text-xs text-muted mt-0.5">{it.subtitulo}</div>
+                    )}
+                    <div className="text-[0.62rem] font-mono uppercase tracking-wider text-subtle mt-1">
+                      {it.fuente === "manual"
+                        ? CATEGORIAS_TAREA.find((c) => c.value === it.categoria)?.label ?? it.categoria
+                        : it.fuente === "sanidad"
+                        ? "Sanidad"
+                        : "Reproducción"}
+                      {it.prioridad === "alta" && !it.completada ? " · prioridad alta" : ""}
+                    </div>
                   </div>
-                  {it.subtitulo && (
-                    <div className="text-xs text-muted mt-0.5">{it.subtitulo}</div>
+                  {puedeChulear && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleItem(it);
+                      }}
+                      className="btn shrink-0"
+                      style={{
+                        padding: "0.3rem 0.7rem",
+                        fontSize: "0.72rem",
+                        background: it.completada ? "var(--surface-2)" : "var(--primary-soft)",
+                        color: it.completada ? "var(--muted)" : "var(--primary)",
+                        border: `1px solid ${it.completada ? "var(--rule)" : "var(--primary)"}`,
+                      }}
+                    >
+                      {it.completada ? "↺ Pendiente" : "✓ Realizada"}
+                    </button>
                   )}
-                  <div className="text-[0.62rem] font-mono uppercase tracking-wider text-subtle mt-1">
-                    {it.fuente === "manual"
-                      ? CATEGORIAS_TAREA.find((c) => c.value === it.categoria)?.label ?? it.categoria
-                      : it.fuente === "sanidad"
-                      ? "Sanidad"
-                      : "Reproducción"}
-                    {it.prioridad === "alta" && !it.completada ? " · prioridad alta" : ""}
-                  </div>
                 </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       </div>
     );
@@ -466,26 +556,44 @@ function DayResumen({
   );
 }
 
-function StatusIcon({ completada }: { completada: boolean }) {
-  if (completada) {
+function StatusIcon({
+  completada,
+  onToggle,
+}: {
+  completada: boolean;
+  onToggle?: () => void;
+}) {
+  const commonStyle = completada
+    ? { background: "var(--primary)", color: "var(--primary-ink)", border: "1.5px solid var(--primary)" }
+    : { border: "1.5px dashed var(--rule-strong)", color: "var(--muted)" };
+  const title = completada ? "Marcar pendiente" : "Marcar realizada";
+  if (onToggle) {
     return (
-      <span
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
         className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded-full"
-        style={{ background: "var(--primary)", color: "var(--primary-ink)" }}
-        title="Realizada"
-        aria-label="Realizada"
+        style={{ ...commonStyle, cursor: "pointer" }}
+        title={title}
+        aria-label={title}
+        aria-pressed={completada}
       >
-        <IconCheck size={12} strokeWidth={3} />
-      </span>
+        {completada ? <IconCheck size={12} strokeWidth={3} /> : null}
+      </button>
     );
   }
   return (
     <span
       className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded-full"
-      style={{ border: "1.5px dashed var(--rule-strong)", color: "var(--muted)" }}
-      title="Pendiente"
-      aria-label="Pendiente"
-    />
+      style={commonStyle}
+      title={completada ? "Realizada" : "Pendiente"}
+      aria-label={completada ? "Realizada" : "Pendiente"}
+    >
+      {completada ? <IconCheck size={12} strokeWidth={3} /> : null}
+    </span>
   );
 }
 
@@ -493,10 +601,12 @@ function TareaRow({
   item,
   onView,
   onEdit,
+  onToggle,
 }: {
   item: UnifiedItem;
   onView: () => void;
   onEdit: () => void;
+  onToggle: () => void;
 }) {
   const vencida = !item.completada && item.dias !== null && item.dias < 0;
   const hoy = !item.completada && item.dias === 0;
@@ -523,7 +633,16 @@ function TareaRow({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <StatusIcon completada={item.completada} />
+          <StatusIcon
+            completada={item.completada}
+            onToggle={
+              (item.fuente === "manual" && item.tarea) ||
+              (item.fuente === "sanidad" && item.sanidad) ||
+              (item.fuente === "reproduccion" && item.servicio)
+                ? onToggle
+                : undefined
+            }
+          />
           <div
             className={
               "font-medium text-fg " +
@@ -577,7 +696,26 @@ function TareaRow({
             )}
           </span>
         )}
-        {item.href ? (
+        {(isManual && item.tarea) ||
+        (item.fuente === "sanidad" && item.sanidad) ||
+        (item.fuente === "reproduccion" && item.servicio) ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
+            className="btn"
+            style={{
+              padding: "0.3rem 0.7rem",
+              fontSize: "0.72rem",
+              background: item.completada ? "var(--surface-2)" : "var(--primary-soft)",
+              color: item.completada ? "var(--muted)" : "var(--primary)",
+              border: `1px solid ${item.completada ? "var(--rule)" : "var(--primary)"}`,
+            }}
+          >
+            {item.completada ? "↺ Pendiente" : "✓ Realizada"}
+          </button>
+        ) : item.href ? (
           <Link
             href={item.href}
             onClick={(e) => e.stopPropagation()}
@@ -585,7 +723,8 @@ function TareaRow({
           >
             abrir →
           </Link>
-        ) : isManual ? (
+        ) : null}
+        {isManual && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -595,7 +734,7 @@ function TareaRow({
           >
             editar
           </button>
-        ) : null}
+        )}
       </div>
     </li>
   );
