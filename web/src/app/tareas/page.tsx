@@ -113,6 +113,7 @@ export default function TareasPage() {
             prioridad: d < 0 ? "alta" : d <= 7 ? "alta" : d <= 30 ? "media" : "baja",
             completada: false,
             href: "/sanidad",
+            sanidad: s,
           });
         }
       }
@@ -200,16 +201,21 @@ export default function TareasPage() {
     }
     if (item.fuente === "sanidad" && item.sanidad) {
       const s = item.sanidad;
+      const esFollowUp = item.key.startsWith("sp:");
       updateCollection("sanidad", (list) =>
-        list.map((x) =>
-          x.id === s.id
-            ? {
-                ...x,
-                completada: !x.completada,
-                completadaFecha: !x.completada ? nowISO() : undefined,
-              }
-            : x
-        )
+        list.map((x) => {
+          if (x.id !== s.id) return x;
+          // Si es un recordatorio de "próximo evento", chulearlo lo quita
+          // (limpia proximo_evento_fecha del origen).
+          if (esFollowUp) {
+            return { ...x, proximoEventoFecha: undefined };
+          }
+          return {
+            ...x,
+            completada: !x.completada,
+            completadaFecha: !x.completada ? nowISO() : undefined,
+          };
+        })
       );
       return;
     }
