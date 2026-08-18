@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
 import { fmtCOP, fmtDate, todayISO } from "@/lib/format";
 import {
+  Animal,
+  CATEGORIAS_ANIMAL,
   CATEGORIAS_GASTO,
   CategoriaGasto,
   Gasto,
@@ -17,21 +19,73 @@ import FormRow from "@/components/FormRow";
 import HeroStat from "@/components/HeroStat";
 
 /**
+ * Deriva la lista efectiva de propietarios que participan del gasto.
+ * - Modo "socios": los propietarios seleccionados manualmente.
+ * - Modo "cabezas": los propietarios de los animales seleccionados (únicos).
+ */
+function participantesGasto(g: Gasto, animales: Animal[]): string[] {
+  if (g.repartoPor === "cabezas" && g.animalIds && g.animalIds.length > 0) {
+    const props = new Set<string>();
+    for (const aid of g.animalIds) {
+      const a = animales.find((x) => x.id === aid);
+      if (a?.propietarioId) props.add(a.propietarioId);
+    }
+    return Array.from(props);
+  }
+  return g.participantes ?? [];
+}
+
+/**
+ * Cuota que le corresponde a cada propietario en este gasto.
+ * - Modo "cabezas": (cabezas_suyas / total_cabezas) * monto.
+ * - Modo "socios": monto / #participantes.
+ */
+function cuotasPorPropietario(g: Gasto, animales: Animal[]): Record<string, number> {
+  const cuotas: Record<string, number> = {};
+  if (g.repartoPor === "cabezas" && g.animalIds && g.animalIds.length > 0) {
+    const cabezas: Record<string, number> = {};
+    let total = 0;
+    for (const aid of g.animalIds) {
+      const a = animales.find((x) => x.id === aid);
+      if (!a?.propietarioId) continue;
+      cabezas[a.propietarioId] = (cabezas[a.propietarioId] ?? 0) + 1;
+      total += 1;
+    }
+    if (total > 0) {
+      for (const [pid, n] of Object.entries(cabezas)) {
+        cuotas[pid] = (n / total) * g.monto;
+      }
+    }
+    return cuotas;
+  }
+  const parts = g.participantes ?? [];
+  if (parts.length === 0) return cuotas;
+  const cuota = g.monto / parts.length;
+  parts.forEach((pid) => {
+    cuotas[pid] = cuota;
+  });
+  return cuotas;
+}
+
+/**
  * Devuelve el conjunto efectivo de participantes que ya pagaron su parte.
  * Quien puso la plata (pagadoPor) cuenta como pagado si es participante.
  */
-function participantesPagados(g: Gasto): Set<string> {
+function participantesPagados(g: Gasto, animales: Animal[]): Set<string> {
   const paid = new Set(g.pagadoPorIds ?? []);
-  const parts = g.participantes ?? [];
+  const parts = participantesGasto(g, animales);
   if (g.pagadoPor && parts.includes(g.pagadoPor)) paid.add(g.pagadoPor);
   return paid;
 }
 
 /** Alterna el estado de pago de un participante en un gasto y persiste. */
-function toggleParticipantePagado(g: Gasto, propietarioId: string): void {
-  const parts = g.participantes ?? [];
+function toggleParticipantePagado(
+  g: Gasto,
+  animales: Animal[],
+  propietarioId: string,
+): void {
+  const parts = participantesGasto(g, animales);
   if (!parts.includes(propietarioId)) return;
-  // No permitir marcar como "debe" a quien puso la plata (lo puso él mismo).
   if (g.pagadoPor === propietarioId) return;
   const set = new Set(g.pagadoPorIds ?? []);
   if (set.has(propietarioId)) set.delete(propietarioId);
@@ -184,7 +238,11 @@ export default function GastosPage() {
 
       {tab === "gastos" && (
         <>
-          <DeudasResumen gastos={gastos} propietarios={db!.propietarios} />
+          <DeudasResumen
+            gastos={gastos}
+            propietarios={db!.propietarios}
+            animales={db!.animales}
+          />
           <div className="card p-0 overflow-x-auto">
             <table className="table">
               <thead>
@@ -196,18 +254,23 @@ export default function GastosPage() {
                   <th>Estado de pago</th>
                   <th className="text-right">Monto</th>
                   <th className="text-right">Por c/u</th>
-                  <th></th>
+                  <th style={{ width: "4rem" }}></th>
                 </tr>
               </thead>
               <tbody>
                 {gastos.map((g) => {
                   const socio = db!.propietarios.find((p) => p.id === g.pagadoPor);
-                  const participantes = g.participantes ?? [];
+                  const participantes = participantesGasto(g, db!.animales);
                   const nParticipantes = participantes.length;
-                  const porPersona = nParticipantes > 0 ? g.monto / nParticipantes : g.monto;
-                  const pagados = participantesPagados(g);
+                  const cuotas = cuotasPorPropietario(g, db!.animales);
+                  const porCabezas = g.repartoPor === "cabezas";
+                  const pagados = participantesPagados(g, db!.animales);
                   const nPagados = participantes.filter((id) => pagados.has(id)).length;
                   const todosPagaron = nParticipantes > 0 && nPagados === nParticipantes;
+                  // Para modo socios el "por c/u" es único; para cabezas mostramos rango.
+                  const cuotasArr = participantes.map((pid) => cuotas[pid] ?? 0);
+                  const cuotaMin = cuotasArr.length ? Math.min(...cuotasArr) : 0;
+                  const cuotaMax = cuotasArr.length ? Math.max(...cuotasArr) : 0;
                   return (
                     <tr
                       key={g.id}
@@ -248,7 +311,7 @@ export default function GastosPage() {
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      toggleParticipantePagado(g, pid);
+                                      toggleParticipantePagado(g, db!.animales, pid);
                                     }}
                                     disabled={esPagador}
                                     className="rounded-full text-[0.6rem] font-mono font-semibold px-2 py-0.5 transition"
@@ -291,7 +354,13 @@ export default function GastosPage() {
                       <td className="text-right font-mono tabular-nums">{fmtCOP(g.monto)}</td>
                       <td className="text-right font-mono tabular-nums text-xs">
                         {nParticipantes > 1 ? (
-                          <span className="text-primary">{fmtCOP(porPersona)}</span>
+                          porCabezas && cuotaMin !== cuotaMax ? (
+                            <span className="text-primary" title="Reparto por cabezas">
+                              {fmtCOP(cuotaMin)}–{fmtCOP(cuotaMax)}
+                            </span>
+                          ) : (
+                            <span className="text-primary">{fmtCOP(cuotaMax)}</span>
+                          )
                         ) : (
                           <span className="text-muted">—</span>
                         )}
@@ -426,9 +495,11 @@ export default function GastosPage() {
 function DeudasResumen({
   gastos,
   propietarios,
+  animales,
 }: {
   gastos: Gasto[];
   propietarios: Propietario[];
+  animales: Animal[];
 }) {
   const balances = useMemo(() => {
     // Por cada socio: cuánto le deben (positivo) y cuánto debe (negativo)
@@ -440,15 +511,16 @@ function DeudasResumen({
     }
 
     for (const g of gastos) {
-      const parts = g.participantes ?? [];
+      const parts = participantesGasto(g, animales);
       if (parts.length === 0 || !g.pagadoPor) continue;
-      const cuota = g.monto / parts.length;
-      const pagados = participantesPagados(g);
+      const cuotas = cuotasPorPropietario(g, animales);
+      const pagados = participantesPagados(g, animales);
 
       for (const pid of parts) {
-        if (pid === g.pagadoPor) continue; // el pagador no se debe a sí mismo
-        if (pagados.has(pid)) continue; // ya reembolsó
-        // pid le debe cuota a g.pagadoPor
+        if (pid === g.pagadoPor) continue;
+        if (pagados.has(pid)) continue;
+        const cuota = cuotas[pid] ?? 0;
+        if (cuota <= 0) continue;
         debe[pid] = (debe[pid] ?? 0) + cuota;
         leDeben[g.pagadoPor] = (leDeben[g.pagadoPor] ?? 0) + cuota;
       }
@@ -462,7 +534,7 @@ function DeudasResumen({
         neto: (leDeben[p.id] ?? 0) - (debe[p.id] ?? 0),
       }))
       .filter((r) => r.debe > 0 || r.leDeben > 0);
-  }, [gastos, propietarios]);
+  }, [gastos, propietarios, animales]);
 
   if (balances.length === 0) return null;
 
@@ -547,12 +619,64 @@ function GastoForm({
     }
   );
 
-  const participantes = form.participantes ?? [];
+  const [selectorAnimales, setSelectorAnimales] = useState(false);
+  const modo: "socios" | "cabezas" = form.repartoPor === "cabezas" ? "cabezas" : "socios";
+  const animalIds = form.animalIds ?? [];
+
+  // En modo "cabezas" los participantes se derivan de los animales.
+  const participantes = useMemo(() => {
+    if (modo === "cabezas") {
+      const props = new Set<string>();
+      for (const aid of animalIds) {
+        const a = db?.animales.find((x) => x.id === aid);
+        if (a?.propietarioId) props.add(a.propietarioId);
+      }
+      return Array.from(props);
+    }
+    return form.participantes ?? [];
+  }, [modo, animalIds, db, form.participantes]);
+
   const nParticipantes = participantes.length;
+
+  // Cuotas por propietario según el modo.
+  const cuotas = useMemo(() => {
+    const out: Record<string, number> = {};
+    if (modo === "cabezas") {
+      const cabezas: Record<string, number> = {};
+      let total = 0;
+      for (const aid of animalIds) {
+        const a = db?.animales.find((x) => x.id === aid);
+        if (!a?.propietarioId) continue;
+        cabezas[a.propietarioId] = (cabezas[a.propietarioId] ?? 0) + 1;
+        total += 1;
+      }
+      if (total > 0 && form.monto > 0) {
+        for (const [pid, n] of Object.entries(cabezas)) {
+          out[pid] = (n / total) * form.monto;
+        }
+      }
+      return { cuotas: out, cabezas, total };
+    }
+    if (nParticipantes > 0) {
+      const c = form.monto / nParticipantes;
+      participantes.forEach((pid) => (out[pid] = c));
+    }
+    return { cuotas: out, cabezas: {} as Record<string, number>, total: 0 };
+  }, [modo, animalIds, db, form.monto, nParticipantes, participantes]);
+
   const porPersona = nParticipantes > 0 ? form.monto / nParticipantes : 0;
   const pagadosSet = new Set(form.pagadoPorIds ?? []);
   if (form.pagadoPor && participantes.includes(form.pagadoPor)) {
     pagadosSet.add(form.pagadoPor);
+  }
+
+  function setModo(m: "socios" | "cabezas") {
+    setForm((f) => ({
+      ...f,
+      repartoPor: m,
+      // Al cambiar de modo, limpiar el estado del otro para no confundir.
+      ...(m === "socios" ? { animalIds: undefined } : { participantes: undefined }),
+    }));
   }
 
   function toggleParticipantePago(id: string) {
@@ -564,7 +688,7 @@ function GastoForm({
   }
 
   function toggleParticipante(id: string) {
-    const set = new Set(participantes);
+    const set = new Set(form.participantes ?? []);
     if (set.has(id)) set.delete(id);
     else set.add(id);
     const next = Array.from(set);
@@ -578,6 +702,10 @@ function GastoForm({
 
   function ninguno() {
     setForm({ ...form, participantes: undefined });
+  }
+
+  function setAnimalIds(ids: string[]) {
+    setForm((f) => ({ ...f, animalIds: ids.length ? ids : undefined }));
   }
 
   function save(e: React.FormEvent) {
@@ -645,85 +773,197 @@ function GastoForm({
       </FormRow>
 
       <div className="md:col-span-2 flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <span className="eyebrow">
-            Participantes de la compra
-            {nParticipantes > 0 && (
-              <span className="text-muted normal-case tracking-normal font-sans ml-2">
-                ({nParticipantes})
-              </span>
-            )}
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={seleccionarTodos}
-              className="text-[0.68rem] text-primary hover:underline font-mono uppercase tracking-wider"
-            >
-              todos
-            </button>
-            {nParticipantes > 0 && (
-              <button
-                type="button"
-                onClick={ninguno}
-                className="text-[0.68rem] text-muted hover:text-danger font-mono uppercase tracking-wider"
-              >
-                ninguno
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {db?.propietarios.map((p) => {
-            const on = participantes.includes(p.id);
-            const initials = p.nombre.slice(0, 2).toUpperCase();
-            return (
-              <button
-                type="button"
-                key={p.id}
-                onClick={() => toggleParticipante(p.id)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition"
-                style={{
-                  background: on ? "var(--primary-soft)" : "var(--surface)",
-                  borderColor: on ? "var(--primary)" : "var(--rule)",
-                  color: on ? "var(--primary)" : "var(--fg)",
-                }}
-              >
-                <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-mono font-semibold shrink-0"
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <span className="eyebrow">Cómo se reparte</span>
+          <div className="flex gap-1.5">
+            {[
+              { value: "socios" as const, label: "Por socios", hint: "partes iguales" },
+              { value: "cabezas" as const, label: "Por cabezas", hint: "proporcional al ganado" },
+            ].map((opt) => {
+              const on = modo === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setModo(opt.value)}
+                  className="btn"
                   style={{
+                    padding: "0.35rem 0.8rem",
+                    fontSize: "0.75rem",
                     background: on ? "var(--primary)" : "var(--surface-2)",
-                    color: on ? "var(--primary-ink)" : "var(--muted)",
+                    color: on ? "var(--primary-ink)" : "var(--fg)",
+                    border: `1px solid ${on ? "var(--primary)" : "var(--rule)"}`,
                   }}
+                  title={opt.hint}
+                  aria-pressed={on}
                 >
-                  {on ? "✓" : initials}
-                </div>
-                <span className="text-sm truncate">{p.nombre}</span>
-              </button>
-            );
-          })}
-        </div>
-        {nParticipantes >= 1 && form.monto > 0 && (
-          <div
-            className="flex items-center justify-between px-3 py-2 rounded-lg text-sm"
-            style={{
-              background: "var(--primary-soft)",
-              color: "var(--primary)",
-            }}
-          >
-            <span>
-              {nParticipantes === 1 ? "Un solo participante" : `${nParticipantes} participantes`} · reparto{" "}
-              {nParticipantes > 1 ? "en partes iguales" : ""}
-            </span>
-            <span className="font-mono font-semibold">
-              {fmtCOP(porPersona)} <span className="text-xs opacity-70">c/u</span>
-            </span>
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
+        </div>
+
+        {modo === "socios" && (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="eyebrow">
+                Participantes de la compra
+                {nParticipantes > 0 && (
+                  <span className="text-muted normal-case tracking-normal font-sans ml-2">
+                    ({nParticipantes})
+                  </span>
+                )}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={seleccionarTodos}
+                  className="text-[0.68rem] text-primary hover:underline font-mono uppercase tracking-wider"
+                >
+                  todos
+                </button>
+                {nParticipantes > 0 && (
+                  <button
+                    type="button"
+                    onClick={ninguno}
+                    className="text-[0.68rem] text-muted hover:text-danger font-mono uppercase tracking-wider"
+                  >
+                    ninguno
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {db?.propietarios.map((p) => {
+                const on = participantes.includes(p.id);
+                const initials = p.nombre.slice(0, 2).toUpperCase();
+                return (
+                  <button
+                    type="button"
+                    key={p.id}
+                    onClick={() => toggleParticipante(p.id)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition"
+                    style={{
+                      background: on ? "var(--primary-soft)" : "var(--surface)",
+                      borderColor: on ? "var(--primary)" : "var(--rule)",
+                      color: on ? "var(--primary)" : "var(--fg)",
+                    }}
+                  >
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-mono font-semibold shrink-0"
+                      style={{
+                        background: on ? "var(--primary)" : "var(--surface-2)",
+                        color: on ? "var(--primary-ink)" : "var(--muted)",
+                      }}
+                    >
+                      {on ? "✓" : initials}
+                    </div>
+                    <span className="text-sm truncate">{p.nombre}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {nParticipantes >= 1 && form.monto > 0 && (
+              <div
+                className="flex items-center justify-between px-3 py-2 rounded-lg text-sm"
+                style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
+              >
+                <span>
+                  {nParticipantes === 1
+                    ? "Un solo participante"
+                    : `${nParticipantes} participantes · partes iguales`}
+                </span>
+                <span className="font-mono font-semibold">
+                  {fmtCOP(porPersona)} <span className="text-xs opacity-70">c/u</span>
+                </span>
+              </div>
+            )}
+            {nParticipantes === 0 && (
+              <p className="text-[0.68rem] text-subtle">
+                Sin participantes: el gasto lo asume completo quien lo pagó.
+              </p>
+            )}
+          </>
         )}
-        {nParticipantes === 0 && (
-          <p className="text-[0.68rem] text-subtle">
-            Sin participantes: el gasto lo asume completo quien lo pagó.
-          </p>
+
+        {modo === "cabezas" && (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="eyebrow">
+                Animales incluidos
+                {animalIds.length > 0 && (
+                  <span className="text-muted normal-case tracking-normal font-sans ml-2">
+                    ({animalIds.length})
+                  </span>
+                )}
+              </span>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => setSelectorAnimales(true)}
+                  className="text-[0.68rem] text-primary hover:underline font-mono uppercase tracking-wider"
+                >
+                  {animalIds.length > 0 ? "editar selección" : "seleccionar animales"}
+                </button>
+              )}
+            </div>
+            {animalIds.length === 0 ? (
+              <p className="text-[0.68rem] text-subtle">
+                Selecciona los animales para que el gasto se divida entre sus propietarios según cabezas.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {animalIds.slice(0, 20).map((aid) => {
+                  const a = db?.animales.find((x) => x.id === aid);
+                  if (!a) return null;
+                  return (
+                    <span
+                      key={aid}
+                      className="chip"
+                      style={{ fontSize: "0.65rem" }}
+                    >
+                      #{a.nroIdentificacion}
+                      {a.nombre ? " " + a.nombre : ""}
+                    </span>
+                  );
+                })}
+                {animalIds.length > 20 && (
+                  <span className="text-[0.65rem] text-subtle self-center ml-1">
+                    +{animalIds.length - 20} más
+                  </span>
+                )}
+              </div>
+            )}
+            {nParticipantes > 0 && form.monto > 0 && (
+              <div
+                className="flex flex-col gap-1.5 px-3 py-2 rounded-lg text-sm"
+                style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
+              >
+                <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider opacity-80">
+                  <span>Reparto por cabezas</span>
+                  <span>{cuotas.total} cabeza{cuotas.total === 1 ? "" : "s"}</span>
+                </div>
+                {participantes.map((pid) => {
+                  const p = db?.propietarios.find((x) => x.id === pid);
+                  if (!p) return null;
+                  const n = cuotas.cabezas[pid] ?? 0;
+                  const c = cuotas.cuotas[pid] ?? 0;
+                  return (
+                    <div key={pid} className="flex items-center justify-between">
+                      <span>
+                        {p.nombre}
+                        <span className="opacity-60 text-xs ml-1.5">
+                          {n} cab
+                        </span>
+                      </span>
+                      <span className="font-mono font-semibold">{fmtCOP(c)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -826,7 +1066,229 @@ function GastoForm({
           <button type="button" className="btn btn-ghost" onClick={onCancel}>Cerrar</button>
         </div>
       )}
+
+      <SelectorAnimalesModal
+        open={selectorAnimales}
+        onClose={() => setSelectorAnimales(false)}
+        seleccionados={animalIds}
+        onSave={(ids) => {
+          setAnimalIds(ids);
+          setSelectorAnimales(false);
+        }}
+      />
     </form>
+  );
+}
+
+function SelectorAnimalesModal({
+  open,
+  onClose,
+  seleccionados,
+  onSave,
+}: {
+  open: boolean;
+  onClose: () => void;
+  seleccionados: string[];
+  onSave: (ids: string[]) => void;
+}) {
+  const { db } = useDB();
+  const [sel, setSel] = useState<Set<string>>(new Set(seleccionados));
+  const [q, setQ] = useState("");
+  const [fCat, setFCat] = useState("");
+  const [fPot, setFPot] = useState("");
+  const [fProp, setFProp] = useState("");
+
+  // Rehidratar cuando cambia la selección externa (abrir/cerrar).
+  useEffect(() => {
+    if (open) setSel(new Set(seleccionados));
+  }, [seleccionados, open]);
+
+  const animalesFiltrados = useMemo(() => {
+    if (!db) return [];
+    const term = q.trim().toLowerCase();
+    return db.animales
+      .filter((a) => a.estado === "activo")
+      .filter((a) => (fCat ? a.categoria === fCat : true))
+      .filter((a) => (fPot ? a.potreroId === fPot : true))
+      .filter((a) => (fProp ? a.propietarioId === fProp : true))
+      .filter((a) => {
+        if (!term) return true;
+        return (
+          a.nroIdentificacion.toLowerCase().includes(term) ||
+          (a.nombre?.toLowerCase().includes(term) ?? false)
+        );
+      })
+      .sort((a, b) => a.nroIdentificacion.localeCompare(b.nroIdentificacion));
+  }, [db, q, fCat, fPot, fProp]);
+
+  function toggle(id: string) {
+    const next = new Set(sel);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSel(next);
+  }
+
+  function marcarFiltrados() {
+    const next = new Set(sel);
+    animalesFiltrados.forEach((a) => next.add(a.id));
+    setSel(next);
+  }
+
+  function desmarcarFiltrados() {
+    const next = new Set(sel);
+    animalesFiltrados.forEach((a) => next.delete(a.id));
+    setSel(next);
+  }
+
+  function limpiarFiltros() {
+    setQ("");
+    setFCat("");
+    setFPot("");
+    setFProp("");
+  }
+
+  const hayFiltros = !!(q || fCat || fPot || fProp);
+  const nSel = sel.size;
+
+  return (
+    <Modal open={open} onClose={onClose} title="Seleccionar animales para el gasto">
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end">
+          <div className="md:col-span-2">
+            <div className="eyebrow mb-1">Buscar</div>
+            <input
+              type="search"
+              placeholder="Nº o nombre…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+          </div>
+          <div>
+            <div className="eyebrow mb-1">Categoría</div>
+            <select value={fCat} onChange={(e) => setFCat(e.target.value)}>
+              <option value="">Todas</option>
+              {CATEGORIAS_ANIMAL.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <div className="eyebrow mb-1">Potrero</div>
+            <select value={fPot} onChange={(e) => setFPot(e.target.value)}>
+              <option value="">Todos</option>
+              {db?.potreros.map((p) => (
+                <option key={p.id} value={p.id}>{p.nombre}</option>
+              ))}
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            <div className="eyebrow mb-1">Propietario</div>
+            <select value={fProp} onChange={(e) => setFProp(e.target.value)}>
+              <option value="">Todos</option>
+              {db?.propietarios.map((p) => (
+                <option key={p.id} value={p.id}>{p.nombre}</option>
+              ))}
+            </select>
+          </div>
+          <div className="md:col-span-2 flex gap-2 justify-end">
+            <button
+              type="button"
+              onClick={marcarFiltrados}
+              className="text-[0.68rem] text-primary hover:underline font-mono uppercase tracking-wider"
+            >
+              marcar {hayFiltros ? "filtrados" : "todos"} ({animalesFiltrados.length})
+            </button>
+            {hayFiltros && (
+              <button
+                type="button"
+                onClick={desmarcarFiltrados}
+                className="text-[0.68rem] text-muted hover:text-danger font-mono uppercase tracking-wider"
+              >
+                desmarcar filtrados
+              </button>
+            )}
+            {hayFiltros && (
+              <button
+                type="button"
+                onClick={limpiarFiltros}
+                className="text-[0.68rem] text-muted hover:underline font-mono uppercase tracking-wider"
+              >
+                limpiar filtros
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div
+          className="rounded-lg border p-2 max-h-[45vh] overflow-y-auto"
+          style={{ borderColor: "var(--rule)" }}
+        >
+          {animalesFiltrados.length === 0 ? (
+            <div className="text-center text-muted py-6 text-sm">
+              Sin animales que coincidan
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+              {animalesFiltrados.map((a) => {
+                const on = sel.has(a.id);
+                const prop = db?.propietarios.find((p) => p.id === a.propietarioId);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => toggle(a.id)}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded text-left transition"
+                    style={{
+                      background: on ? "var(--primary-soft)" : "transparent",
+                      color: on ? "var(--primary)" : "var(--fg)",
+                    }}
+                  >
+                    <div
+                      className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                      style={{
+                        background: on ? "var(--primary)" : "transparent",
+                        color: on ? "var(--primary-ink)" : "var(--muted)",
+                        border: on ? "1.5px solid var(--primary)" : "1.5px dashed var(--rule-strong)",
+                        fontSize: "10px",
+                      }}
+                    >
+                      {on ? "✓" : ""}
+                    </div>
+                    <span className="font-mono text-xs text-muted">
+                      #{a.nroIdentificacion}
+                    </span>
+                    <span className="text-sm truncate flex-1">{a.nombre ?? "—"}</span>
+                    {prop && (
+                      <span className="text-[0.6rem] text-subtle font-mono uppercase">
+                        {prop.nombre.slice(0, 3)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: "var(--rule)" }}>
+          <span className="text-sm text-muted">
+            {nSel} seleccionado{nSel === 1 ? "" : "s"}
+          </span>
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-ghost" onClick={onClose}>
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => onSave(Array.from(sel))}
+            >
+              Guardar selección
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

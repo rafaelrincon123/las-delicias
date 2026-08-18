@@ -120,6 +120,8 @@ export type CategoriaGasto =
   | "servicios"
   | "otros";
 
+export type RepartoGasto = "socios" | "cabezas";
+
 export interface Gasto {
   id: string;
   fecha: string;
@@ -136,6 +138,14 @@ export interface Gasto {
    * plata. El `pagadoPor` cuenta como pagado por defecto si es participante.
    */
   pagadoPorIds?: string[];
+  /**
+   * Modo de reparto. "socios" (default): partes iguales entre participantes.
+   * "cabezas": el gasto se divide entre los propietarios de animalIds
+   * proporcional a cuántas cabezas suyas están en la lista.
+   */
+  repartoPor?: RepartoGasto;
+  /** Animales involucrados (usado cuando repartoPor === "cabezas"). */
+  animalIds?: string[];
   animalId?: string;
   potreroId?: string;
   notas?: string;
