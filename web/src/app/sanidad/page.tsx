@@ -172,10 +172,10 @@ export default function SanidadPage() {
 
       {tab === "proximos" && (
         <div className="card p-0 overflow-x-auto">
-          <table className="table">
+          <table className="table" style={{ tableLayout: "auto" }}>
             <thead>
               <tr>
-                <th></th>
+                <th style={{ width: "3rem" }}></th>
                 <th>Cuándo</th>
                 <th>Animal</th>
                 <th>Tipo</th>
@@ -252,17 +252,17 @@ export default function SanidadPage() {
 
       {tab === "historial" && (
         <div className="card p-0 overflow-x-auto">
-          <table className="table">
+          <table className="table" style={{ tableLayout: "auto" }}>
             <thead>
               <tr>
-                <th></th>
+                <th style={{ width: "3rem" }}></th>
                 <th>Fecha</th>
                 <th>Animal</th>
                 <th>Tipo</th>
                 <th>Producto</th>
                 <th>Dosis</th>
                 <th>Costo</th>
-                <th></th>
+                <th style={{ width: "4rem" }}></th>
               </tr>
             </thead>
             <tbody>

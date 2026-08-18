@@ -180,17 +180,17 @@ export default function ReproduccionPage() {
 
       {tab === "servicios" && (
         <div className="card p-0 overflow-x-auto">
-          <table className="table">
+          <table className="table" style={{ tableLayout: "auto" }}>
             <thead>
               <tr>
-                <th></th>
+                <th style={{ width: "3rem" }}></th>
                 <th>Fecha servicio</th>
                 <th>Hembra</th>
                 <th>Macho / semen</th>
                 <th>Tipo</th>
                 <th>Resultado</th>
                 <th>Parto probable</th>
-                <th></th>
+                <th style={{ width: "4rem" }}></th>
               </tr>
             </thead>
             <tbody>
