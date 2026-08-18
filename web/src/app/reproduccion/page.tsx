@@ -180,17 +180,20 @@ export default function ReproduccionPage() {
 
       {tab === "servicios" && (
         <div className="card p-0 overflow-x-auto">
-          <table className="table" style={{ tableLayout: "auto" }}>
+          <table
+            className="table"
+            style={{ ["--cols" as string]: "3.5rem 10rem minmax(9rem, 1fr) minmax(10rem, 1.2fr) 8rem 8rem 10rem 7rem" }}
+          >
             <thead>
               <tr>
-                <th style={{ width: "3rem" }}></th>
+                <th></th>
                 <th>Fecha servicio</th>
                 <th>Hembra</th>
                 <th>Macho / semen</th>
                 <th>Tipo</th>
                 <th>Resultado</th>
                 <th>Parto probable</th>
-                <th style={{ width: "6rem" }}></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -305,7 +308,10 @@ export default function ReproduccionPage() {
 
       {tab === "partos" && (
         <div className="card p-0 overflow-x-auto">
-          <table className="table">
+          <table
+            className="table"
+            style={{ ["--cols" as string]: "10rem minmax(10rem, 1fr) minmax(10rem, 1fr) 6rem 8rem minmax(10rem, 1.2fr) 7rem" }}
+          >
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -314,7 +320,7 @@ export default function ReproduccionPage() {
                 <th>Sexo</th>
                 <th>Peso al nacer</th>
                 <th>Notas</th>
-                <th style={{ width: "6rem" }}></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>

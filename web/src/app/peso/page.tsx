@@ -288,7 +288,10 @@ export default function PesoPage() {
       )}
 
       <div className="card p-0 overflow-x-auto">
-        <table className="table">
+        <table
+          className="table"
+          style={{ ["--cols" as string]: "10rem minmax(12rem, 1.5fr) 8rem 9rem 9rem 7rem" }}
+        >
           <thead>
             <tr>
               <th>Fecha</th>
@@ -296,16 +299,13 @@ export default function PesoPage() {
               <th className="text-right">Peso (kg)</th>
               <th>Tipo</th>
               <th className="text-right">Gan. día (g)</th>
-              <th style={{ width: "6rem" }}></th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {pesajesFiltrados.length === 0 ? (
               <tr>
-                <td
-                  colSpan={6}
-                  className="text-center text-muted py-8 text-sm"
-                >
+                <td className="row-full text-muted py-8 text-sm">
                   {filtrosActivos
                     ? "Sin pesajes con esos filtros."
                     : "Aún no hay pesajes. Registra el primero."}

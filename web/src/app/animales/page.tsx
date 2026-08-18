@@ -122,7 +122,10 @@ export default function AnimalesPage() {
 
       {/* Desktop: table */}
       <div className="card p-0 overflow-x-auto hidden md:block">
-        <table className="table">
+        <table
+          className="table"
+          style={{ ["--cols" as string]: "6rem minmax(10rem, 1.5fr) 5rem 8rem 6rem minmax(10rem, 1.2fr) 8rem 9rem 8rem 8rem" }}
+        >
           <thead>
             <tr>
               <th>Nº</th>
@@ -140,7 +143,7 @@ export default function AnimalesPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={10} className="text-center text-muted py-8">
+                <td className="row-full text-muted py-8">
                   Sin resultados con estos filtros
                 </td>
               </tr>

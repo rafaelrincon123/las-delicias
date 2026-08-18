@@ -244,7 +244,10 @@ export default function GastosPage() {
             animales={db!.animales}
           />
           <div className="card p-0 overflow-x-auto">
-            <table className="table">
+            <table
+              className="table"
+              style={{ ["--cols" as string]: "9rem 9rem minmax(12rem, 1.5fr) 8rem minmax(12rem, 1.3fr) 9rem 8rem 7rem" }}
+            >
               <thead>
                 <tr>
                   <th>Fecha</th>
@@ -254,7 +257,7 @@ export default function GastosPage() {
                   <th>Estado de pago</th>
                   <th className="text-right">Monto</th>
                   <th className="text-right">Por c/u</th>
-                  <th style={{ width: "6rem" }}></th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -400,7 +403,10 @@ export default function GastosPage() {
 
       {tab === "ingresos" && (
         <div className="card p-0 overflow-x-auto">
-          <table className="table">
+          <table
+            className="table"
+            style={{ ["--cols" as string]: "10rem 10rem minmax(12rem, 1.5fr) minmax(10rem, 1fr) 10rem 7rem" }}
+          >
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -408,7 +414,7 @@ export default function GastosPage() {
                 <th>Concepto</th>
                 <th>Comprador</th>
                 <th className="text-right">Monto</th>
-                <th style={{ width: "6rem" }}></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>

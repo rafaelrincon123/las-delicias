@@ -781,20 +781,44 @@ select option { background-color: var(--surface); color: var(--fg); }
 :root:not([data-theme="light"]) .hero-stat-num { color: white; }
 :root:not([data-theme="light"]) .hero-stat-sub { color: rgba(255, 255, 255, 0.62); }
 
-/* ═══════════════════════ TABLES ═══════════════════════ */
+/* ═══════════════════════ TABLES (CSS-Grid based) ═══════════════════════
+   La tabla usa CSS Grid en el <table> y `display: contents` en thead/tbody/tr
+   para que headers y celdas participen del MISMO grid — imposible que se
+   desalineen. Cada tabla define su template con la CSS var --cols en el style
+   del <table>, ej. style={{ "--cols": "8rem 1fr 8rem 6rem" }}.
+   Fallback si --cols no está: reparte en columnas iguales por auto-fit. */
 .table {
+  display: grid;
+  grid-template-columns: var(--cols, repeat(6, minmax(0, 1fr)));
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
   font-variant-numeric: tabular-nums;
+  min-width: max-content;
 }
-.table thead tr {
-  background: linear-gradient(180deg, var(--surface-2) 0%, transparent 100%);
+.table thead,
+.table tbody {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+}
+.table tr {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  cursor: inherit;
+  transition: background 120ms ease;
+}
+.table th,
+.table td {
+  display: flex;
+  align-items: center;
+  padding: 0.85rem 1.15rem;
+  min-width: 0;
+  border-bottom: 1px solid var(--rule);
+  transition: background 120ms ease;
+  overflow: hidden;
 }
 .table th {
-  text-align: left;
-  padding: 0.85rem 1.15rem;
-  background: transparent;
+  background: var(--surface-2);
   font-family: var(--font-geist-mono);
   font-size: 0.65rem;
   letter-spacing: 0.09em;
@@ -803,34 +827,19 @@ select option { background-color: var(--surface); color: var(--fg); }
   font-weight: 600;
   border-bottom: 1px solid var(--rule-strong);
 }
-/* Un th vacío (columna de acciones / chulo) sin ancho explícito colapsa
-   y descuadra el resto de las celdas. Le damos un mínimo defensivo. */
-.table th:empty { min-width: 3.5rem; }
 .table td {
-  padding: 0.95rem 1.15rem;
-  border-bottom: 1px solid var(--rule);
   font-size: 0.9rem;
   color: var(--fg);
-  vertical-align: middle;
-  transition: background 120ms ease;
+  padding: 0.95rem 1.15rem;
 }
-.table tbody tr { transition: background 120ms ease; position: relative; }
-.table tbody tr:hover td { background: var(--surface-2); }
+.table th.text-right,
+.table td.text-right { justify-content: flex-end; text-align: right; }
+.table th.text-center,
+.table td.text-center { justify-content: center; text-align: center; }
 .table tbody tr:last-child td { border-bottom: none; }
-
-/* Table with row accent on hover */
-.table tbody tr::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--primary);
-  transform: scaleY(0);
-  transition: transform 150ms ease;
-}
-.table tbody tr:hover::before { transform: scaleY(1); }
+.table tbody tr:hover td { background: var(--surface-2); }
+.table td.row-full { grid-column: 1 / -1; justify-content: center; }
+.table-wrap-scroll { width: 100%; overflow-x: auto; }
 
 /* ═══════════════════════ SIDEBAR NAV ═══════════════════════ */
 .nav-link {

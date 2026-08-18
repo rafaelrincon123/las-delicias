@@ -172,10 +172,13 @@ export default function SanidadPage() {
 
       {tab === "proximos" && (
         <div className="card p-0 overflow-x-auto">
-          <table className="table" style={{ tableLayout: "auto" }}>
+          <table
+            className="table"
+            style={{ ["--cols" as string]: "3.5rem 10rem minmax(10rem, 1fr) 9rem minmax(10rem, 1.2fr) 8rem" }}
+          >
             <thead>
               <tr>
-                <th style={{ width: "3rem" }}></th>
+                <th></th>
                 <th>Cuándo</th>
                 <th>Animal</th>
                 <th>Tipo</th>
@@ -186,7 +189,7 @@ export default function SanidadPage() {
             <tbody>
               {proximos.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center text-muted py-6">
+                  <td className="row-full text-muted py-6">
                     Sin eventos pendientes
                   </td>
                 </tr>
@@ -252,17 +255,20 @@ export default function SanidadPage() {
 
       {tab === "historial" && (
         <div className="card p-0 overflow-x-auto">
-          <table className="table" style={{ tableLayout: "auto" }}>
+          <table
+            className="table"
+            style={{ ["--cols" as string]: "3.5rem 10rem minmax(10rem, 1fr) 9rem minmax(10rem, 1.2fr) 7rem 8rem 7rem" }}
+          >
             <thead>
               <tr>
-                <th style={{ width: "3rem" }}></th>
+                <th></th>
                 <th>Fecha</th>
                 <th>Animal</th>
                 <th>Tipo</th>
                 <th>Producto</th>
                 <th>Dosis</th>
                 <th>Costo</th>
-                <th style={{ width: "6rem" }}></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>

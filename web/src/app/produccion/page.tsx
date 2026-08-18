@@ -137,7 +137,10 @@ export default function ProduccionPage() {
           </div>
 
           <div className="card p-0 overflow-x-auto">
-            <table className="table">
+            <table
+              className="table"
+              style={{ ["--cols" as string]: "10rem minmax(10rem, 1.5fr) 8rem 8rem 8rem 7rem" }}
+            >
               <thead>
                 <tr>
                   <th>Fecha</th>

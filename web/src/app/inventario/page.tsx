@@ -137,7 +137,10 @@ export default function InventarioPage() {
               No hay insumos registrados. Agrega el primero.
             </div>
           ) : (
-            <table className="table">
+            <table
+              className="table"
+              style={{ ["--cols" as string]: "minmax(12rem, 1.5fr) 10rem 7rem 7rem 9rem 9rem 12rem" }}
+            >
               <thead>
                 <tr>
                   <th>Insumo</th>
@@ -262,7 +265,10 @@ export default function InventarioPage() {
               Sin movimientos aún.
             </div>
           ) : (
-            <table className="table">
+            <table
+              className="table"
+              style={{ ["--cols" as string]: "10rem minmax(10rem, 1.2fr) 8rem 8rem 9rem minmax(10rem, 1fr)" }}
+            >
               <thead>
                 <tr>
                   <th>Fecha</th>
