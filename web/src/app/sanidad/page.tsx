@@ -44,11 +44,12 @@ export default function SanidadPage() {
       .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
   }, [db, q, filtroAnimal, filtroTipo, desde, hasta]);
 
+  // Pendientes = eventos no realizados. Se ordenan por qué tan vencidos están
+  // (los que ya pasaron primero, luego los futuros).
   const proximos = useMemo(() => {
     return eventos
-      .filter((e) => e.proximoEventoFecha)
-      .map((e) => ({ ...e, dias: diasHasta(e.proximoEventoFecha) }))
-      .filter((e) => e.dias !== null && e.dias! >= -30 && e.dias! <= 60)
+      .filter((e) => !e.completada)
+      .map((e) => ({ ...e, dias: diasHasta(e.fecha) }))
       .sort((a, b) => (a.dias ?? 0) - (b.dias ?? 0));
   }, [eventos]);
 
@@ -174,6 +175,7 @@ export default function SanidadPage() {
           <table className="table">
             <thead>
               <tr>
+                <th></th>
                 <th>Cuándo</th>
                 <th>Animal</th>
                 <th>Tipo</th>
@@ -184,8 +186,8 @@ export default function SanidadPage() {
             <tbody>
               {proximos.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center text-muted py-6">
-                    Sin eventos programados
+                  <td colSpan={6} className="text-center text-muted py-6">
+                    Sin eventos pendientes
                   </td>
                 </tr>
               ) : (
@@ -202,7 +204,22 @@ export default function SanidadPage() {
                       }}
                       style={{ cursor: "pointer" }}
                     >
-                      <td>{fmtDate(e.proximoEventoFecha)}</td>
+                      <td onClick={(ev) => ev.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => toggleCompletada(e)}
+                          title="Marcar realizada"
+                          aria-label="Marcar realizada"
+                          className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded-full"
+                          style={{
+                            background: "transparent",
+                            color: "var(--muted)",
+                            border: "1.5px dashed var(--rule-strong)",
+                            cursor: "pointer",
+                          }}
+                        />
+                      </td>
+                      <td>{fmtDate(e.fecha)}</td>
                       <td>
                         {animal?.nombre ?? "—"}{" "}
                         <span className="font-mono text-xs text-muted">
@@ -217,7 +234,11 @@ export default function SanidadPage() {
                       <td>{e.producto}</td>
                       <td>
                         <span className={"chip " + (vencido ? "danger" : "accent")}>
-                          {vencido ? `${Math.abs(e.dias!)} d vencida` : `en ${e.dias} d`}
+                          {vencido
+                            ? `${Math.abs(e.dias!)} d vencida`
+                            : e.dias === 0
+                            ? "hoy"
+                            : `en ${e.dias} d`}
                         </span>
                       </td>
                     </tr>
