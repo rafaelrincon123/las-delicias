@@ -254,7 +254,7 @@ export default function GastosPage() {
                   <th>Estado de pago</th>
                   <th className="text-right">Monto</th>
                   <th className="text-right">Por c/u</th>
-                  <th style={{ width: "4rem" }}></th>
+                  <th style={{ width: "6rem" }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -365,7 +365,18 @@ export default function GastosPage() {
                           <span className="text-muted">—</span>
                         )}
                       </td>
-                      <td className="text-right">
+                      <td className="text-right whitespace-nowrap">
+                        <button
+                          className="text-xs text-muted hover:text-fg hover:underline mr-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditG(g);
+                            setModeG("view");
+                            setOpenG(true);
+                          }}
+                        >
+                          ver
+                        </button>
                         <button
                           className="text-xs text-accent hover:underline"
                           onClick={(e) => {
@@ -397,7 +408,7 @@ export default function GastosPage() {
                 <th>Concepto</th>
                 <th>Comprador</th>
                 <th className="text-right">Monto</th>
-                <th></th>
+                <th style={{ width: "6rem" }}></th>
               </tr>
             </thead>
             <tbody>
@@ -422,7 +433,18 @@ export default function GastosPage() {
                   <td className="text-right font-mono tabular-nums text-success">
                     {fmtCOP(i.monto)}
                   </td>
-                  <td className="text-right">
+                  <td className="text-right whitespace-nowrap">
+                    <button
+                      className="text-xs text-muted hover:text-fg hover:underline mr-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditI(i);
+                        setModeI("view");
+                        setOpenI(true);
+                      }}
+                    >
+                      ver
+                    </button>
                     <button
                       className="text-xs text-accent hover:underline"
                       onClick={(e) => {

@@ -214,7 +214,18 @@ export default function InventarioPage() {
                       </td>
                       <td className="text-right whitespace-nowrap">
                         <button
-                          className="text-xs text-primary hover:underline mr-3"
+                          className="text-xs text-muted hover:text-fg hover:underline mr-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditInsumo(i);
+                            setModeInsumo("view");
+                            setOpenInsumo(true);
+                          }}
+                        >
+                          ver
+                        </button>
+                        <button
+                          className="text-xs text-primary hover:underline mr-2"
                           onClick={(e) => {
                             e.stopPropagation();
                             setMovInsumoId(i.id);

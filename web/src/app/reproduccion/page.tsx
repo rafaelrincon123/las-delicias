@@ -190,7 +190,7 @@ export default function ReproduccionPage() {
                 <th>Tipo</th>
                 <th>Resultado</th>
                 <th>Parto probable</th>
-                <th style={{ width: "4rem" }}></th>
+                <th style={{ width: "6rem" }}></th>
               </tr>
             </thead>
             <tbody>
@@ -271,7 +271,18 @@ export default function ReproduccionPage() {
                         </span>
                       ) : "—"}
                     </td>
-                    <td className="text-right">
+                    <td className="text-right whitespace-nowrap">
+                      <button
+                        className="text-xs text-muted hover:text-fg hover:underline mr-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditServ(s);
+                          setModeServ("view");
+                          setOpenServ(true);
+                        }}
+                      >
+                        ver
+                      </button>
                       <button
                         className="text-xs text-accent hover:underline"
                         onClick={(e) => {
@@ -303,7 +314,7 @@ export default function ReproduccionPage() {
                 <th>Sexo</th>
                 <th>Peso al nacer</th>
                 <th>Notas</th>
-                <th></th>
+                <th style={{ width: "6rem" }}></th>
               </tr>
             </thead>
             <tbody>
@@ -339,7 +350,18 @@ export default function ReproduccionPage() {
                     <td className="text-xs text-muted">
                       {p.complicaciones ?? p.notas ?? ""}
                     </td>
-                    <td className="text-right">
+                    <td className="text-right whitespace-nowrap">
+                      <button
+                        className="text-xs text-muted hover:text-fg hover:underline mr-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditPar(p);
+                          setModePar("view");
+                          setOpenPar(true);
+                        }}
+                      >
+                        ver
+                      </button>
                       <button
                         className="text-xs text-accent hover:underline"
                         onClick={(e) => {

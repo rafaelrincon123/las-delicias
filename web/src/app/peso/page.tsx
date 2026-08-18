@@ -296,7 +296,7 @@ export default function PesoPage() {
               <th className="text-right">Peso (kg)</th>
               <th>Tipo</th>
               <th className="text-right">Gan. día (g)</th>
-              <th style={{ width: "4rem" }}></th>
+              <th style={{ width: "6rem" }}></th>
             </tr>
           </thead>
           <tbody>
@@ -362,7 +362,18 @@ export default function PesoPage() {
                     <td className="text-right font-mono tabular-nums">
                       {gan !== null ? fmtNumber(gan, 0) : "—"}
                     </td>
-                    <td className="text-right">
+                    <td className="text-right whitespace-nowrap">
+                      <button
+                        className="text-xs text-muted hover:text-fg hover:underline mr-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEdit(p);
+                          setMode("view");
+                          setOpen(true);
+                        }}
+                      >
+                        ver
+                      </button>
                       <button
                         className="text-xs text-accent hover:underline"
                         onClick={(e) => {

@@ -178,7 +178,18 @@ export default function ProduccionPage() {
                       <td className="text-right font-mono tabular-nums font-semibold">
                         {fmtNumber(total, 1)}
                       </td>
-                      <td className="text-right">
+                      <td className="text-right whitespace-nowrap">
+                        <button
+                          className="text-xs text-muted hover:text-fg hover:underline mr-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditLec(l);
+                            setModeLec("view");
+                            setOpenLec(true);
+                          }}
+                        >
+                          ver
+                        </button>
                         <button
                           className="text-xs text-accent hover:underline"
                           onClick={(e) => {

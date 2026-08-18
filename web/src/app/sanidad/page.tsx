@@ -262,7 +262,7 @@ export default function SanidadPage() {
                 <th>Producto</th>
                 <th>Dosis</th>
                 <th>Costo</th>
-                <th style={{ width: "4rem" }}></th>
+                <th style={{ width: "6rem" }}></th>
               </tr>
             </thead>
             <tbody>
@@ -318,7 +318,18 @@ export default function SanidadPage() {
                     </td>
                     <td className="font-mono text-xs">{e.dosis ?? "—"}</td>
                     <td className="font-mono text-xs">{fmtCOP(e.costo)}</td>
-                    <td className="text-right">
+                    <td className="text-right whitespace-nowrap">
+                      <button
+                        className="text-xs text-muted hover:text-fg hover:underline mr-2"
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          setEdit(e);
+                          setMode("view");
+                          setOpen(true);
+                        }}
+                      >
+                        ver
+                      </button>
                       <button
                         className="text-xs text-accent hover:underline"
                         onClick={(ev) => {
