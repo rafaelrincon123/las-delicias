@@ -8,6 +8,8 @@ import { fmtDate, fmtCOP, fmtNumber, fmtPct, edadTexto, diasHasta } from "@/lib/
 import { CATEGORIAS_ANIMAL, CATEGORIAS_GASTO } from "@/lib/types";
 import { miParticipacion } from "@/lib/participacion";
 import HeroStat from "@/components/HeroStat";
+import Modal from "@/components/Modal";
+import IngresoForm from "@/components/IngresoForm";
 
 export default function MiOperacionPage() {
   const { user } = useAuth();
@@ -15,6 +17,7 @@ export default function MiOperacionPage() {
 
   const [desde, setDesde] = useState<string>("");
   const [hasta, setHasta] = useState<string>("");
+  const [openIngreso, setOpenIngreso] = useState(false);
 
   const rango = useMemo(() => {
     const d = desde ? new Date(desde + "T00:00:00") : null;
@@ -152,12 +155,22 @@ export default function MiOperacionPage() {
               {hoyLabel}
             </span>
           </div>
-          <Link
-            href="/panel"
-            className="text-[0.68rem] font-mono uppercase tracking-widest text-primary hover:underline"
-          >
-            Ver panel general →
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setOpenIngreso(true)}
+              className="btn btn-primary"
+              style={{ padding: "0.4rem 0.9rem", fontSize: "0.75rem" }}
+            >
+              + Nuevo ingreso
+            </button>
+            <Link
+              href="/panel"
+              className="text-[0.68rem] font-mono uppercase tracking-widest text-primary hover:underline"
+            >
+              Ver panel general →
+            </Link>
+          </div>
         </div>
         <div className="flex items-start justify-between gap-6 flex-wrap">
           <div className="min-w-0 flex-1">
@@ -531,6 +544,18 @@ export default function MiOperacionPage() {
           />
         </div>
       </section>
+
+      <Modal
+        open={openIngreso}
+        onClose={() => setOpenIngreso(false)}
+        title="Nuevo ingreso"
+      >
+        <IngresoForm
+          initial={null}
+          onSaved={() => setOpenIngreso(false)}
+          onCancel={() => setOpenIngreso(false)}
+        />
+      </Modal>
     </div>
   );
 }
