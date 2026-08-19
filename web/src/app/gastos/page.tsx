@@ -12,7 +12,6 @@ import {
   Gasto,
   Ingreso,
   Propietario,
-  TipoIngreso,
 } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
