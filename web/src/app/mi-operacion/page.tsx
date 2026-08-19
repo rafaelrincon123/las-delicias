@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useDB } from "@/lib/useDB";
 import { useAuth } from "@/lib/useAuth";
@@ -12,6 +12,16 @@ import HeroStat from "@/components/HeroStat";
 export default function MiOperacionPage() {
   const { user } = useAuth();
   const { db, ready } = useDB();
+
+  const [desde, setDesde] = useState<string>("");
+  const [hasta, setHasta] = useState<string>("");
+
+  const rango = useMemo(() => {
+    const d = desde ? new Date(desde + "T00:00:00") : null;
+    const h = hasta ? new Date(hasta + "T23:59:59") : null;
+    const activo = !!(d || h);
+    return { d, h, activo };
+  }, [desde, hasta]);
 
   const data = useMemo(() => {
     if (!db || !user) return null;
@@ -58,20 +68,27 @@ export default function MiOperacionPage() {
       misAnimalIds.has(s.hembraId)
     );
 
-    const desde30 = new Date();
-    desde30.setDate(desde30.getDate() - 30);
-    const gastos30 = misGastos
-      .filter((g) => new Date(g.fecha) >= desde30)
-      .reduce((s, g) => s + g.miParte, 0);
-    const ingresos30 = misIngresos
-      .filter((i) => new Date(i.fecha) >= desde30)
-      .reduce((s, i) => s + i.monto, 0);
-
     const gastosTotales = misGastos.reduce((s, g) => s + g.miParte, 0);
     const ingresosTotales = misIngresos.reduce((s, i) => s + i.monto, 0);
 
+    const inRange = (iso: string) => {
+      if (!rango.activo) return true;
+      const f = new Date(iso);
+      if (rango.d && f < rango.d) return false;
+      if (rango.h && f > rango.h) return false;
+      return true;
+    };
+
+    const misGastosRango = misGastos.filter((g) => inRange(g.fecha));
+    const misIngresosRango = misIngresos.filter((i) => inRange(i.fecha));
+    const misSanidadRango = misSanidad.filter((s) => inRange(s.fecha));
+
+    const gastosRango = misGastosRango.reduce((s, g) => s + g.miParte, 0);
+    const ingresosRango = misIngresosRango.reduce((s, i) => s + i.monto, 0);
+
     const tareasPendientes = misTareas
       .filter((t) => !t.completada)
+      .filter((t) => inRange(t.fecha))
       .map((t) => ({ ...t, dias: diasHasta(t.fecha) }))
       .sort((a, b) => (a.dias ?? 9999) - (b.dias ?? 9999));
 
@@ -81,8 +98,9 @@ export default function MiOperacionPage() {
           (s.resultado === "pendiente" || s.resultado === "prenada") &&
           s.fechaProbableParto
       )
+      .filter((s) => inRange(s.fechaProbableParto!))
       .map((s) => ({ ...s, dias: diasHasta(s.fechaProbableParto) }))
-      .filter((s) => s.dias !== null && s.dias! >= -14 && s.dias! <= 300)
+      .filter((s) => rango.activo || (s.dias !== null && s.dias! >= -14 && s.dias! <= 300))
       .sort((a, b) => (a.dias ?? 0) - (b.dias ?? 0));
 
     const share = miParticipacion(myId, db.animales);
@@ -91,21 +109,23 @@ export default function MiOperacionPage() {
       misAnimales,
       misAnimalesActivos,
       misGastos,
+      misGastosRango,
       misIngresos,
       misTareas,
       misSanidad,
+      misSanidadRango,
       misServicios,
-      gastos30,
-      ingresos30,
       gastosTotales,
       ingresosTotales,
-      balance30: ingresos30 - gastos30,
       balanceTotal: ingresosTotales - gastosTotales,
+      gastosRango,
+      ingresosRango,
+      balanceRango: ingresosRango - gastosRango,
       tareasPendientes,
       proximosPartos,
       participacionPct: share.pct,
     };
-  }, [db, user]);
+  }, [db, user, rango]);
 
   if (!ready || !user || !data) {
     return <div className="text-muted">Cargando…</div>;
@@ -180,7 +200,54 @@ export default function MiOperacionPage() {
         </div>
       </section>
 
-      {/* KPIs */}
+      {/* Selector de rango */}
+      <section className="card">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <div className="eyebrow eyebrow-primary">Rango</div>
+            <span className="text-xs text-muted">
+              {rango.activo
+                ? "Filtrando KPIs, tareas, partos, gastos y sanidad"
+                : "Sin filtro — mostrando toda la operación"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <label className="flex items-center gap-1.5 text-xs text-muted">
+              Desde
+              <input
+                type="date"
+                value={desde}
+                onChange={(e) => setDesde(e.target.value)}
+                style={{ padding: "0.35rem 0.55rem" }}
+              />
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-muted">
+              Hasta
+              <input
+                type="date"
+                value={hasta}
+                onChange={(e) => setHasta(e.target.value)}
+                style={{ padding: "0.35rem 0.55rem" }}
+              />
+            </label>
+            {rango.activo && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDesde("");
+                  setHasta("");
+                }}
+                className="chip ghost"
+                style={{ padding: "0.3rem 0.7rem", fontSize: "0.7rem" }}
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* KPIs — siempre muestran totales de toda la operación */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-3">
         <HeroStat
           label="Mis animales"
@@ -193,25 +260,25 @@ export default function MiOperacionPage() {
           }
         />
         <HeroStat
-          label="Mis gastos 30 d"
-          value={fmtCOP(data.gastos30)}
+          label="Mis gastos"
+          value={fmtCOP(rango.activo ? data.gastosRango : data.gastosTotales)}
           tone="coral"
           size="sm"
-          sub={`Total: ${fmtCOP(data.gastosTotales)}`}
+          sub={rango.activo ? `Total: ${fmtCOP(data.gastosTotales)}` : "desde el inicio"}
         />
         <HeroStat
-          label="Mis ingresos 30 d"
-          value={fmtCOP(data.ingresos30)}
+          label="Mis ingresos"
+          value={fmtCOP(rango.activo ? data.ingresosRango : data.ingresosTotales)}
           tone="moss"
           size="sm"
-          sub={`Total: ${fmtCOP(data.ingresosTotales)}`}
+          sub={rango.activo ? `Total: ${fmtCOP(data.ingresosTotales)}` : "desde el inicio"}
         />
         <HeroStat
-          label="Balance 30 d"
-          value={fmtCOP(data.balance30)}
-          tone={data.balance30 >= 0 ? "citrus" : "coral"}
+          label="Balance"
+          value={fmtCOP(rango.activo ? data.balanceRango : data.balanceTotal)}
+          tone={(rango.activo ? data.balanceRango : data.balanceTotal) >= 0 ? "citrus" : "coral"}
           size="sm"
-          sub={`Total: ${fmtCOP(data.balanceTotal)}`}
+          sub={rango.activo ? `Total: ${fmtCOP(data.balanceTotal)}` : "desde el inicio"}
         />
       </section>
 
@@ -376,11 +443,15 @@ export default function MiOperacionPage() {
               ver todos →
             </Link>
           </div>
-          {data.misGastos.length === 0 ? (
-            <p className="text-sm text-muted">No hay gastos registrados a tu nombre.</p>
+          {data.misGastosRango.length === 0 ? (
+            <p className="text-sm text-muted">
+              {rango.activo
+                ? "No hay gastos en el rango seleccionado."
+                : "No hay gastos registrados a tu nombre."}
+            </p>
           ) : (
             <ul className="flex flex-col gap-1 -mx-1">
-              {[...data.misGastos]
+              {[...data.misGastosRango]
                 .sort(
                   (a, b) =>
                     new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
@@ -440,19 +511,22 @@ export default function MiOperacionPage() {
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <MiniPill label="Eventos totales" value={data.misSanidad.length} />
+          <MiniPill
+            label={rango.activo ? "Eventos en rango" : "Eventos totales"}
+            value={data.misSanidadRango.length}
+          />
           <MiniPill
             label="Vacunas"
-            value={data.misSanidad.filter((s) => s.tipo === "vacuna").length}
+            value={data.misSanidadRango.filter((s) => s.tipo === "vacuna").length}
           />
           <MiniPill
             label="Tratamientos"
-            value={data.misSanidad.filter((s) => s.tipo === "tratamiento").length}
+            value={data.misSanidadRango.filter((s) => s.tipo === "tratamiento").length}
           />
           <MiniPill
             label="Desparasitaciones"
             value={
-              data.misSanidad.filter((s) => s.tipo === "desparasitacion").length
+              data.misSanidadRango.filter((s) => s.tipo === "desparasitacion").length
             }
           />
         </div>
