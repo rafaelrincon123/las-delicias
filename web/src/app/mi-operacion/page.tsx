@@ -504,7 +504,7 @@ export default function MiOperacionPage() {
                           )}
                         </div>
                       </div>
-                      <div className="text-right whitespace-nowrap">
+                      <div className="text-right whitespace-nowrap shrink-0">
                         <div className="font-mono text-sm text-danger">
                           {fmtCOP(valor)}
                         </div>
@@ -597,7 +597,7 @@ export default function MiOperacionPage() {
                       </div>
                     </div>
                     {typeof s.costo === "number" && s.costo > 0 && (
-                      <div className="font-mono text-sm text-danger whitespace-nowrap">
+                      <div className="font-mono text-sm text-danger whitespace-nowrap shrink-0">
                         {fmtCOP(s.costo)}
                       </div>
                     )}

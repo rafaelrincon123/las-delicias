@@ -60,7 +60,6 @@ html, body {
   text-rendering: optimizeLegibility;
   font-feature-settings: "ss01", "cv11", "cv09";
   letter-spacing: -0.005em;
-  overflow-x: hidden;
 }
 
 /* Ambient background */
