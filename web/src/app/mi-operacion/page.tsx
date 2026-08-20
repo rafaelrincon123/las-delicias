@@ -296,8 +296,8 @@ export default function MiOperacionPage() {
       </section>
 
       {/* Dos columnas: animales + tareas */}
-      <section className="grid lg:grid-cols-2 gap-3">
-        <div className="card">
+      <section className="grid lg:grid-cols-2 gap-3 min-w-0">
+        <div className="card min-w-0">
           <div className="card-head">
             <div>
               <div className="eyebrow eyebrow-primary">Hato</div>
@@ -403,8 +403,8 @@ export default function MiOperacionPage() {
       </section>
 
       {/* Próximos partos + gastos recientes */}
-      <section className="grid lg:grid-cols-2 gap-3">
-        <div className="card">
+      <section className="grid lg:grid-cols-2 gap-3 min-w-0">
+        <div className="card min-w-0">
           <div className="card-head">
             <div>
               <div className="eyebrow eyebrow-primary">Reproducción</div>

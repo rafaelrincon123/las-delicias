@@ -26,10 +26,7 @@ export default function NavShell({ children }: { children: React.ReactNode }) {
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header onOpenNav={() => setMobileOpen(true)} />
-        <main
-          className="flex-1 px-4 md:px-8 py-5 md:py-8 max-w-[92rem] w-full mx-auto pb-24 md:pb-8"
-          style={{ overflowX: "clip" }}
-        >
+        <main className="flex-1 px-4 md:px-8 py-5 md:py-8 max-w-[92rem] w-full mx-auto pb-24 md:pb-8 min-w-0">
           {children}
         </main>
       </div>
