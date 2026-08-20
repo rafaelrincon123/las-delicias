@@ -44,7 +44,9 @@ export default function MiOperacionPage() {
       });
 
     const misIngresos = db.ingresos.filter(
-      (i) => i.animalId && misAnimalIds.has(i.animalId)
+      (i) =>
+        i.registradoPor === myId ||
+        (i.animalId ? misAnimalIds.has(i.animalId) : false)
     );
 
     const misTareas = db.tareas.filter((t) => {

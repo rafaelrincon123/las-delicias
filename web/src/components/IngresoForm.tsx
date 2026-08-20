@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useDB } from "@/lib/useDB";
+import { useAuth } from "@/lib/useAuth";
 import { updateCollection, uid, nowISO } from "@/lib/storage";
 import { todayISO } from "@/lib/format";
 import { Ingreso, TipoIngreso } from "@/lib/types";
@@ -27,6 +28,7 @@ export default function IngresoForm({
   onCancel,
 }: Props) {
   const { db } = useDB();
+  const { user } = useAuth();
   const [form, setForm] = useState<Ingreso>(
     initial ?? {
       id: uid(),
@@ -34,6 +36,7 @@ export default function IngresoForm({
       tipo: "venta_leche",
       concepto: "",
       monto: 0,
+      registradoPor: user?.id,
       createdAt: nowISO(),
     }
   );
@@ -42,9 +45,13 @@ export default function IngresoForm({
     e.preventDefault();
     if (!form.concepto.trim()) return alert("Escribe un concepto");
     if (form.monto <= 0) return alert("Ingresa un monto válido");
+    const toSave: Ingreso = {
+      ...form,
+      registradoPor: form.registradoPor ?? user?.id,
+    };
     updateCollection("ingresos", (list) => [
-      ...list.filter((i) => i.id !== form.id),
-      form,
+      ...list.filter((i) => i.id !== toSave.id),
+      toSave,
     ]);
     onSaved();
   }
@@ -94,6 +101,21 @@ export default function IngresoForm({
             value={form.comprador ?? ""}
             onChange={(e) => setForm({ ...form, comprador: e.target.value })}
           />
+        </FormRow>
+        <FormRow label="Registrado por">
+          <select
+            value={form.registradoPor ?? ""}
+            onChange={(e) =>
+              setForm({ ...form, registradoPor: e.target.value || undefined })
+            }
+          >
+            <option value="">—</option>
+            {db?.propietarios.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre}
+              </option>
+            ))}
+          </select>
         </FormRow>
         {form.tipo === "venta_animal" && (
           <FormRow label="Animal vendido" colspan={2}>

@@ -162,6 +162,8 @@ export interface Ingreso {
   monto: number;
   comprador?: string;
   animalId?: string;
+  /** Propietario que registró el ingreso (para atribución cuando no hay animalId). */
+  registradoPor?: string;
   notas?: string;
   createdAt: string;
 }
