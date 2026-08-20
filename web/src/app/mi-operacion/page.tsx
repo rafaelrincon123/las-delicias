@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useDB } from "@/lib/useDB";
 import { useAuth } from "@/lib/useAuth";
-import { fmtDate, fmtCOP, fmtNumber, fmtPct, edadTexto, diasHasta } from "@/lib/format";
+import { fmtDate, fmtCOP, fmtPct, edadTexto, diasHasta } from "@/lib/format";
 import { CATEGORIAS_ANIMAL, CATEGORIAS_GASTO, TIPOS_SANIDAD } from "@/lib/types";
 import { miParticipacion } from "@/lib/participacion";
 import { participantesGasto, cuotasPorPropietario } from "@/lib/gastos";
@@ -533,26 +533,19 @@ export default function MiOperacionPage() {
             ver todo →
           </Link>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <MiniPill
-            label={rango.activo ? "Eventos en rango" : "Eventos totales"}
-            value={data.misSanidadRango.length}
-          />
-          <MiniPill
-            label="Vacunas"
-            value={data.misSanidadRango.filter((s) => s.tipo === "vacuna").length}
-          />
-          <MiniPill
-            label="Tratamientos"
-            value={data.misSanidadRango.filter((s) => s.tipo === "tratamiento").length}
-          />
-          <MiniPill
-            label="Desparasitaciones"
-            value={
-              data.misSanidadRango.filter((s) => s.tipo === "desparasitacion").length
-            }
-          />
-        </div>
+        {data.misSanidadRango.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            <span className="chip ghost" style={{ padding: "0.2rem 0.55rem", fontSize: "0.65rem" }}>
+              {data.misSanidadRango.filter((s) => s.tipo === "vacuna").length} vacunas
+            </span>
+            <span className="chip ghost" style={{ padding: "0.2rem 0.55rem", fontSize: "0.65rem" }}>
+              {data.misSanidadRango.filter((s) => s.tipo === "tratamiento").length} tratamientos
+            </span>
+            <span className="chip ghost" style={{ padding: "0.2rem 0.55rem", fontSize: "0.65rem" }}>
+              {data.misSanidadRango.filter((s) => s.tipo === "desparasitacion").length} desparasitaciones
+            </span>
+          </div>
+        )}
         {data.misSanidadRango.length === 0 ? (
           <p className="text-sm text-muted">
             {rango.activo
@@ -621,11 +614,3 @@ export default function MiOperacionPage() {
   );
 }
 
-function MiniPill({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="px-4 py-3 rounded-xl bg-surface-2 flex items-center justify-between">
-      <div className="text-xs text-muted">{label}</div>
-      <div className="num text-2xl text-fg">{fmtNumber(value, 0)}</div>
-    </div>
-  );
-}
