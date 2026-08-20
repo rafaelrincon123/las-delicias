@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/useAuth";
 import { fmtDate, fmtCOP, fmtNumber, fmtPct, edadTexto, diasHasta } from "@/lib/format";
 import { CATEGORIAS_ANIMAL, CATEGORIAS_GASTO } from "@/lib/types";
 import { miParticipacion } from "@/lib/participacion";
+import { participantesGasto, cuotasPorPropietario } from "@/lib/gastos";
 import HeroStat from "@/components/HeroStat";
 import Modal from "@/components/Modal";
 import IngresoForm from "@/components/IngresoForm";
@@ -35,18 +36,10 @@ export default function MiOperacionPage() {
     const misAnimalIds = new Set(misAnimales.map((a) => a.id));
 
     const misGastos = db.gastos
-      .filter(
-        (g) =>
-          g.pagadoPor === myId ||
-          (g.participantes?.includes(myId) ?? false) ||
-          (g.animalId && misAnimalIds.has(g.animalId))
-      )
+      .filter((g) => participantesGasto(g, db.animales).includes(myId))
       .map((g) => {
-        const nParticipantes = g.participantes?.length ?? 0;
-        const miParte =
-          nParticipantes > 0 && g.participantes!.includes(myId)
-            ? g.monto / nParticipantes
-            : g.monto;
+        const cuotas = cuotasPorPropietario(g, db.animales);
+        const miParte = cuotas[myId] ?? 0;
         return { ...g, miParte };
       });
 
