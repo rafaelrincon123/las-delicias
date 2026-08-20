@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/useAuth";
 import { fmtDate, fmtCOP, fmtNumber, fmtPct, edadTexto, diasHasta } from "@/lib/format";
 import { CATEGORIAS_ANIMAL, CATEGORIAS_GASTO, TIPOS_SANIDAD } from "@/lib/types";
 import { miParticipacion } from "@/lib/participacion";
-import { cuotasPorPropietario } from "@/lib/gastos";
+import { participantesGasto, cuotasPorPropietario } from "@/lib/gastos";
 import HeroStat from "@/components/HeroStat";
 import Modal from "@/components/Modal";
 import IngresoForm from "@/components/IngresoForm";
@@ -37,15 +37,14 @@ export default function MiOperacionPage() {
 
     const misGastos = db.gastos
       .filter((g) => {
-        const ids = g.animalIds && g.animalIds.length > 0
-          ? g.animalIds
-          : g.animalId ? [g.animalId] : [];
-        return ids.some((id) => misAnimalIds.has(id));
+        if (g.pagadoPor === myId) return true;
+        return participantesGasto(g, db.animales).includes(myId);
       })
       .map((g) => {
         const cuotas = cuotasPorPropietario(g, db.animales);
         const miParte = cuotas[myId] ?? 0;
-        return { ...g, miParte };
+        const yoPague = g.pagadoPor === myId;
+        return { ...g, miParte, yoPague };
       });
 
     const misIngresos = db.ingresos.filter(
@@ -469,25 +468,33 @@ export default function MiOperacionPage() {
                   (a, b) =>
                     new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
                 )
-                .slice(0, 6)
+                .slice(0, 10)
                 .map((g) => {
                   const cat = CATEGORIAS_GASTO.find((c) => c.value === g.categoria);
-                  const compartido =
-                    (g.participantes?.length ?? 0) > 1 && g.miParte !== g.monto;
+                  const nParts = g.participantes?.length ?? 0;
+                  const compartido = nParts > 1 && g.miParte !== g.monto;
                   return (
                     <li
                       key={g.id}
                       className="px-3 py-2.5 rounded-lg hover:bg-surface-2 transition flex items-center gap-3"
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-fg truncate text-sm">
-                          {g.concepto}
+                        <div className="font-medium text-fg truncate text-sm flex items-center gap-2">
+                          <span className="truncate">{g.concepto}</span>
+                          {g.yoPague && (
+                            <span
+                              className="chip primary shrink-0"
+                              style={{ padding: "0.1rem 0.45rem", fontSize: "0.6rem" }}
+                            >
+                              pagué
+                            </span>
+                          )}
                         </div>
                         <div className="text-xs text-muted">
                           {fmtDate(g.fecha)} · {cat?.label}
                           {compartido && (
                             <span className="ml-1">
-                              · compartido /{g.participantes!.length}
+                              · compartido /{nParts}
                             </span>
                           )}
                         </div>
@@ -496,7 +503,7 @@ export default function MiOperacionPage() {
                         <div className="font-mono text-sm text-danger">
                           {fmtCOP(g.miParte)}
                         </div>
-                        {compartido && (
+                        {(compartido || g.yoPague) && (
                           <div className="text-[0.62rem] text-subtle font-mono">
                             total {fmtCOP(g.monto)}
                           </div>
