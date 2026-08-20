@@ -449,7 +449,9 @@ export default function MiOperacionPage() {
           <div className="card-head">
             <div>
               <div className="eyebrow eyebrow-primary">Cuentas</div>
-              <h2 className="text-lg font-semibold tracking-tight">Tus últimos gastos</h2>
+              <h2 className="text-lg font-semibold tracking-tight">
+                Tus gastos ({data.misGastosRango.length})
+              </h2>
             </div>
             <Link href="/gastos" className="text-xs text-primary hover:underline font-medium">
               ver todos →
@@ -468,7 +470,6 @@ export default function MiOperacionPage() {
                   (a, b) =>
                     new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
                 )
-                .slice(0, 10)
                 .map((g) => {
                   const cat = CATEGORIAS_GASTO.find((c) => c.value === g.categoria);
                   const nParts = g.participantes?.length ?? 0;
