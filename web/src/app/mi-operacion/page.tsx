@@ -144,39 +144,39 @@ export default function MiOperacionPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Hero */}
       <section className="hero-card">
-        <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2 mb-3 md:mb-4 flex-wrap">
+          <div className="flex items-center gap-2 min-w-0">
             <span
-              className="w-1.5 h-1.5 rounded-full bg-primary"
+              className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"
               style={{ boxShadow: "0 0 8px var(--primary)" }}
             />
-            <span className="text-[0.72rem] font-mono uppercase tracking-widest text-muted capitalize">
+            <span className="text-[0.65rem] md:text-[0.72rem] font-mono uppercase tracking-widest text-muted capitalize truncate">
               {hoyLabel}
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <button
               type="button"
               onClick={() => setOpenIngreso(true)}
               className="btn btn-primary"
-              style={{ padding: "0.4rem 0.9rem", fontSize: "0.75rem" }}
+              style={{ padding: "0.35rem 0.75rem", fontSize: "0.72rem" }}
             >
-              + Nuevo ingreso
+              + Ingreso
             </button>
             <Link
               href="/panel"
-              className="text-[0.68rem] font-mono uppercase tracking-widest text-primary hover:underline"
+              className="text-[0.62rem] md:text-[0.68rem] font-mono uppercase tracking-widest text-primary hover:underline hidden sm:inline"
             >
-              Ver panel general →
+              Ver panel →
             </Link>
           </div>
         </div>
-        <div className="flex items-start justify-between gap-6 flex-wrap">
+        <div className="flex items-start justify-between gap-4 md:gap-6">
           <div className="min-w-0 flex-1">
-            <h2 className="display-hero text-fg text-balance">
+            <h2 className="text-[1.75rem] leading-[1.05] md:display-hero text-fg text-balance font-light tracking-tight">
               Hola,{" "}
               <span
                 className="text-primary"
@@ -185,7 +185,7 @@ export default function MiOperacionPage() {
                 {user.nombre}
               </span>
             </h2>
-            <p className="text-muted mt-4 max-w-lg text-[0.95rem] leading-relaxed">
+            <p className="text-muted mt-2 md:mt-4 max-w-lg text-[0.85rem] md:text-[0.95rem] leading-relaxed">
               Tienes{" "}
               <span className="text-fg font-medium">
                 {data.misAnimalesActivos.length}
@@ -202,7 +202,7 @@ export default function MiOperacionPage() {
             </p>
           </div>
           <div
-            className="w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-mono font-semibold shrink-0"
+            className="w-14 h-14 md:w-24 md:h-24 rounded-xl md:rounded-2xl flex items-center justify-center text-lg md:text-3xl font-mono font-semibold shrink-0"
             style={{
               background: "var(--primary-soft)",
               color: "var(--primary)",
@@ -217,49 +217,47 @@ export default function MiOperacionPage() {
 
       {/* Selector de rango */}
       <section className="card">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="eyebrow eyebrow-primary">Rango</div>
-            <span className="text-xs text-muted">
-              {rango.activo
-                ? "Filtrando KPIs, tareas, partos, gastos y sanidad"
-                : "Sin filtro — mostrando toda la operación"}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <label className="flex items-center gap-1.5 text-xs text-muted">
-              Desde
-              <input
-                type="date"
-                value={desde}
-                onChange={(e) => setDesde(e.target.value)}
-                style={{ padding: "0.35rem 0.55rem" }}
-              />
-            </label>
-            <label className="flex items-center gap-1.5 text-xs text-muted">
-              Hasta
-              <input
-                type="date"
-                value={hasta}
-                onChange={(e) => setHasta(e.target.value)}
-                style={{ padding: "0.35rem 0.55rem" }}
-              />
-            </label>
-            {rango.activo && (
-              <button
-                type="button"
-                onClick={() => {
-                  setDesde("");
-                  setHasta("");
-                }}
-                className="chip ghost"
-                style={{ padding: "0.3rem 0.7rem", fontSize: "0.7rem" }}
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="eyebrow eyebrow-primary">Rango</div>
+          <span className="text-[0.72rem] md:text-xs text-muted truncate">
+            {rango.activo ? "Filtrado activo" : "Sin filtro — toda la operación"}
+          </span>
         </div>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="flex flex-col gap-1 text-[0.65rem] font-mono uppercase tracking-wider text-muted min-w-0">
+            Desde
+            <input
+              type="date"
+              value={desde}
+              onChange={(e) => setDesde(e.target.value)}
+              className="w-full min-w-0"
+              style={{ padding: "0.4rem 0.55rem" }}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-[0.65rem] font-mono uppercase tracking-wider text-muted min-w-0">
+            Hasta
+            <input
+              type="date"
+              value={hasta}
+              onChange={(e) => setHasta(e.target.value)}
+              className="w-full min-w-0"
+              style={{ padding: "0.4rem 0.55rem" }}
+            />
+          </label>
+        </div>
+        {rango.activo && (
+          <button
+            type="button"
+            onClick={() => {
+              setDesde("");
+              setHasta("");
+            }}
+            className="chip ghost mt-2"
+            style={{ padding: "0.3rem 0.7rem", fontSize: "0.7rem" }}
+          >
+            Limpiar
+          </button>
+        )}
       </section>
 
       {/* KPIs — siempre muestran totales de toda la operación */}
