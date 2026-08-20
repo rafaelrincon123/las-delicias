@@ -8,6 +8,7 @@ import { Pesaje, TipoPesaje } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import AreaChart from "@/components/AreaChart";
+import Sparkline from "@/components/Sparkline";
 
 const TIPOS_PESAJE: { value: TipoPesaje; label: string }[] = [
   { value: "nacimiento", label: "Nacimiento" },
@@ -120,6 +121,35 @@ export default function PesoPage() {
     return db.animales.find((a) => a.id === filtroAnimal) ?? null;
   }, [db, filtroAnimal]);
 
+  // Datos por animal para el strip horizontal
+  const pesajesPorAnimal = useMemo(() => {
+    if (!db) return [];
+    return db.animales
+      .filter((a) => a.estado === "activo")
+      .map((a) => {
+        const puntos = pesajesOrdenados.filter((p) => p.animalId === a.id);
+        if (puntos.length === 0) return null;
+        const ultimo = puntos[puntos.length - 1];
+        const anterior = puntos.length >= 2 ? puntos[puntos.length - 2] : null;
+        let gdp: number | null = null;
+        if (anterior) {
+          const dias =
+            (new Date(ultimo.fecha).getTime() -
+              new Date(anterior.fecha).getTime()) /
+            (1000 * 60 * 60 * 24);
+          if (dias > 0)
+            gdp = ((ultimo.pesoKg - anterior.pesoKg) / dias) * 1000;
+        }
+        return { animal: a, puntos, ultimo, gdp, values: puntos.map((p) => p.pesoKg) };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null)
+      .sort(
+        (a, b) =>
+          new Date(b.ultimo.fecha).getTime() -
+          new Date(a.ultimo.fecha).getTime()
+      );
+  }, [db, pesajesOrdenados]);
+
   if (!ready) return <div className="text-muted">Cargando…</div>;
 
   return (
@@ -179,6 +209,115 @@ export default function PesoPage() {
             hint="animales activos"
             danger={stats.sinPesaje > 0}
           />
+        </div>
+      )}
+
+      {pesajesPorAnimal.length > 0 && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="eyebrow eyebrow-primary">Animales</div>
+              <h2 className="text-lg font-semibold tracking-tight">
+                Toca uno para ver su curva
+              </h2>
+            </div>
+            {filtroAnimal && (
+              <button
+                onClick={() => setFiltroAnimal("")}
+                className="chip ghost"
+                style={{ padding: "0.25rem 0.6rem", fontSize: "0.65rem" }}
+              >
+                Ver todos
+              </button>
+            )}
+          </div>
+          <div
+            className="-mx-3 md:-mx-4 px-3 md:px-4 overflow-x-auto pb-1"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
+            <div className="flex gap-2.5" style={{ width: "max-content" }}>
+              {pesajesPorAnimal.map((row) => {
+                const { animal, ultimo, gdp, values } = row;
+                const positivo = gdp !== null && gdp >= 0;
+                const selected = filtroAnimal === animal.id;
+                return (
+                  <button
+                    type="button"
+                    key={animal.id}
+                    onClick={() =>
+                      setFiltroAnimal(selected ? "" : animal.id)
+                    }
+                    className={
+                      "rounded-xl p-3 flex flex-col gap-2 shrink-0 text-left transition " +
+                      (selected
+                        ? "bg-primary-soft border border-primary"
+                        : "bg-surface-2 border border-transparent hover:border-rule-strong")
+                    }
+                    style={{ width: "170px" }}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-[0.65rem] font-mono font-semibold shrink-0"
+                        style={{
+                          background: "var(--primary-soft)",
+                          color: "var(--primary)",
+                        }}
+                      >
+                        {animal.nroIdentificacion}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-[0.85rem] truncate leading-tight">
+                          {animal.nombre ?? "—"}
+                        </div>
+                        <div className="text-[0.6rem] text-muted truncate">
+                          {values.length} pesaje{values.length === 1 ? "" : "s"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-10 -mx-1">
+                      <Sparkline
+                        values={values}
+                        width={146}
+                        height={40}
+                        color={positivo ? "var(--primary)" : "var(--danger)"}
+                        fillOpacity={0.18}
+                      />
+                    </div>
+                    <div className="flex items-end justify-between gap-2">
+                      <div>
+                        <div className="font-mono text-lg font-semibold text-fg leading-none tabular-nums">
+                          {fmtNumber(ultimo.pesoKg, 0)}
+                          <span className="text-[0.65rem] text-muted ml-0.5 font-normal">
+                            kg
+                          </span>
+                        </div>
+                        <div className="text-[0.6rem] text-muted mt-0.5">
+                          {fmtDate(ultimo.fecha)}
+                        </div>
+                      </div>
+                      {gdp !== null ? (
+                        <div
+                          className="text-right font-mono text-[0.72rem] font-semibold tabular-nums whitespace-nowrap"
+                          style={{
+                            color: positivo ? "var(--primary)" : "var(--danger)",
+                          }}
+                        >
+                          {positivo ? "▲" : "▼"} {fmtNumber(Math.abs(gdp), 0)}
+                          <span className="text-[0.55rem] text-muted ml-0.5 font-normal">
+                            g/d
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-[0.6rem] text-muted text-right">
+                          sin GDP
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
@@ -287,111 +426,101 @@ export default function PesoPage() {
         </div>
       )}
 
-      <div className="card p-0 overflow-x-auto">
-        <table
-          className="table"
-          style={{ ["--cols" as string]: "10rem minmax(12rem, 1.5fr) 8rem 9rem 9rem 7rem" }}
-        >
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Animal</th>
-              <th className="text-right">Peso (kg)</th>
-              <th>Tipo</th>
-              <th className="text-right">Gan. día (g)</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {pesajesFiltrados.length === 0 ? (
-              <tr>
-                <td className="row-full text-muted py-8 text-sm">
-                  {filtrosActivos
-                    ? "Sin pesajes con esos filtros."
-                    : "Aún no hay pesajes. Registra el primero."}
-                </td>
-              </tr>
-            ) : (
-              pesajesFiltrados.map((p) => {
-                const animal = db!.animales.find((a) => a.id === p.animalId);
-                const previos = pesajesOrdenados
-                  .filter(
-                    (x) =>
-                      x.animalId === p.animalId &&
-                      new Date(x.fecha).getTime() < new Date(p.fecha).getTime()
-                  )
-                  .sort(
-                    (a, b) =>
-                      new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
-                  );
-                const anterior = previos[0];
-                let gan: number | null = null;
-                if (anterior) {
-                  const dias =
-                    (new Date(p.fecha).getTime() -
-                      new Date(anterior.fecha).getTime()) /
-                    (1000 * 60 * 60 * 24);
-                  if (dias > 0)
-                    gan = ((p.pesoKg - anterior.pesoKg) / dias) * 1000;
-                }
-                return (
-                  <tr
-                    key={p.id}
-                    onClick={() => {
-                      setEdit(p);
-                      setMode("view");
-                      setOpen(true);
-                    }}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td>{fmtDate(p.fecha)}</td>
-                    <td>
-                      {animal?.nombre ?? "—"}{" "}
-                      <span className="font-mono text-xs text-muted">
-                        #{animal?.nroIdentificacion}
-                      </span>
-                    </td>
-                    <td className="text-right font-mono tabular-nums">
-                      {fmtNumber(p.pesoKg, 1)}
-                    </td>
-                    <td>
-                      <span className="chip">
-                        {TIPOS_PESAJE.find((t) => t.value === p.tipo)?.label}
-                      </span>
-                    </td>
-                    <td className="text-right font-mono tabular-nums">
-                      {gan !== null ? fmtNumber(gan, 0) : "—"}
-                    </td>
-                    <td className="text-right whitespace-nowrap">
-                      <button
-                        className="text-xs text-muted hover:text-fg hover:underline mr-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEdit(p);
-                          setMode("view");
-                          setOpen(true);
-                        }}
-                      >
-                        ver
-                      </button>
-                      <button
-                        className="text-xs text-accent hover:underline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEdit(p);
-                          setMode("edit");
-                          setOpen(true);
-                        }}
-                      >
-                        editar
-                      </button>
-                    </td>
-                  </tr>
+      <div className="card">
+        <div className="card-head">
+          <div>
+            <div className="eyebrow eyebrow-primary">Historial</div>
+            <h2 className="text-lg font-semibold tracking-tight">
+              Pesajes ({pesajesFiltrados.length})
+            </h2>
+          </div>
+        </div>
+        {pesajesFiltrados.length === 0 ? (
+          <p className="text-sm text-muted py-4">
+            {filtrosActivos
+              ? "Sin pesajes con esos filtros."
+              : "Aún no hay pesajes. Registra el primero."}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {pesajesFiltrados.map((p) => {
+              const animal = db!.animales.find((a) => a.id === p.animalId);
+              const previos = pesajesOrdenados
+                .filter(
+                  (x) =>
+                    x.animalId === p.animalId &&
+                    new Date(x.fecha).getTime() < new Date(p.fecha).getTime()
+                )
+                .sort(
+                  (a, b) =>
+                    new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
                 );
-              })
-            )}
-          </tbody>
-        </table>
+              const anterior = previos[0];
+              let gan: number | null = null;
+              if (anterior) {
+                const dias =
+                  (new Date(p.fecha).getTime() -
+                    new Date(anterior.fecha).getTime()) /
+                  (1000 * 60 * 60 * 24);
+                if (dias > 0)
+                  gan = ((p.pesoKg - anterior.pesoKg) / dias) * 1000;
+              }
+              const positivo = gan !== null && gan >= 0;
+              const tipoLabel = TIPOS_PESAJE.find((t) => t.value === p.tipo)?.label;
+              return (
+                <li
+                  key={p.id}
+                  onClick={() => {
+                    setEdit(p);
+                    setMode("view");
+                    setOpen(true);
+                  }}
+                  className="rounded-xl bg-surface-2 p-3 flex items-start gap-3 cursor-pointer hover:border-rule-strong border border-transparent transition"
+                >
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-mono font-semibold shrink-0"
+                    style={{
+                      background: "var(--primary-soft)",
+                      color: "var(--primary)",
+                    }}
+                  >
+                    {animal?.nroIdentificacion ?? "?"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-fg text-[0.95rem] leading-tight break-words">
+                          {animal?.nombre ?? "—"}
+                        </div>
+                        <div className="text-[0.7rem] text-muted mt-0.5">
+                          {fmtDate(p.fecha)} · {tipoLabel}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="font-mono text-[1rem] font-semibold text-fg leading-tight tabular-nums">
+                          {fmtNumber(p.pesoKg, 1)}
+                          <span className="text-[0.65rem] text-muted ml-0.5 font-normal">
+                            kg
+                          </span>
+                        </div>
+                        {gan !== null && (
+                          <div
+                            className="text-[0.7rem] font-mono font-semibold tabular-nums mt-0.5"
+                            style={{
+                              color: positivo ? "var(--primary)" : "var(--danger)",
+                            }}
+                          >
+                            {positivo ? "▲" : "▼"} {fmtNumber(Math.abs(gan), 0)} g/d
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       <Modal
