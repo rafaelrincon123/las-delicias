@@ -524,7 +524,7 @@ export default function MiOperacionPage() {
           <div>
             <div className="eyebrow eyebrow-primary">Salud</div>
             <h2 className="text-lg font-semibold tracking-tight">
-              Sanidad de tus animales
+              Sanidad de tus animales ({data.misSanidadRango.length})
             </h2>
           </div>
           <Link href="/sanidad" className="text-xs text-primary hover:underline font-medium">
@@ -564,7 +564,6 @@ export default function MiOperacionPage() {
                 (a, b) =>
                   new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
               )
-              .slice(0, 10)
               .map((s) => {
                 const animal = db!.animales.find((a) => a.id === s.animalId);
                 const tipoLabel =
