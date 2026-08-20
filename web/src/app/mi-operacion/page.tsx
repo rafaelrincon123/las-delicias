@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useDB } from "@/lib/useDB";
 import { useAuth } from "@/lib/useAuth";
 import { fmtDate, fmtCOP, fmtNumber, fmtPct, edadTexto, diasHasta } from "@/lib/format";
-import { CATEGORIAS_ANIMAL, CATEGORIAS_GASTO } from "@/lib/types";
+import { CATEGORIAS_ANIMAL, CATEGORIAS_GASTO, TIPOS_SANIDAD } from "@/lib/types";
 import { miParticipacion } from "@/lib/participacion";
 import { cuotasPorPropietario } from "@/lib/gastos";
 import HeroStat from "@/components/HeroStat";
@@ -523,7 +523,7 @@ export default function MiOperacionPage() {
             ver todo →
           </Link>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           <MiniPill
             label={rango.activo ? "Eventos en rango" : "Eventos totales"}
             value={data.misSanidadRango.length}
@@ -543,6 +543,58 @@ export default function MiOperacionPage() {
             }
           />
         </div>
+        {data.misSanidadRango.length === 0 ? (
+          <p className="text-sm text-muted">
+            {rango.activo
+              ? "No hay eventos de sanidad en el rango seleccionado."
+              : "No hay eventos de sanidad registrados en tus animales."}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-1 -mx-1">
+            {[...data.misSanidadRango]
+              .sort(
+                (a, b) =>
+                  new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+              )
+              .slice(0, 10)
+              .map((s) => {
+                const animal = db!.animales.find((a) => a.id === s.animalId);
+                const tipoLabel =
+                  TIPOS_SANIDAD.find((t) => t.value === s.tipo)?.label ?? s.tipo;
+                return (
+                  <li
+                    key={s.id}
+                    className="px-3 py-2.5 rounded-lg hover:bg-surface-2 transition flex items-center gap-3"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-mono font-semibold shrink-0"
+                      style={{
+                        background: "var(--primary-soft)",
+                        color: "var(--primary)",
+                      }}
+                    >
+                      {animal?.nroIdentificacion ?? "?"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-fg truncate text-sm">
+                        {s.producto || tipoLabel}
+                      </div>
+                      <div className="text-xs text-muted">
+                        {fmtDate(s.fecha)} · {tipoLabel}
+                        {animal?.nombre ? ` · ${animal.nombre}` : ""}
+                        {s.veterinario ? ` · ${s.veterinario}` : ""}
+                      </div>
+                    </div>
+                    {typeof s.costo === "number" && s.costo > 0 && (
+                      <div className="font-mono text-sm text-danger whitespace-nowrap">
+                        {fmtCOP(s.costo)}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+          </ul>
+        )}
       </section>
 
       <Modal
