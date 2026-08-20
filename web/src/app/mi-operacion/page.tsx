@@ -44,7 +44,10 @@ export default function MiOperacionPage() {
         const cuotas = cuotasPorPropietario(g, db.animales);
         const miParte = cuotas[myId] ?? 0;
         const yoPague = g.pagadoPor === myId;
-        return { ...g, miParte, yoPague };
+        // Mi valor efectivo: cuota si soy participante, monto completo si
+        // solo puse la plata (aunque despues me reembolsen).
+        const miValor = miParte > 0 ? miParte : g.monto;
+        return { ...g, miParte, yoPague, miValor };
       });
 
     const misIngresos = db.ingresos.filter(
@@ -70,7 +73,7 @@ export default function MiOperacionPage() {
       misAnimalIds.has(s.hembraId)
     );
 
-    const gastosTotales = misGastos.reduce((s, g) => s + g.miParte, 0);
+    const gastosTotales = misGastos.reduce((s, g) => s + g.miValor, 0);
     const ingresosTotales = misIngresos.reduce((s, i) => s + i.monto, 0);
 
     const inRange = (iso: string) => {
@@ -85,7 +88,7 @@ export default function MiOperacionPage() {
     const misIngresosRango = misIngresos.filter((i) => inRange(i.fecha));
     const misSanidadRango = misSanidad.filter((s) => inRange(s.fecha));
 
-    const gastosRango = misGastosRango.reduce((s, g) => s + g.miParte, 0);
+    const gastosRango = misGastosRango.reduce((s, g) => s + g.miValor, 0);
     const ingresosRango = misIngresosRango.reduce((s, i) => s + i.monto, 0);
 
     const tareasPendientes = misTareas
@@ -473,7 +476,8 @@ export default function MiOperacionPage() {
                 .map((g) => {
                   const cat = CATEGORIAS_GASTO.find((c) => c.value === g.categoria);
                   const nParts = g.participantes?.length ?? 0;
-                  const compartido = nParts > 1 && g.miParte !== g.monto;
+                  const valor = g.miValor;
+                  const compartido = nParts > 1 && g.miParte > 0 && g.miParte !== g.monto;
                   return (
                     <li
                       key={g.id}
@@ -502,9 +506,9 @@ export default function MiOperacionPage() {
                       </div>
                       <div className="text-right whitespace-nowrap">
                         <div className="font-mono text-sm text-danger">
-                          {fmtCOP(g.miParte)}
+                          {fmtCOP(valor)}
                         </div>
-                        {(compartido || g.yoPague) && (
+                        {compartido && (
                           <div className="text-[0.62rem] text-subtle font-mono">
                             total {fmtCOP(g.monto)}
                           </div>
