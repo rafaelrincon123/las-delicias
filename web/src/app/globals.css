@@ -60,6 +60,7 @@ html, body {
   text-rendering: optimizeLegibility;
   font-feature-settings: "ss01", "cv11", "cv09";
   letter-spacing: -0.005em;
+  overflow-x: hidden;
 }
 
 /* Ambient background */
@@ -755,7 +756,7 @@ select option { background-color: var(--surface); color: var(--fg); }
   color: var(--hs-ink);
 }
 .hero-stat-num.sm {
-  font-size: 1.1rem;
+  font-size: 1.35rem;
   letter-spacing: -0.01em;
 }
 .hero-stat-sub {
@@ -767,7 +768,7 @@ select option { background-color: var(--surface); color: var(--fg); }
 @media (min-width: 768px) {
   .hero-stat { min-height: 92px; padding: 0.85rem 1rem 0.95rem; }
   .hero-stat-num { font-size: 2rem; }
-  .hero-stat-num.sm { font-size: 1.35rem; }
+  .hero-stat-num.sm { font-size: 1.55rem; }
   .hero-stat-sub { font-size: 0.68rem; }
 }
 :root:not([data-theme="light"]) .hero-stat {
