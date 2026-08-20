@@ -465,72 +465,66 @@ export default function MiOperacionPage() {
                 : "No hay gastos registrados a tu nombre."}
             </p>
           ) : (
-            <div
-              className="overflow-x-auto"
-              style={{ WebkitOverflowScrolling: "touch" }}
-            >
-              <table className="w-full text-sm" style={{ minWidth: "560px" }}>
-                <thead>
-                  <tr className="text-left text-[0.62rem] font-mono uppercase tracking-wider text-muted">
-                    <th className="py-2 pr-3 font-medium">Fecha</th>
-                    <th className="py-2 pr-3 font-medium">Concepto</th>
-                    <th className="py-2 pr-3 font-medium">Categoría</th>
-                    <th className="py-2 pr-3 font-medium text-right">Mi valor</th>
-                    <th className="py-2 pr-3 font-medium text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...data.misGastosRango]
-                    .sort(
-                      (a, b) =>
-                        new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
-                    )
-                    .map((g) => {
-                      const cat = CATEGORIAS_GASTO.find((c) => c.value === g.categoria);
-                      const nParts = g.participantes?.length ?? 0;
-                      const valor = g.miValor;
-                      const compartido = nParts > 1 && g.miParte > 0 && g.miParte !== g.monto;
-                      return (
-                        <tr
-                          key={g.id}
-                          className="border-t border-rule hover:bg-surface-2 transition"
-                        >
-                          <td className="py-2 pr-3 whitespace-nowrap text-muted">
-                            {fmtDate(g.fecha)}
-                          </td>
-                          <td className="py-2 pr-3 whitespace-nowrap font-medium">
-                            <span className="inline-flex items-center gap-2">
-                              {g.concepto}
-                              {g.yoPague && (
-                                <span
-                                  className="chip primary"
-                                  style={{ padding: "0.1rem 0.45rem", fontSize: "0.6rem" }}
-                                >
-                                  pagué
-                                </span>
-                              )}
-                              {compartido && (
-                                <span className="text-[0.62rem] text-subtle">
-                                  compartido /{nParts}
-                                </span>
-                              )}
-                            </span>
-                          </td>
-                          <td className="py-2 pr-3 whitespace-nowrap text-muted">
-                            {cat?.label}
-                          </td>
-                          <td className="py-2 pr-3 whitespace-nowrap font-mono text-danger text-right">
+            <ul className="flex flex-col gap-2">
+              {[...data.misGastosRango]
+                .sort(
+                  (a, b) =>
+                    new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+                )
+                .map((g) => {
+                  const cat = CATEGORIAS_GASTO.find((c) => c.value === g.categoria);
+                  const nParts = g.participantes?.length ?? 0;
+                  const valor = g.miValor;
+                  const compartido = nParts > 1 && g.miParte > 0 && g.miParte !== g.monto;
+                  return (
+                    <li
+                      key={g.id}
+                      className="rounded-xl bg-surface-2 p-3 flex flex-col gap-1.5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-fg text-[0.95rem] leading-tight break-words">
+                            {g.concepto}
+                          </div>
+                          <div className="text-[0.7rem] text-muted mt-0.5">
+                            {fmtDate(g.fecha)} · {cat?.label}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="font-mono text-[0.95rem] font-semibold text-danger leading-tight">
                             {fmtCOP(valor)}
-                          </td>
-                          <td className="py-2 pr-3 whitespace-nowrap font-mono text-subtle text-right">
-                            {fmtCOP(g.monto)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </div>
+                          </div>
+                          {compartido && (
+                            <div className="text-[0.6rem] text-subtle font-mono mt-0.5">
+                              de {fmtCOP(g.monto)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {(g.yoPague || compartido) && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {g.yoPague && (
+                            <span
+                              className="chip primary"
+                              style={{ padding: "0.1rem 0.5rem", fontSize: "0.6rem" }}
+                            >
+                              yo pagué
+                            </span>
+                          )}
+                          {compartido && (
+                            <span
+                              className="chip ghost"
+                              style={{ padding: "0.1rem 0.5rem", fontSize: "0.6rem" }}
+                            >
+                              compartido /{nParts}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+            </ul>
           )}
         </div>
       </section>
@@ -578,10 +572,11 @@ export default function MiOperacionPage() {
                 const animal = db!.animales.find((a) => a.id === s.animalId);
                 const tipoLabel =
                   TIPOS_SANIDAD.find((t) => t.value === s.tipo)?.label ?? s.tipo;
+                const hasCosto = typeof s.costo === "number" && s.costo > 0;
                 return (
                   <li
                     key={s.id}
-                    className="px-3 py-2.5 rounded-lg hover:bg-surface-2 transition flex items-center gap-3"
+                    className="rounded-xl bg-surface-2 p-3 flex items-start gap-3"
                   >
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-mono font-semibold shrink-0"
@@ -593,20 +588,24 @@ export default function MiOperacionPage() {
                       {animal?.nroIdentificacion ?? "?"}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-fg truncate text-sm">
-                        {s.producto || tipoLabel}
-                      </div>
-                      <div className="text-xs text-muted">
-                        {fmtDate(s.fecha)} · {tipoLabel}
-                        {animal?.nombre ? ` · ${animal.nombre}` : ""}
-                        {s.veterinario ? ` · ${s.veterinario}` : ""}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-fg text-[0.95rem] leading-tight break-words">
+                            {s.producto || tipoLabel}
+                          </div>
+                          <div className="text-[0.7rem] text-muted mt-0.5 break-words">
+                            {fmtDate(s.fecha)} · {tipoLabel}
+                            {animal?.nombre ? ` · ${animal.nombre}` : ""}
+                            {s.veterinario ? ` · ${s.veterinario}` : ""}
+                          </div>
+                        </div>
+                        {hasCosto && (
+                          <div className="font-mono text-[0.95rem] font-semibold text-danger whitespace-nowrap shrink-0">
+                            {fmtCOP(s.costo!)}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    {typeof s.costo === "number" && s.costo > 0 && (
-                      <div className="font-mono text-sm text-danger whitespace-nowrap shrink-0">
-                        {fmtCOP(s.costo)}
-                      </div>
-                    )}
                   </li>
                 );
               })}
