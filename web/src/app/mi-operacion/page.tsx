@@ -465,57 +465,59 @@ export default function MiOperacionPage() {
                 : "No hay gastos registrados a tu nombre."}
             </p>
           ) : (
-            <ul className="flex flex-col gap-1 -mx-1">
-              {[...data.misGastosRango]
-                .sort(
-                  (a, b) =>
-                    new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
-                )
-                .map((g) => {
-                  const cat = CATEGORIAS_GASTO.find((c) => c.value === g.categoria);
-                  const nParts = g.participantes?.length ?? 0;
-                  const valor = g.miValor;
-                  const compartido = nParts > 1 && g.miParte > 0 && g.miParte !== g.monto;
-                  return (
-                    <li
-                      key={g.id}
-                      className="px-3 py-2.5 rounded-lg hover:bg-surface-2 transition flex items-center gap-3"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-fg text-sm flex items-center gap-2 min-w-0">
-                          <span className="truncate min-w-0">{g.concepto}</span>
-                          {g.yoPague && (
-                            <span
-                              className="chip primary shrink-0"
-                              style={{ padding: "0.1rem 0.45rem", fontSize: "0.6rem" }}
-                            >
-                              pagué
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted truncate">
-                          {fmtDate(g.fecha)} · {cat?.label}
-                          {compartido && (
-                            <span className="ml-1">
-                              · compartido /{nParts}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right whitespace-nowrap shrink-0">
-                        <div className="font-mono text-sm text-danger">
-                          {fmtCOP(valor)}
-                        </div>
-                        {compartido && (
-                          <div className="text-[0.62rem] text-subtle font-mono">
-                            total {fmtCOP(g.monto)}
+            <div className="overflow-x-auto -mx-1">
+              <ul className="flex flex-col gap-1" style={{ minWidth: "min-content" }}>
+                {[...data.misGastosRango]
+                  .sort(
+                    (a, b) =>
+                      new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+                  )
+                  .map((g) => {
+                    const cat = CATEGORIAS_GASTO.find((c) => c.value === g.categoria);
+                    const nParts = g.participantes?.length ?? 0;
+                    const valor = g.miValor;
+                    const compartido = nParts > 1 && g.miParte > 0 && g.miParte !== g.monto;
+                    return (
+                      <li
+                        key={g.id}
+                        className="px-3 py-2.5 rounded-lg hover:bg-surface-2 transition flex items-center gap-3 whitespace-nowrap"
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium text-fg text-sm flex items-center gap-2">
+                            <span>{g.concepto}</span>
+                            {g.yoPague && (
+                              <span
+                                className="chip primary shrink-0"
+                                style={{ padding: "0.1rem 0.45rem", fontSize: "0.6rem" }}
+                              >
+                                pagué
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-            </ul>
+                          <div className="text-xs text-muted">
+                            {fmtDate(g.fecha)} · {cat?.label}
+                            {compartido && (
+                              <span className="ml-1">
+                                · compartido /{nParts}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0 pl-4">
+                          <div className="font-mono text-sm text-danger">
+                            {fmtCOP(valor)}
+                          </div>
+                          {compartido && (
+                            <div className="text-[0.62rem] text-subtle font-mono">
+                              total {fmtCOP(g.monto)}
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </div>
           )}
         </div>
       </section>
