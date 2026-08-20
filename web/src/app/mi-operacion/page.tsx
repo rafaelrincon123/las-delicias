@@ -4,13 +4,14 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useDB } from "@/lib/useDB";
 import { useAuth } from "@/lib/useAuth";
-import { fmtDate, fmtCOP, fmtPct, edadTexto, diasHasta } from "@/lib/format";
+import { fmtDate, fmtCOP, fmtNumber, fmtPct, edadTexto, diasHasta } from "@/lib/format";
 import { CATEGORIAS_ANIMAL, CATEGORIAS_GASTO, TIPOS_SANIDAD } from "@/lib/types";
 import { miParticipacion } from "@/lib/participacion";
 import { participantesGasto, cuotasPorPropietario } from "@/lib/gastos";
 import HeroStat from "@/components/HeroStat";
 import Modal from "@/components/Modal";
 import IngresoForm from "@/components/IngresoForm";
+import Sparkline from "@/components/Sparkline";
 
 export default function MiOperacionPage() {
   const { user } = useAuth();
@@ -73,6 +74,41 @@ export default function MiOperacionPage() {
       misAnimalIds.has(s.hembraId)
     );
 
+    // Peso: por cada animal del usuario, ordena pesajes por fecha y calcula
+    // peso actual + ganancia diaria (g/dia) entre el ultimo y el anterior.
+    const misPesajesPorAnimal = misAnimales
+      .map((a) => {
+        const pesajes = db.pesajes
+          .filter((p) => p.animalId === a.id)
+          .sort(
+            (x, y) => new Date(x.fecha).getTime() - new Date(y.fecha).getTime()
+          );
+        if (pesajes.length === 0) return null;
+        const ultimo = pesajes[pesajes.length - 1];
+        const anterior = pesajes.length >= 2 ? pesajes[pesajes.length - 2] : null;
+        let gdp: number | null = null;
+        if (anterior) {
+          const dias =
+            (new Date(ultimo.fecha).getTime() -
+              new Date(anterior.fecha).getTime()) /
+            (1000 * 60 * 60 * 24);
+          if (dias > 0) gdp = ((ultimo.pesoKg - anterior.pesoKg) / dias) * 1000;
+        }
+        return {
+          animal: a,
+          pesajes,
+          ultimo,
+          anterior,
+          gdp,
+          values: pesajes.map((p) => p.pesoKg),
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null)
+      .sort(
+        (a, b) =>
+          new Date(b.ultimo.fecha).getTime() - new Date(a.ultimo.fecha).getTime()
+      );
+
     const gastosTotales = misGastos.reduce((s, g) => s + g.miValor, 0);
     const ingresosTotales = misIngresos.reduce((s, i) => s + i.monto, 0);
 
@@ -120,6 +156,7 @@ export default function MiOperacionPage() {
       misSanidad,
       misSanidadRango,
       misServicios,
+      misPesajesPorAnimal,
       gastosTotales,
       ingresosTotales,
       balanceTotal: ingresosTotales - gastosTotales,
@@ -294,6 +331,106 @@ export default function MiOperacionPage() {
           sub={rango.activo ? `Total: ${fmtCOP(data.balanceTotal)}` : "desde el inicio"}
         />
       </section>
+
+      {/* Peso — swipe horizontal por animal */}
+      {data.misPesajesPorAnimal.length > 0 && (
+        <section className="card">
+          <div className="card-head">
+            <div>
+              <div className="eyebrow eyebrow-primary">Peso</div>
+              <h2 className="text-lg font-semibold tracking-tight">
+                Crecimiento de tus animales
+              </h2>
+            </div>
+            <Link
+              href="/peso"
+              className="text-xs text-primary hover:underline font-medium"
+            >
+              ver todo →
+            </Link>
+          </div>
+          <div
+            className="-mx-3 md:-mx-4 px-3 md:px-4 overflow-x-auto pb-1"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
+            <div className="flex gap-2.5" style={{ width: "max-content" }}>
+              {data.misPesajesPorAnimal.map((row) => {
+                const { animal, ultimo, gdp, values } = row;
+                const positivo = gdp !== null && gdp >= 0;
+                return (
+                  <div
+                    key={animal.id}
+                    className="rounded-xl bg-surface-2 p-3 flex flex-col gap-2 shrink-0"
+                    style={{ width: "180px" }}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-[0.65rem] font-mono font-semibold shrink-0"
+                        style={{
+                          background: "var(--primary-soft)",
+                          color: "var(--primary)",
+                        }}
+                      >
+                        {animal.nroIdentificacion}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-[0.85rem] truncate leading-tight">
+                          {animal.nombre ?? "—"}
+                        </div>
+                        <div className="text-[0.6rem] text-muted truncate">
+                          {values.length} pesaje{values.length === 1 ? "" : "s"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-10 -mx-1">
+                      <Sparkline
+                        values={values}
+                        width={156}
+                        height={40}
+                        color={positivo ? "var(--primary)" : "var(--danger)"}
+                        fillOpacity={0.18}
+                      />
+                    </div>
+                    <div className="flex items-end justify-between gap-2">
+                      <div>
+                        <div className="font-mono text-lg font-semibold text-fg leading-none tabular-nums">
+                          {fmtNumber(ultimo.pesoKg, 0)}
+                          <span className="text-[0.65rem] text-muted ml-0.5 font-normal">
+                            kg
+                          </span>
+                        </div>
+                        <div className="text-[0.6rem] text-muted mt-0.5">
+                          {fmtDate(ultimo.fecha)}
+                        </div>
+                      </div>
+                      {gdp !== null ? (
+                        <div
+                          className="text-right font-mono text-[0.75rem] font-semibold tabular-nums whitespace-nowrap"
+                          style={{
+                            color: positivo ? "var(--primary)" : "var(--danger)",
+                          }}
+                        >
+                          {positivo ? "▲" : "▼"} {fmtNumber(Math.abs(gdp), 0)}
+                          <span className="text-[0.55rem] text-muted ml-0.5 font-normal">
+                            g/día
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-[0.6rem] text-muted text-right">
+                          sin GDP
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="text-[0.6rem] text-subtle mt-2 font-mono uppercase tracking-wider">
+            ← desliza para ver todos →
+          </div>
+        </section>
+      )}
 
       {/* Dos columnas: animales + tareas */}
       <section className="grid lg:grid-cols-2 gap-3 min-w-0">
