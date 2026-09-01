@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useAuth } from "@/lib/useAuth";
 import { loginWithEmail, logout } from "@/lib/auth";
 import { IconLock, IconUser } from "./icons";
@@ -60,29 +61,21 @@ function LoginScreen() {
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <div
-            className="w-32 h-32 rounded-3xl flex items-center justify-center mx-auto mb-4 overflow-hidden"
+            className="w-32 h-32 rounded-3xl flex items-center justify-center mx-auto mb-4 overflow-hidden relative"
             style={{
               background: "var(--surface-solid)",
               border: "1px solid var(--rule)",
               boxShadow: "0 12px 40px -8px var(--primary-glow)",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src="/logo.png"
               alt="Las Delicias"
+              width={128}
+              height={128}
+              priority
+              sizes="128px"
               className="w-full h-full object-contain p-3"
-              onError={(e) => {
-                const img = e.currentTarget;
-                img.style.display = "none";
-                const parent = img.parentElement;
-                if (parent && !parent.querySelector("svg")) {
-                  parent.insertAdjacentHTML(
-                    "beforeend",
-                    `<svg width="56" height="56" viewBox="0 0 24 24" fill="none"><path d="M12 3l4 5-4 5-4-5z" stroke="var(--primary)" stroke-width="1.6" stroke-linejoin="round"/><path d="M6 18h12" stroke="var(--primary)" stroke-width="1.6" stroke-linecap="round"/></svg>`
-                  );
-                }
-              }}
             />
           </div>
           <h1 className="display-lg tracking-tight font-serif">Las Delicias</h1>

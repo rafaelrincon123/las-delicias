@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
@@ -124,6 +125,7 @@ export default function Sidebar(props: SidebarProps) {
                     <li key={item.href}>
                       <Link
                         href={item.href}
+                        prefetch={false}
                         className={"nav-link " + (active ? "active" : "")}
                       >
                         <item.Icon className="nav-icon" />
@@ -191,22 +193,13 @@ function BrandMark() {
         boxShadow: "0 4px 16px -4px var(--primary-glow)",
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <Image
         src="/logo.png"
         alt="Las Delicias"
+        width={44}
+        height={44}
+        sizes="44px"
         className="w-full h-full object-contain p-0.5"
-        onError={(e) => {
-          const img = e.currentTarget;
-          img.style.display = "none";
-          const parent = img.parentElement;
-          if (parent && !parent.querySelector("svg")) {
-            parent.insertAdjacentHTML(
-              "beforeend",
-              `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3l4 5-4 5-4-5z" stroke="var(--primary)" stroke-width="1.8" stroke-linejoin="round"/><path d="M6 18h12" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round"/></svg>`
-            );
-          }
-        }}
       />
     </div>
   );
