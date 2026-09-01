@@ -43,20 +43,28 @@ const TONES: Record<TileTone, { from: string; to: string; ink: string; fg: strin
 };
 
 export default function Home() {
-  const { db, ready } = useDB();
+  const { db, ready, loaded } = useDB();
+  const animalesReady = loaded("animales");
+  const tareasReady = loaded("tareas");
 
   const stats = useMemo(() => {
     if (!db) return null;
-    const activos = db.animales.filter((a) => a.estado === "activo").length;
-    const pendientes = db.tareas.filter((t) => !t.completada).length;
-    const vencidas = db.tareas.filter((t) => {
-      if (t.completada) return false;
-      const d = diasHasta(t.fecha);
-      return d !== null && d < 0;
-    }).length;
+    const activos = animalesReady
+      ? db.animales.filter((a) => a.estado === "activo").length
+      : null;
+    const pendientes = tareasReady
+      ? db.tareas.filter((t) => !t.completada).length
+      : null;
+    const vencidas = tareasReady
+      ? db.tareas.filter((t) => {
+          if (t.completada) return false;
+          const d = diasHasta(t.fecha);
+          return d !== null && d < 0;
+        }).length
+      : 0;
 
     return { activos, pendientes, vencidas };
-  }, [db]);
+  }, [db, animalesReady, tareasReady]);
 
   if (!ready || !stats) {
     return (
@@ -74,7 +82,7 @@ export default function Home() {
       sub: stats.vencidas > 0 ? `${stats.vencidas} vencidas` : "pendientes",
       Art: ArtActividades,
       tone: "copper",
-      metric: stats.pendientes,
+      metric: stats.pendientes ?? undefined,
       alert: stats.vencidas > 0,
     },
     {
@@ -83,7 +91,7 @@ export default function Home() {
       sub: "animales y potreros",
       Art: ArtHato,
       tone: "moss",
-      metric: stats.activos,
+      metric: stats.activos ?? undefined,
     },
     {
       href: "/gastos",

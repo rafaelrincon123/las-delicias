@@ -2,9 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { DBState } from "./types";
-import { getCachedDB, initDB } from "./db";
+import { getCachedDB, initDB, isTableLoaded } from "./db";
 
-export function useDB(): { db: DBState | null; ready: boolean } {
+interface UseDBReturn {
+  db: DBState | null;
+  ready: boolean;
+  /** true si el fetch inicial de esa tabla ya llegó. Útil para distinguir
+   *  "lista vacía real" de "aún cargando" durante el streaming inicial. */
+  loaded: (key: keyof DBState) => boolean;
+}
+
+export function useDB(): UseDBReturn {
   const [db, setDb] = useState<DBState | null>(() => getCachedDB());
 
   useEffect(() => {
@@ -22,5 +30,5 @@ export function useDB(): { db: DBState | null; ready: boolean } {
     };
   }, []);
 
-  return { db, ready: db !== null };
+  return { db, ready: db !== null, loaded: isTableLoaded };
 }

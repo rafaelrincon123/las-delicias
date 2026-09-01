@@ -262,6 +262,8 @@ function emptyDB(): DBState {
 let _cache: DBState | null = null;
 let _initPromise: Promise<void> | null = null;
 let _channels: RealtimeChannel[] = [];
+/** Tablas cuyo fetch inicial ya llegó del server. */
+const _loaded = new Set<keyof DBState>();
 /**
  * IDs de operaciones locales pendientes de reflejo Realtime — evita rebotes.
  * Cada marca lleva TTL: si el evento no llega en 5s, la limpiamos para que
@@ -304,38 +306,66 @@ export function isReady(): boolean {
   return _cache !== null;
 }
 
+/** ¿Ya llegó el fetch inicial de esa tabla desde el server? */
+export function isTableLoaded(key: keyof DBState): boolean {
+  return _loaded.has(key);
+}
+
+/** ¿Ya cargaron TODAS las tablas? (rara vez se necesita — la UI suele
+ *  poder mostrarse tabla a tabla). */
+export function areAllTablesLoaded(): boolean {
+  return _loaded.size >= Object.keys(TABLE_DEFS).length;
+}
+
 // ---------------------------------------------------------------------------
 //  Carga inicial
 // ---------------------------------------------------------------------------
 
+/**
+ * Carga inicial "streaming": arranca las 13 queries en paralelo y aplica
+ * cada tabla al cache conforme llega, emitiendo `db:changed` para que la
+ * UI se pinte progresivamente. La promise se resuelve tan pronto como
+ * `propietarios` esté cargada (lo único que `useAuth` necesita para
+ * vincular la sesión), pero el resto sigue cargando en segundo plano.
+ * Realtime se suscribe por tabla después de que cada una termina de
+ * cargar, evitando condiciones de carrera INSERT ↔ fetch inicial.
+ */
 export function initDB(): Promise<void> {
   if (_initPromise) return _initPromise;
   _initPromise = (async () => {
     const sb = getSupabase();
-    const next = emptyDB();
+    // Cache no-vacío desde el arranque: los componentes pueden renderizar
+    // (con listas vacías) mientras las tablas llegan.
+    _cache = emptyDB();
+    emit();
 
     const keys = Object.keys(TABLE_DEFS) as (keyof DBState)[];
-    const results = await Promise.all(
-      keys.map(async (k) => {
-        const def = TABLE_DEFS[k];
-        const { data, error } = await sb.from(def.table).select("*");
-        if (error) {
-          console.error(`[db] error cargando ${def.table}`, error);
-          return { key: k, rows: [] as Record<string, unknown>[] };
+    let resolveEssentials: () => void = () => {};
+    const essentials = new Promise<void>((r) => { resolveEssentials = r; });
+
+    keys.forEach((k) => {
+      const def = TABLE_DEFS[k];
+      void (async () => {
+        try {
+          const { data, error } = await sb.from(def.table).select("*");
+          if (error) {
+            console.error(`[db] error cargando ${def.table}`, error);
+          } else if (_cache) {
+            const rows = (data ?? []) as Record<string, unknown>[];
+            const list = rows.map((r) => fromRow(r, def.map));
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            _cache = { ..._cache, [k]: list as any };
+            _loaded.add(k);
+            emit();
+          }
+        } finally {
+          if (k === "propietarios") resolveEssentials();
+          subscribeTable(k);
         }
-        return { key: k, rows: (data ?? []) as Record<string, unknown>[] };
-      })
-    );
+      })();
+    });
 
-    for (const { key, rows } of results) {
-      const def = TABLE_DEFS[key];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (next[key] as any) = rows.map((r) => fromRow(r, def.map));
-    }
-
-    _cache = next;
-    subscribeRealtime();
-    emit();
+    await essentials;
   })();
   return _initPromise;
 }
@@ -345,6 +375,7 @@ export async function refreshDB(): Promise<void> {
   unsubscribeRealtime();
   _initPromise = null;
   _cache = null;
+  _loaded.clear();
   await initDB();
 }
 
@@ -352,6 +383,7 @@ export function clearDB(): void {
   unsubscribeRealtime();
   _cache = null;
   _initPromise = null;
+  _loaded.clear();
   emit();
 }
 
@@ -359,24 +391,25 @@ export function clearDB(): void {
 //  Realtime: postgres_changes → cache local
 // ---------------------------------------------------------------------------
 
-function subscribeRealtime(): void {
-  if (_channels.length > 0) return;
+const _subscribed = new Set<keyof DBState>();
+
+function subscribeTable<K extends keyof DBState>(key: K): void {
+  if (_subscribed.has(key)) return;
+  _subscribed.add(key);
   const sb = getSupabase();
-  (Object.keys(TABLE_DEFS) as (keyof DBState)[]).forEach((key) => {
-    const def = TABLE_DEFS[key];
-    const channel = sb
-      .channel(`db:${def.table}`)
-      .on(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        "postgres_changes" as any,
-        { event: "*", schema: "public", table: def.table },
-        (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
-          applyRealtimeEvent(key, payload);
-        }
-      )
-      .subscribe();
-    _channels.push(channel);
-  });
+  const def = TABLE_DEFS[key];
+  const channel = sb
+    .channel(`db:${def.table}`)
+    .on(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      "postgres_changes" as any,
+      { event: "*", schema: "public", table: def.table },
+      (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
+        applyRealtimeEvent(key, payload);
+      }
+    )
+    .subscribe();
+  _channels.push(channel);
 }
 
 function unsubscribeRealtime(): void {
@@ -386,6 +419,7 @@ function unsubscribeRealtime(): void {
     void sb.removeChannel(ch);
   }
   _channels = [];
+  _subscribed.clear();
 }
 
 function applyRealtimeEvent<K extends keyof DBState>(
