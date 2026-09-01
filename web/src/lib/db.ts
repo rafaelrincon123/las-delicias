@@ -23,6 +23,7 @@ const TABLE_DEFS: Record<keyof DBState, TableDef> = {
       nombre: "nombre",
       email: "email",
       participacionPct: "participacion_pct",
+      authUserId: "auth_user_id",
     },
   },
   potreros: {
@@ -261,8 +262,32 @@ function emptyDB(): DBState {
 let _cache: DBState | null = null;
 let _initPromise: Promise<void> | null = null;
 let _channels: RealtimeChannel[] = [];
-/** IDs de operaciones locales pendientes de reflejo Realtime — evita rebotes. */
-const _localOps = new Set<string>();
+/**
+ * IDs de operaciones locales pendientes de reflejo Realtime — evita rebotes.
+ * Cada marca lleva TTL: si el evento no llega en 5s, la limpiamos para que
+ * cualquier reconciliación posterior desde el servidor sí se aplique.
+ */
+const _localOps = new Map<string, ReturnType<typeof setTimeout>>();
+const LOCAL_OP_TTL_MS = 5000;
+
+function markLocalOp(key: string): void {
+  const prev = _localOps.get(key);
+  if (prev) clearTimeout(prev);
+  const t = setTimeout(() => { _localOps.delete(key); }, LOCAL_OP_TTL_MS);
+  _localOps.set(key, t);
+}
+
+function consumeLocalOp(key: string): boolean {
+  const t = _localOps.get(key);
+  if (!t) return false;
+  clearTimeout(t);
+  _localOps.delete(key);
+  return true;
+}
+
+function clearLocalOp(key: string): void {
+  consumeLocalOp(key);
+}
 
 const EVENT = "db:changed";
 function emit(): void {
@@ -378,7 +403,7 @@ function applyRealtimeEvent<K extends keyof DBState>(
     const id = (item as any).id as string | undefined;
     if (!id) return;
     const opKey = `${def.table}:upsert:${id}`;
-    if (_localOps.delete(opKey)) return; // ya aplicado localmente
+    if (consumeLocalOp(opKey)) return; // ya aplicado localmente
     const idx = list.findIndex((x) => x.id === id);
     const newList = list.slice();
     if (idx >= 0) newList[idx] = item;
@@ -390,7 +415,7 @@ function applyRealtimeEvent<K extends keyof DBState>(
     const id = (payload.old as any)?.id as string | undefined;
     if (!id) return;
     const opKey = `${def.table}:delete:${id}`;
-    if (_localOps.delete(opKey)) return;
+    if (consumeLocalOp(opKey)) return;
     const idx = list.findIndex((x) => x.id === id);
     if (idx >= 0) {
       const newList = list.slice();
@@ -454,20 +479,30 @@ async function syncCollection<K extends keyof DBState>(
   const deletes: string[] = Object.keys(oldById).filter((id) => !(id in newById));
 
   // Marcar como locales para que Realtime no los re-aplique
-  upsertIds.forEach((id) => _localOps.add(`${def.table}:upsert:${id}`));
-  deletes.forEach((id) => _localOps.add(`${def.table}:delete:${id}`));
+  upsertIds.forEach((id) => markLocalOp(`${def.table}:upsert:${id}`));
+  deletes.forEach((id) => markLocalOp(`${def.table}:delete:${id}`));
 
   try {
     if (upserts.length > 0) {
       const { error } = await sb.from(def.table).upsert(upserts, { onConflict: "id" });
-      if (error) console.error(`[db] upsert ${def.table}`, error);
+      if (error) {
+        console.error(`[db] upsert ${def.table}`, error);
+        // La escritura falló: soltamos las marcas para que si llega un evento
+        // Realtime del estado real del servidor, sí se aplique al cache.
+        upsertIds.forEach((id) => clearLocalOp(`${def.table}:upsert:${id}`));
+      }
     }
     if (deletes.length > 0) {
       const { error } = await sb.from(def.table).delete().in("id", deletes);
-      if (error) console.error(`[db] delete ${def.table}`, error);
+      if (error) {
+        console.error(`[db] delete ${def.table}`, error);
+        deletes.forEach((id) => clearLocalOp(`${def.table}:delete:${id}`));
+      }
     }
   } catch (e) {
     console.error(`[db] sync ${def.table} falló`, e);
+    upsertIds.forEach((id) => clearLocalOp(`${def.table}:upsert:${id}`));
+    deletes.forEach((id) => clearLocalOp(`${def.table}:delete:${id}`));
   }
 }
 

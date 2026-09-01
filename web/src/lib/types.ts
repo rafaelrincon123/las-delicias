@@ -173,7 +173,7 @@ export interface Propietario {
   nombre: string;
   email: string;
   participacionPct: number;
-  passwordHash?: string;
+  authUserId?: string;
 }
 
 export type PrioridadTarea = "alta" | "media" | "baja";

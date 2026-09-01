@@ -37,11 +37,13 @@ export function findPropietarioForAuthUser(
 ): Propietario | null {
   const db = getCachedDB();
   if (!db) return null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const byAuth = db.propietarios.find((p) => (p as any).authUserId === authUserId);
+  const byAuth = db.propietarios.find((p) => p.authUserId === authUserId);
   if (byAuth) return byAuth;
   if (email) {
-    const byEmail = db.propietarios.find((p) => p.email === email);
+    const emailLc = email.toLowerCase();
+    const byEmail = db.propietarios.find(
+      (p) => p.email?.toLowerCase() === emailLc
+    );
     if (byEmail) return byEmail;
   }
   return null;
