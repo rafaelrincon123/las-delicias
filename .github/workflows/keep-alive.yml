@@ -1,11 +1,17 @@
 name: Supabase keep-alive
 
-# Objetivo: evitar que Supabase pause el proyecto free tras 7 dias de
-# inactividad. Le pegamos un ping diario al REST de Supabase.
+# Objetivo: evitar que Supabase pause el proyecto free tras ~7 dias sin
+# actividad real. Un GET con la anon key ya NO cuenta como actividad
+# suficiente; Supabase requiere trafico de un usuario autenticado.
+# Por eso hacemos un login real cada dia con un usuario dedicado y
+# luego una query autenticada.
 #
-# Requiere dos secrets en el repo:
-#   - SUPABASE_URL       (ej. https://tfluitgarqtdjdbxugmq.supabase.co)
-#   - SUPABASE_ANON_KEY  (la anon key publica)
+# Requiere cuatro secrets en el repo:
+#   - SUPABASE_URL         (ej. https://tfluitgarqtdjdbxugmq.supabase.co)
+#   - SUPABASE_ANON_KEY    (la anon key publica)
+#   - KEEPALIVE_EMAIL      (email de un usuario creado solo para esto,
+#                           ej. keepalive@lasdelicias.com)
+#   - KEEPALIVE_PASSWORD   (su password)
 #
 # Instrucciones para agregarlos:
 #   Repo en GitHub -> Settings -> Secrets and variables -> Actions
@@ -13,39 +19,61 @@ name: Supabase keep-alive
 
 on:
   schedule:
-    # 12:00 UTC = 7:00 am Colombia (hora local)
+    # 12:00 UTC = 7:00 am Colombia
     - cron: "0 12 * * *"
-  # Permite dispararlo a mano desde la pestana Actions.
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
     steps:
-      - name: Ping Supabase REST
+      - name: Login real + query autenticada
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          KEEPALIVE_EMAIL: ${{ secrets.KEEPALIVE_EMAIL }}
+          KEEPALIVE_PASSWORD: ${{ secrets.KEEPALIVE_PASSWORD }}
         run: |
           set -e
-          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
-            echo "Faltan los secrets SUPABASE_URL o SUPABASE_ANON_KEY."
-            exit 1
-          fi
-          echo "Pinging $SUPABASE_URL ..."
-          # Cualquier request al REST de la base sirve para marcar actividad.
-          # RLS puede filtrar filas con la anon key, pero el servidor igual
-          # atiende la peticion y se resetea el reloj de auto-pause.
-          http_code=$(curl -sS -o /tmp/resp.txt -w "%{http_code}" \
+          for var in SUPABASE_URL SUPABASE_ANON_KEY KEEPALIVE_EMAIL KEEPALIVE_PASSWORD; do
+            if [ -z "${!var}" ]; then
+              echo "Falta el secret $var."
+              exit 1
+            fi
+          done
+
+          echo "1) Sign-in en $SUPABASE_URL ..."
+          login_code=$(curl -sS -o /tmp/login.json -w "%{http_code}" \
+            -X POST \
             -H "apikey: $SUPABASE_ANON_KEY" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-            "$SUPABASE_URL/rest/v1/propietarios?select=id&limit=1")
-          echo "HTTP $http_code"
-          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 500 ]; then
-            echo "Ping OK (proyecto activo)."
-          else
-            echo "Ping FAILED. Respuesta:"
-            cat /tmp/resp.txt
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"$KEEPALIVE_EMAIL\",\"password\":\"$KEEPALIVE_PASSWORD\"}" \
+            "$SUPABASE_URL/auth/v1/token?grant_type=password")
+          echo "Login HTTP $login_code"
+          if [ "$login_code" -lt 200 ] || [ "$login_code" -ge 300 ]; then
+            echo "Login FAILED. Respuesta:"
+            cat /tmp/login.json
             exit 1
           fi
+
+          ACCESS_TOKEN=$(python3 -c "import json,sys;print(json.load(open('/tmp/login.json'))['access_token'])")
+          if [ -z "$ACCESS_TOKEN" ]; then
+            echo "No pude extraer access_token."
+            exit 1
+          fi
+          echo "Login OK."
+
+          echo "2) Query autenticada..."
+          q_code=$(curl -sS -o /tmp/q.json -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "$SUPABASE_URL/rest/v1/propietarios?select=id&limit=1")
+          echo "Query HTTP $q_code"
+          if [ "$q_code" -lt 200 ] || [ "$q_code" -ge 300 ]; then
+            echo "Query FAILED. Respuesta:"
+            cat /tmp/q.json
+            exit 1
+          fi
+
+          echo "Keep-alive OK (usuario autenticado ping-o el proyecto)."
