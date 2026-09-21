@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 import { useDB } from "@/lib/useDB";
+import { useFincaActiva } from "@/lib/useFincaActiva";
 import { logout } from "@/lib/auth";
 import { miParticipacion } from "@/lib/participacion";
 import { fmtPct } from "@/lib/format";
@@ -52,6 +53,7 @@ export default function Sidebar(props: SidebarProps) {
   const path = usePathname();
   const { user } = useAuth();
   const { db } = useDB();
+  const { activa } = useFincaActiva();
   const sections = Array.from(new Set(NAV.map((n) => n.section)));
   const initials = user ? user.nombre.slice(0, 2).toUpperCase() : "";
   const share =
@@ -90,11 +92,11 @@ export default function Sidebar(props: SidebarProps) {
         <div className="px-5 pt-6 pb-6 flex items-center gap-3">
           <BrandMark />
           <div className="flex-1 min-w-0">
-            <div className="text-[0.95rem] font-serif font-semibold tracking-tight leading-none">
-              Las Delicias
+            <div className="text-[0.95rem] font-serif font-semibold tracking-tight leading-none truncate">
+              {activa?.nombre ?? "MiFinca"}
             </div>
             <div className="text-[0.62rem] text-accent font-mono tracking-[0.14em] uppercase mt-1">
-              Ganadería
+              MiFinca
             </div>
           </div>
           <button
@@ -195,7 +197,7 @@ function BrandMark() {
     >
       <Image
         src="/logo.png"
-        alt="Las Delicias"
+        alt="MiFinca"
         width={44}
         height={44}
         sizes="44px"

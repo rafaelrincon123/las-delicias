@@ -7,19 +7,19 @@ import AuthGate from "@/components/AuthGate";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://las-delicias-mddw.vercel.app"),
-  title: "Las Delicias · Sistema ganadero",
-  description: "Sistema de gestión del hato de Las Delicias",
+  title: "MiFinca · Gestión ganadera",
+  description: "Registra tu finca y controla tu hato: animales, sanidad, gastos y más.",
   openGraph: {
-    title: "Ganadería Las Delicias",
-    description: "Tradición familiar, genética y progreso.",
+    title: "MiFinca — Gestión ganadera",
+    description: "La app para cualquier ganadero: hato, sanidad, gastos y actividades.",
     type: "website",
     locale: "es_CO",
-    siteName: "Las Delicias",
+    siteName: "MiFinca",
   },
   twitter: {
     card: "summary",
-    title: "Ganadería Las Delicias",
-    description: "Tradición familiar, genética y progreso.",
+    title: "MiFinca — Gestión ganadera",
+    description: "Registra tu finca y controla tu hato.",
   },
 };
 

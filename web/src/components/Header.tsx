@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { resetDB } from "@/lib/storage";
+import { useFincaActiva } from "@/lib/useFincaActiva";
 import { useState } from "react";
 import { IconRefresh, IconMenu } from "./icons";
 
@@ -27,10 +28,11 @@ interface HeaderProps {
 
 export default function Header({ onOpenNav }: HeaderProps) {
   const path = usePathname();
+  const { activa } = useFincaActiva();
   const key = Object.keys(TITLES).find((k) =>
     k === "/" ? path === "/" : k === "/panel" ? path === "/panel" : path.startsWith(k)
   );
-  const meta = key ? TITLES[key] : { title: "Las Delicias", sub: "" };
+  const meta = key ? TITLES[key] : { title: activa?.nombre ?? "MiFinca", sub: "" };
   const [confirming, setConfirming] = useState(false);
 
   const today = new Date();

@@ -12,15 +12,22 @@ interface State {
   authUserId: string | null;
   user: Propietario | null;
   ready: boolean;
+  /**
+   * Se pone en true cuando Supabase dispara PASSWORD_RECOVERY (usuario
+   * volvió del link de recuperación). El AuthGate lo usa para mostrar el
+   * formulario de nueva clave en lugar de la app.
+   */
+  recoveryMode: boolean;
 }
 
-export function useAuth(): State {
+export function useAuth(): State & { clearRecovery: () => void } {
   const [state, setState] = useState<State>({
     hasSession: false,
     authEmail: null,
     authUserId: null,
     user: null,
     ready: false,
+    recoveryMode: false,
   });
 
   useEffect(() => {
@@ -34,13 +41,15 @@ export function useAuth(): State {
         // Solo limpiar cache si había datos cargados (para evitar loops con db:changed)
         if (getCachedDB() !== null) clearDB();
         if (mounted) {
-          setState({
+          setState((s) => ({
             hasSession: false,
             authEmail: null,
             authUserId: null,
             user: null,
             ready: true,
-          });
+            // Salir de recovery cuando ya no hay sesión
+            recoveryMode: false && s.recoveryMode,
+          }));
         }
         return;
       }
@@ -55,18 +64,23 @@ export function useAuth(): State {
         session.user.id,
         session.user.email ?? undefined
       );
-      setState({
+      setState((s) => ({
         hasSession: true,
         authEmail: session.user.email ?? null,
         authUserId: session.user.id,
         user,
         ready: true,
-      });
+        recoveryMode: s.recoveryMode,
+      }));
     }
 
     void refresh();
 
-    const { data: sub } = sb.auth.onAuthStateChange(() => {
+    const { data: sub } = sb.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setState((s) => ({ ...s, recoveryMode: true, ready: true }));
+        return;
+      }
       void refresh();
     });
 
@@ -83,5 +97,9 @@ export function useAuth(): State {
     };
   }, []);
 
-  return state;
+  function clearRecovery() {
+    setState((s) => ({ ...s, recoveryMode: false }));
+  }
+
+  return { ...state, clearRecovery };
 }

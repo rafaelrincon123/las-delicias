@@ -219,11 +219,37 @@ const TABLE_DEFS: Record<keyof DBState, TableDef> = {
   },
 };
 
+// ---------------------------------------------------------------------------
+//  Finca activa (multi-tenant): se inyecta como finca_id en cada upsert.
+//  La setea `useFincaActiva` cuando la app arranca / cambia de finca.
+// ---------------------------------------------------------------------------
+let _activeFincaId: string | null = null;
+
+export function setActiveFincaId(id: string | null): void {
+  if (_activeFincaId === id) return;
+  _activeFincaId = id;
+  // Reiniciar cache — los datos de la finca anterior ya no aplican —
+  // y volver a arrancar la carga si hay finca activa. Sin finca, dejamos
+  // el cache vacío (el gate de onboarding tomará el control).
+  clearDB();
+  if (id) void initDB();
+}
+
+export function getActiveFincaId(): string | null {
+  return _activeFincaId;
+}
+
 function toRow(obj: Record<string, unknown>, map: FieldMap): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [ts, db] of Object.entries(map)) {
     const v = obj[ts];
     if (v !== undefined) out[db] = v;
+  }
+  // Inyectar finca_id si no viene explícito. El trigger del server sirve de
+  // red de seguridad, pero mandarlo explícito evita ambigüedad cuando el
+  // usuario está en varias fincas.
+  if (_activeFincaId && out["finca_id"] === undefined) {
+    out["finca_id"] = _activeFincaId;
   }
   return out;
 }
@@ -347,7 +373,11 @@ export function initDB(): Promise<void> {
       const def = TABLE_DEFS[k];
       void (async () => {
         try {
-          const { data, error } = await sb.from(def.table).select("*");
+          let query = sb.from(def.table).select("*");
+          if (_activeFincaId) {
+            query = query.eq("finca_id", _activeFincaId);
+          }
+          const { data, error } = await query;
           if (error) {
             console.error(`[db] error cargando ${def.table}`, error);
           } else if (_cache) {
@@ -398,12 +428,16 @@ function subscribeTable<K extends keyof DBState>(key: K): void {
   _subscribed.add(key);
   const sb = getSupabase();
   const def = TABLE_DEFS[key];
+  // Filtro Realtime por finca activa: aunque RLS también protege el server,
+  // esto evita que la UI reciba eventos de fincas ajenas (por seguridad y
+  // para no procesar payloads irrelevantes).
+  const filter = _activeFincaId ? `finca_id=eq.${_activeFincaId}` : undefined;
   const channel = sb
-    .channel(`db:${def.table}`)
+    .channel(`db:${def.table}:${_activeFincaId ?? "any"}`)
     .on(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       "postgres_changes" as any,
-      { event: "*", schema: "public", table: def.table },
+      { event: "*", schema: "public", table: def.table, ...(filter ? { filter } : {}) },
       (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
         applyRealtimeEvent(key, payload);
       }

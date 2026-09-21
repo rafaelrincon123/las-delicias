@@ -176,6 +176,29 @@ export interface Propietario {
   authUserId?: string;
 }
 
+export type PlanFinca = "ranchero" | "ganadero" | "hacienda";
+
+export interface Finca {
+  id: string;
+  nombre: string;
+  ownerUserId: string;
+  plan: PlanFinca;
+  timezone: string;
+  createdAt: string;
+}
+
+export type RolFinca = "owner" | "admin" | "operario" | "viewer";
+
+export interface FincaMiembro {
+  id: string;
+  fincaId: string;
+  userId: string;
+  rol: RolFinca;
+  activo: boolean;
+  invitadoPor?: string;
+  createdAt: string;
+}
+
 export type PrioridadTarea = "alta" | "media" | "baja";
 export type CategoriaTarea =
   | "sanidad"
