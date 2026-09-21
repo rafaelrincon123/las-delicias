@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 import { useFincaActiva } from "@/lib/useFincaActiva";
 import {
@@ -13,11 +14,14 @@ import {
 } from "@/lib/auth";
 import { IconLock, IconUser } from "./icons";
 import OnboardingWizard from "./OnboardingWizard";
+import LandingPage from "./LandingPage";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const { hasSession, user, ready, authEmail, recoveryMode, clearRecovery } =
     useAuth();
   const { ready: fincaReady, activa } = useFincaActiva();
+  const pathname = usePathname();
+  const [showLogin, setShowLogin] = useState(false);
 
   if (!ready) {
     return (
@@ -34,6 +38,11 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   if (!hasSession) {
+    // Sin sesión en la raíz → landing pública (marketing). En cualquier
+    // otra ruta protegida saltamos directo al login.
+    if (pathname === "/" && !showLogin) {
+      return <LandingPage onLogin={() => setShowLogin(true)} />;
+    }
     return <LoginScreen />;
   }
 
