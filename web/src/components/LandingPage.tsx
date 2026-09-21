@@ -1569,10 +1569,10 @@ function StickyValueBar() {
 function SociosSection() {
   const ref = useReveal<HTMLDivElement>();
   const socios = [
-    { name: "Orlando", initials: "OR", pct: 25, owes: 300000, paid: true },
-    { name: "Camila", initials: "CA", pct: 25, owes: 300000, paid: false },
-    { name: "Nicolás", initials: "NI", pct: 25, owes: 300000, paid: true },
-    { name: "Rafael", initials: "RA", pct: 25, owes: 300000, paid: false, pagador: true },
+    { name: "Álvaro D.", initials: "AD", pct: 25, owes: 300000, paid: true },
+    { name: "Marcela R.", initials: "MR", pct: 25, owes: 300000, paid: false },
+    { name: "Jorge H.", initials: "JH", pct: 25, owes: 300000, paid: true },
+    { name: "Camilo V.", initials: "CV", pct: 25, owes: 300000, paid: false, pagador: true },
   ];
   return (
     <section id="socios" className="relative py-24 md:py-32" style={{ background: "var(--cream)" }}>
@@ -1641,7 +1641,7 @@ function SociosSection() {
             style={{ borderColor: "rgba(20, 38, 26, 0.08)" }}
           >
             <span className="font-mono uppercase text-[0.7rem] tracking-widest" style={{ color: "var(--forest-3)", opacity: 0.7 }}>
-              Pendiente hacia Rafael
+              Pendiente hacia Camilo
             </span>
             <span className="font-bold text-lg" style={{ color: "#B54B2A" }}>
               $300.000
@@ -1742,10 +1742,10 @@ function PhonesShowcase() {
   );
 }
 
-function PhoneShell({ children }: { children: React.ReactNode }) {
+function PhoneShell({ children, active }: { children: React.ReactNode; active: "hato" | "gastos" | "tareas" }) {
   return (
     <div className="phone-frame max-w-[280px] mx-auto">
-      <div className="phone-screen">
+      <div className="phone-screen flex flex-col">
         <div className="phone-status" style={{ color: "var(--ink)" }}>
           <span>9:41</span>
           <span className="flex items-center gap-1">
@@ -1756,8 +1756,61 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
             </span>
           </span>
         </div>
-        {children}
+        <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
+        <PhoneBottomNav active={active} />
       </div>
+    </div>
+  );
+}
+
+/** Bottom nav mock: 5 tabs con iconos y home indicator. Llena el fondo del phone. */
+function PhoneBottomNav({ active }: { active: "hato" | "gastos" | "tareas" }) {
+  const tabs: { id: "hato" | "gastos" | "tareas" | "socios" | "mi"; label: string; icon: React.ReactNode }[] = [
+    { id: "hato", label: "Hato", icon: <IconCow size={14} /> },
+    { id: "gastos", label: "Gastos", icon: <IconMoney size={14} /> },
+    { id: "tareas", label: "Tareas", icon: <IconTask size={14} /> },
+    { id: "socios", label: "Socios", icon: <IconUser size={14} /> },
+    { id: "mi", label: "Mi op.", icon: <IconSparkles size={14} /> },
+  ];
+  return (
+    <div
+      className="shrink-0 border-t"
+      style={{
+        background: "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(10px)",
+        borderColor: "rgba(20,38,26,0.08)",
+        paddingTop: "6px",
+        paddingBottom: "18px",
+      }}
+    >
+      <div className="grid grid-cols-5 gap-1 px-2">
+        {tabs.map((t) => {
+          const isActive = t.id === active;
+          return (
+            <div key={t.id} className="flex flex-col items-center gap-0.5 py-0.5">
+              <span
+                className="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                style={{
+                  background: isActive ? "var(--forest)" : "transparent",
+                  color: isActive ? "var(--lime-bright)" : "rgba(14,27,18,0.45)",
+                }}
+              >
+                {t.icon}
+              </span>
+              <span
+                className="text-[0.44rem] font-semibold uppercase tracking-wider"
+                style={{ color: isActive ? "var(--forest)" : "rgba(14,27,18,0.45)" }}
+              >
+                {t.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div
+        className="mx-auto mt-1 rounded-full"
+        style={{ width: "40%", height: "3px", background: "rgba(14,27,18,0.4)" }}
+      />
     </div>
   );
 }
@@ -1774,8 +1827,8 @@ function PhoneHato() {
     { label: "Inventario", sub: "insumos", from: "#EBE0D1", to: "#B99A7A", ink: "#5A3C20", fg: "#2E1D0C", Icon: IconBox },
   ];
   return (
-    <PhoneShell>
-      <div className="phone-content" style={{ background: "var(--cream)", height: "100%" }}>
+    <PhoneShell active="hato">
+      <div className="phone-content h-full" style={{ background: "var(--cream)" }}>
         <div className="flex items-center justify-between mb-3.5">
           <div className="text-[0.6rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.5)" }}>
             Las Delicias
@@ -1841,8 +1894,8 @@ function MiniTile({
 // 3 HeroStat + lista de gastos con avatares de socios pagados.
 function PhoneGastos() {
   return (
-    <PhoneShell>
-      <div className="phone-content" style={{ background: "var(--cream)", height: "100%" }}>
+    <PhoneShell active="gastos">
+      <div className="phone-content h-full" style={{ background: "var(--cream)" }}>
         <div className="flex items-center justify-between mb-3">
           <div className="text-[0.6rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.5)" }}>
             Gastos e ingresos
@@ -1863,9 +1916,9 @@ function PhoneGastos() {
           <span className="text-[0.55rem] uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ color: "rgba(14,27,18,0.55)" }}>Ingresos</span>
         </div>
 
-        <ExpenseRow titulo="Vacunas Q3" cat="Sanidad" fecha="12 sep" monto="$1.200.000" payer="RA" partners={["OR","CA","NI","RA"]} paidBy={["OR","NI","RA"]} />
-        <ExpenseRow titulo="Sal + concentrado" cat="Alimentación" fecha="08 sep" monto="$680.000" payer="CA" partners={["OR","CA","NI","RA"]} paidBy={["OR","CA","NI","RA"]} />
-        <ExpenseRow titulo="Diesel" cat="Otros" fecha="05 sep" monto="$320.000" payer="RA" partners={["OR","CA","NI","RA"]} paidBy={["CA","RA"]} />
+        <ExpenseRow titulo="Vacunas Q3" cat="Sanidad" fecha="12 sep" monto="$1.200.000" payer="CV" partners={["AD","MR","JH","CV"]} paidBy={["AD","JH","CV"]} />
+        <ExpenseRow titulo="Sal + concentrado" cat="Alimentación" fecha="08 sep" monto="$680.000" payer="MR" partners={["AD","MR","JH","CV"]} paidBy={["AD","MR","JH","CV"]} />
+        <ExpenseRow titulo="Diesel" cat="Otros" fecha="05 sep" monto="$320.000" payer="CV" partners={["AD","MR","JH","CV"]} paidBy={["MR","CV"]} />
       </div>
     </PhoneShell>
   );
@@ -1948,8 +2001,8 @@ function PhoneActividades() {
     alimentacion: "#D19255",
   };
   return (
-    <PhoneShell>
-      <div className="phone-content" style={{ background: "var(--cream)", height: "100%" }}>
+    <PhoneShell active="tareas">
+      <div className="phone-content h-full" style={{ background: "var(--cream)" }}>
         <div className="flex items-center justify-between mb-3">
           <div className="text-[0.6rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.5)" }}>
             Actividades
@@ -2127,7 +2180,7 @@ function AnimalCedulaSection() {
               <div className="text-xs mt-0.5" style={{ color: "rgba(20, 38, 26, 0.55)" }}>Girolando · 4 años · Las Delicias</div>
 
               <dl className="mt-5 space-y-2 text-sm">
-                <FieldPair label="Dueño" value="Rafael Rincón" />
+                <FieldPair label="Dueño" value="Camilo Vega" />
                 <FieldPair label="Registrada" value="2024-03-14" />
                 <FieldPair label="Último peso" value="420 kg · hace 3 días" />
                 <FieldPair label="Última vacuna" value="Aftosa · 2026-07-20" />
