@@ -37,6 +37,11 @@ interface State {
 
 async function fetchFincas(): Promise<Finca[]> {
   const sb = getSupabase();
+  // Esperar a que la sesión esté cargada desde storage antes de pedir fincas.
+  // Sin sesión, RLS devuelve [] y el AuthGate creería que el usuario no
+  // tiene finca (mandándolo al onboarding wizard). Sin sesión: cortar aquí.
+  const { data: sessionData } = await sb.auth.getSession();
+  if (!sessionData.session) return [];
   const { data, error } = await sb
     .from("fincas")
     .select("id, nombre, owner_user_id, plan, timezone, created_at")
@@ -106,10 +111,28 @@ export function useFincaActiva(): State & {
     const onChanged = () => void refresh();
     window.addEventListener(AUTH_EVENT_NAME, onAuth);
     window.addEventListener(CHANGED_EVENT, onChanged);
+    // Suscripción directa a Supabase: si la sesión aparece (INITIAL_SESSION
+    // al hidratar desde storage, SIGNED_IN, TOKEN_REFRESHED), refrescamos.
+    const sb = getSupabase();
+    const { data: sub } = sb.auth.onAuthStateChange((event, session) => {
+      if (
+        event === "INITIAL_SESSION" ||
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "SIGNED_OUT"
+      ) {
+        if (event === "SIGNED_OUT" || !session) {
+          setState({ ready: true, fincas: [], activa: null });
+          return;
+        }
+        void refresh();
+      }
+    });
     return () => {
       mounted = false;
       window.removeEventListener(AUTH_EVENT_NAME, onAuth);
       window.removeEventListener(CHANGED_EVENT, onChanged);
+      sub.subscription.unsubscribe();
     };
   }, []);
 
