@@ -157,16 +157,6 @@ function LandingStyles() {
         line-height: 1.05;
       }
 
-      /* Section marker: [01] TÍTULO */
-      .section-marker {
-        font-family: var(--font-geist-mono), monospace;
-        font-size: 0.72rem;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--forest-2);
-        opacity: 0.55;
-      }
-
       /* Hero: foto grande con overlay verde */
       .hero-photo {
         position: absolute;
@@ -607,10 +597,6 @@ function Hero({ onLogin }: { onLogin: () => void }) {
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6 pt-32 md:pt-36 pb-24">
         <div ref={ref} className="reveal grid lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
           <div className="text-white">
-            <div className="section-marker mb-6" style={{ color: "rgba(184, 206, 122, 0.9)", opacity: 1 }}>
-              [ 01 ] &mdash; MULTI-FINCA
-            </div>
-
             <h1
               className="display-xxl uppercase text-white"
               style={{
@@ -697,9 +683,6 @@ function ModulesOverview() {
       <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 py-24 md:py-32">
         <div className="grid lg:grid-cols-[1fr_1.4fr] gap-12 items-center">
           <div>
-            <div className="section-marker mb-4" style={{ color: "var(--lime)", opacity: 1 }}>
-              [ 02 ] &mdash; MÓDULOS
-            </div>
             <h2
               className="display-lg uppercase text-white"
               style={{ fontSize: "clamp(2.2rem, 5.5vw, 3.75rem)" }}
@@ -771,7 +754,6 @@ function ThreePillars() {
     <section id="pilares" className="relative max-w-6xl mx-auto px-4 md:px-6 py-24 md:py-32">
       <div ref={ref} className="reveal">
         <div className="text-center mb-14 md:mb-20">
-          <div className="section-marker mb-3">[ 03 ] &mdash; PILARES</div>
           <h2
             className="display-lg uppercase"
             style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", color: "var(--forest)" }}
@@ -896,7 +878,6 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
     <section id="precios" className="relative py-24 md:py-32" style={{ background: "var(--sand)" }}>
       <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6">
         <div className="text-center mb-14 md:mb-20">
-          <div className="section-marker mb-3">[ 04 ] &mdash; PRECIOS</div>
           <h2
             className="display-lg uppercase"
             style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", color: "var(--forest)" }}
@@ -1010,7 +991,6 @@ function FAQ() {
     <section id="faq" className="relative max-w-3xl mx-auto px-4 md:px-6 py-24 md:py-32">
       <div ref={ref} className="reveal">
         <div className="text-center mb-14">
-          <div className="section-marker mb-3">[ 05 ] &mdash; FAQ</div>
           <h2
             className="display-lg uppercase"
             style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", color: "var(--forest)" }}
@@ -1107,7 +1087,6 @@ function LoginEmbed() {
     <section id="ingreso" className="relative max-w-4xl mx-auto px-4 md:px-6 py-24 md:py-32">
       <div ref={ref} className="reveal grid md:grid-cols-2 gap-10 items-center">
         <div>
-          <div className="section-marker mb-3">[ 06 ] &mdash; INGRESO</div>
           <h2 className="display-lg uppercase" style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", color: "var(--forest)" }}>
             {mode === "login" ? <>Entre a<br /><em style={{ color: "var(--forest-3)", fontStyle: "normal" }}>su finca.</em></>
               : mode === "signup" ? <>Cree<br /><em style={{ color: "var(--forest-3)", fontStyle: "normal" }}>su cuenta.</em></>
@@ -1234,9 +1213,6 @@ function FinalCTA({ onLogin }: { onLogin: () => void }) {
           />
         </div>
         <div className="relative z-10 text-center px-6 py-20 md:py-28 text-white">
-          <div className="section-marker mb-4" style={{ color: "var(--lime)", opacity: 1 }}>
-            EMPIECE HOY &mdash; SIN COSTO
-          </div>
           <h3
             className="display-xxl uppercase"
             style={{ fontSize: "clamp(2.2rem, 5.5vw, 4rem)", textShadow: "0 2px 20px rgba(0,0,0,0.4)" }}
