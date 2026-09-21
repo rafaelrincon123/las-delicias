@@ -40,6 +40,7 @@ const NAV = [
   { href: "/inventario", label: "Inventario", section: "Hato", Icon: IconBox },
   { href: "/mi-operacion", label: "Mi operación", section: "Mi operación", Icon: IconUser },
   { href: "/panel", label: "Panel general", section: "Mi operación", Icon: IconPanel },
+  { href: "/socios", label: "Socios", section: "Mi operación", Icon: IconUser },
 ];
 
 type SidebarProps = {

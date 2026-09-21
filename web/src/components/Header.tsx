@@ -20,6 +20,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "/produccion": { title: "Producción", sub: "Ordeño diario y pesajes" },
   "/gastos": { title: "Gastos", sub: "Contabilidad de la finca" },
   "/inventario": { title: "Inventario", sub: "Insumos, stock y movimientos" },
+  "/socios": { title: "Socios", sub: "Propietarios y participaciones" },
 };
 
 interface HeaderProps {
