@@ -192,35 +192,83 @@ function LandingStyles() {
         .hero-photo img { animation: none; }
       }
 
-      /* Badge circular flotante estilo axolotl */
+      /* Badge circular flotante estilo axolotl — grande y protagónico */
       .badge-circle {
         display: inline-flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 4px;
-        width: 96px;
-        height: 96px;
+        gap: 8px;
+        width: 148px;
+        height: 148px;
         border-radius: 50%;
-        background: linear-gradient(160deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.06) 100%);
-        border: 1px solid rgba(184, 206, 122, 0.5);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
+        background:
+          radial-gradient(circle at 30% 20%, rgba(184, 206, 122, 0.28) 0%, transparent 55%),
+          linear-gradient(160deg, rgba(255, 255, 255, 0.22) 0%, rgba(20, 38, 26, 0.20) 100%);
+        border: 2px solid rgba(184, 206, 122, 0.55);
+        backdrop-filter: blur(18px) saturate(1.2);
+        -webkit-backdrop-filter: blur(18px) saturate(1.2);
         color: white;
         text-align: center;
-        padding: 8px;
-        box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        box-shadow:
+          0 24px 48px -14px rgba(0, 0, 0, 0.5),
+          0 8px 20px -8px rgba(20, 38, 26, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s;
       }
-      .badge-circle .b-label {
-        font-size: 0.58rem;
-        letter-spacing: 0.10em;
-        line-height: 1.1;
-        text-transform: uppercase;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.95);
+      .badge-circle:hover {
+        transform: translateY(-4px) scale(1.03);
+        box-shadow:
+          0 32px 64px -14px rgba(0, 0, 0, 0.55),
+          0 12px 24px -8px rgba(184, 206, 122, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.30);
+      }
+      .badge-circle .b-num {
+        font-family: var(--font-geist-mono), monospace;
+        font-size: 0.55rem;
+        letter-spacing: 0.16em;
+        color: var(--lime-bright);
+        opacity: 0.75;
+        line-height: 1;
       }
       .badge-circle .b-icon {
         color: var(--lime-bright);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: rgba(184, 206, 122, 0.15);
+        border: 1px solid rgba(184, 206, 122, 0.35);
+      }
+      .badge-circle .b-label {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        line-height: 1.15;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: white;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      }
+      @media (max-width: 767px) {
+        .badge-circle {
+          width: 118px;
+          height: 118px;
+          gap: 6px;
+          padding: 8px;
+        }
+        .badge-circle .b-icon {
+          width: 28px;
+          height: 28px;
+        }
+        .badge-circle .b-label {
+          font-size: 0.6rem;
+        }
+        .badge-circle .b-num {
+          font-size: 0.48rem;
+        }
       }
 
       /* Ring frame verde (marco estilo axolotl) */
@@ -722,30 +770,31 @@ function Hero({ onLogin }: { onLogin: () => void }) {
             </div>
           </div>
 
-          {/* Badges flotantes columna derecha */}
-          <div className="hidden lg:flex flex-col items-end gap-4 justify-center">
-            <FloatingBadge label="Sin instalación" icon={<IconCheck size={18} />} />
-            <FloatingBadge label="Sin tarjeta" icon={<IconLock size={16} />} />
-            <FloatingBadge label="Multi-finca" icon={<IconPasture size={18} />} />
-            <FloatingBadge label="Realtime" icon={<IconSparkles size={16} />} />
+          {/* Badges: grid 2x2 con separación */}
+          <div className="hidden lg:grid grid-cols-2 gap-5 justify-items-center content-center">
+            <FloatingBadge num="01" label="Sin instalación" icon={<IconCheck size={16} />} />
+            <FloatingBadge num="02" label="Sin tarjeta" icon={<IconLock size={14} />} />
+            <FloatingBadge num="03" label="Multi-finca" icon={<IconPasture size={16} />} />
+            <FloatingBadge num="04" label="Realtime" icon={<IconSparkles size={14} />} />
           </div>
         </div>
 
-        {/* Móvil: badges en fila */}
-        <div className="lg:hidden mt-10 flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
-          <FloatingBadge label="Sin instalación" icon={<IconCheck size={16} />} />
-          <FloatingBadge label="Sin tarjeta" icon={<IconLock size={14} />} />
-          <FloatingBadge label="Multi-finca" icon={<IconPasture size={16} />} />
-          <FloatingBadge label="Realtime" icon={<IconSparkles size={14} />} />
+        {/* Móvil / tablet: grid 2x2 centrado */}
+        <div className="lg:hidden mt-12 grid grid-cols-2 gap-4 justify-items-center max-w-sm mx-auto">
+          <FloatingBadge num="01" label="Sin instalación" icon={<IconCheck size={14} />} />
+          <FloatingBadge num="02" label="Sin tarjeta" icon={<IconLock size={12} />} />
+          <FloatingBadge num="03" label="Multi-finca" icon={<IconPasture size={14} />} />
+          <FloatingBadge num="04" label="Realtime" icon={<IconSparkles size={12} />} />
         </div>
       </div>
     </section>
   );
 }
 
-function FloatingBadge({ label, icon }: { label: string; icon: React.ReactNode }) {
+function FloatingBadge({ num, label, icon }: { num: string; label: string; icon: React.ReactNode }) {
   return (
     <div className="badge-circle shrink-0">
+      <span className="b-num">[ {num} ]</span>
       <span className="b-icon">{icon}</span>
       <span className="b-label">{label}</span>
     </div>
