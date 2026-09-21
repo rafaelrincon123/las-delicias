@@ -41,26 +41,15 @@ async function fetchFincas(): Promise<Finca[]> {
   // Sin sesión, RLS devuelve [] y el AuthGate creería que el usuario no
   // tiene finca (mandándolo al onboarding wizard). Sin sesión: cortar aquí.
   const { data: sessionData } = await sb.auth.getSession();
-  const session = sessionData.session;
-  if (!session) {
-    console.log("[fincas] no session yet");
-    return [];
-  }
-  console.log("[fincas] session uid:", session.user.id, "email:", session.user.email);
+  if (!sessionData.session) return [];
   const { data, error } = await sb
     .from("fincas")
     .select("id, nombre, owner_user_id, plan, timezone, created_at")
     .order("created_at", { ascending: true });
   if (error) {
-    console.error("[fincas] error", error);
+    console.error("[useFincaActiva] fetch fincas", error);
     return [];
   }
-  console.log("[fincas] rows returned:", data?.length ?? 0, data);
-  // Diagnóstico extra: ¿el usuario aparece en finca_miembros?
-  const { data: mm, error: mmErr } = await sb
-    .from("finca_miembros")
-    .select("finca_id, rol, activo, user_id");
-  console.log("[fincas] finca_miembros rows visible:", mm, mmErr);
   return (data ?? []).map((r) => fromRow(r as RowFinca));
 }
 
