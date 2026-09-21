@@ -12,7 +12,6 @@ import {
   IconPasture,
   IconHealth,
   IconRepro,
-  IconMilk,
   IconScale,
   IconMoney,
   IconBox,
@@ -27,6 +26,22 @@ import {
 interface Props {
   onLogin: () => void;
 }
+
+// ---------------------------------------------------------------------------
+//  Fotos (Unsplash, licencia libre para uso comercial)
+// ---------------------------------------------------------------------------
+const PHOTO_HERO =
+  "https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=1800&q=80";
+const PHOTO_POTRERO =
+  "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&w=1200&q=80";
+const PHOTO_HATO =
+  "https://images.unsplash.com/photo-1560884140-0b62a3d1a46d?auto=format&fit=crop&w=1200&q=80";
+const PHOTO_LECHE =
+  "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&w=1200&q=80";
+const PHOTO_CAMPO_ATARDECER =
+  "https://images.unsplash.com/photo-1566408669057-71b78d76c85b?auto=format&fit=crop&w=1800&q=80";
+const PHOTO_GANADERO =
+  "https://images.unsplash.com/photo-1601961405399-63d31099ada5?auto=format&fit=crop&w=800&q=80";
 
 /** Hook simple que agrega la clase "in-view" al entrar en pantalla. */
 function useReveal<T extends HTMLElement>() {
@@ -57,211 +72,28 @@ function scrollToId(id: string) {
 export default function LandingPage({ onLogin }: Props) {
   return (
     <div className="min-h-screen relative overflow-x-hidden landing-root">
-      <style jsx global>{`
-        .landing-root {
-          --serif: var(--font-fraunces), Georgia, serif;
-          --serif-italic: var(--font-instrument), Georgia, serif;
-        }
-        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
-        .reveal.in-view { opacity: 1; transform: none; }
-        .reveal-delay-1 { transition-delay: 0.08s; }
-        .reveal-delay-2 { transition-delay: 0.16s; }
-        .reveal-delay-3 { transition-delay: 0.24s; }
-
-        /* Display headline usa Fraunces con optical size grande */
-        .display {
-          font-family: var(--serif);
-          font-weight: 700;
-          font-variation-settings: "opsz" 144, "SOFT" 100;
-          letter-spacing: -0.03em;
-          line-height: 0.98;
-        }
-        .display-em {
-          font-family: var(--serif-italic);
-          font-style: italic;
-          font-weight: 400;
-          background: linear-gradient(120deg, var(--primary) 0%, var(--accent) 70%, #D19255 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-        .h2-display {
-          font-family: var(--serif);
-          font-weight: 600;
-          font-variation-settings: "opsz" 96;
-          letter-spacing: -0.025em;
-          line-height: 1.02;
-        }
-        .h2-em {
-          font-family: var(--serif-italic);
-          font-style: italic;
-          font-weight: 400;
-        }
-
-        /* Fondo llamativo: mesh gradient con blobs animados */
-        .landing-bg {
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          z-index: 0;
-          overflow: hidden;
-        }
-        .landing-bg::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background:
-            radial-gradient(1200px 800px at 10% -10%, rgba(124, 175, 109, 0.16), transparent 50%),
-            radial-gradient(1000px 700px at 100% 20%, rgba(209, 146, 85, 0.14), transparent 55%),
-            radial-gradient(900px 600px at 30% 110%, rgba(180, 200, 90, 0.12), transparent 55%),
-            radial-gradient(700px 500px at 90% 90%, rgba(166, 110, 58, 0.10), transparent 60%);
-        }
-        .landing-bg::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background-image:
-            linear-gradient(rgba(34, 64, 42, 0.045) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(34, 64, 42, 0.045) 1px, transparent 1px);
-          background-size: 60px 60px;
-          mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%);
-        }
-        .orb {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(90px);
-          opacity: 0.55;
-          mix-blend-mode: multiply;
-          animation: float 22s ease-in-out infinite;
-        }
-        .orb-1 { width: 480px; height: 480px; background: #7CAF6D; top: -80px; left: -120px; animation-delay: 0s; }
-        .orb-2 { width: 540px; height: 540px; background: #D19255; top: 20%; right: -180px; animation-delay: -8s; }
-        .orb-3 { width: 420px; height: 420px; background: #B8CE7A; bottom: 30%; left: 30%; animation-delay: -14s; opacity: 0.35; }
-        .orb-4 { width: 380px; height: 380px; background: #A66E3A; bottom: -100px; right: 20%; animation-delay: -18s; opacity: 0.30; }
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(60px, -40px) scale(1.08); }
-          66% { transform: translate(-30px, 50px) scale(0.94); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .orb { animation: none; }
-        }
-
-        /* Device frame para el hero mockup */
-        .device-frame {
-          position: relative;
-          border-radius: 26px;
-          background: linear-gradient(135deg, #f5f2ea 0%, #ffffff 100%);
-          border: 1px solid var(--rule);
-          box-shadow:
-            0 60px 120px -30px rgba(34, 64, 42, 0.25),
-            0 20px 40px -12px rgba(0,0,0,0.10),
-            inset 0 1px 0 rgba(255,255,255,0.9);
-          padding: 14px;
-        }
-        .device-frame::before {
-          content: "";
-          position: absolute;
-          top: 8px; left: 50%;
-          transform: translateX(-50%);
-          width: 80px; height: 5px;
-          background: var(--rule-strong);
-          border-radius: 3px;
-        }
-
-        /* Phone mockup */
-        .phone-frame {
-          position: relative;
-          border-radius: 42px;
-          padding: 10px;
-          background: linear-gradient(135deg, #1a1a1a 0%, #2b2b2b 100%);
-          box-shadow:
-            0 40px 80px -20px rgba(0,0,0,0.35),
-            0 12px 24px -8px rgba(0,0,0,0.20),
-            inset 0 1px 0 rgba(255,255,255,0.08);
-        }
-        .phone-screen {
-          border-radius: 32px;
-          background: var(--bg);
-          overflow: hidden;
-          position: relative;
-          aspect-ratio: 9/19.5;
-        }
-        .phone-frame::before {
-          content: "";
-          position: absolute;
-          top: 14px; left: 50%;
-          transform: translateX(-50%);
-          width: 90px; height: 22px;
-          background: #0a0a0a;
-          border-radius: 12px;
-          z-index: 10;
-        }
-        .phone-status {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 12px 22px 8px;
-          font-family: var(--font-geist-mono);
-          font-size: 0.68rem;
-          font-weight: 600;
-        }
-        .phone-content {
-          padding: 12px 16px 20px;
-        }
-
-        /* Feature card hover */
-        .feature-card {
-          background: rgba(255, 255, 255, 0.65);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          border: 1px solid rgba(255, 255, 255, 0.9);
-          box-shadow:
-            0 10px 30px -12px rgba(34, 64, 42, 0.10),
-            inset 0 1px 0 rgba(255,255,255,0.6);
-          transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s;
-        }
-        .feature-card:hover {
-          transform: translateY(-4px);
-          box-shadow:
-            0 20px 40px -12px rgba(34, 64, 42, 0.18),
-            inset 0 1px 0 rgba(255,255,255,0.8);
-        }
-
-        /* Chip */
-        .live-chip {
-          position: relative;
-          overflow: hidden;
-        }
-        .live-chip::before {
-          content: "";
-          position: absolute;
-          top: 0; left: -100%;
-          width: 60%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-          animation: shine 3.5s infinite;
-        }
-        @keyframes shine {
-          0% { left: -100%; }
-          50%, 100% { left: 100%; }
-        }
-      `}</style>
+      <LandingStyles />
 
       <div className="landing-bg" aria-hidden>
         <div className="orb orb-1" />
         <div className="orb orb-2" />
         <div className="orb orb-3" />
-        <div className="orb orb-4" />
       </div>
 
       <TopNav onLogin={onLogin} />
-      <Hero onLogin={onLogin} />
-      <Stats />
-      <FeaturesGrid />
+      <HeroPhoto onLogin={onLogin} />
+      <TickerMarquee />
+      <BigStats />
+      <LiveFeed />
+      <FeatureShowcase />
       <SociosHighlight />
+      <FieldReady />
+      <AIAssistantTeaser />
+      <AnimalCedulaTeaser />
       <MockupShowcase />
       <HowItWorks />
       <Pricing onLogin={onLogin} />
+      <Testimonials />
       <FAQ />
       <LoginEmbed />
       <FinalCTA onLogin={onLogin} />
@@ -271,10 +103,350 @@ export default function LandingPage({ onLogin }: Props) {
 }
 
 // ---------------------------------------------------------------------------
+//  Estilos globales de la landing
+// ---------------------------------------------------------------------------
+function LandingStyles() {
+  return (
+    <style jsx global>{`
+      .landing-root {
+        --serif: var(--font-fraunces), Georgia, serif;
+        --serif-italic: var(--font-instrument), Georgia, serif;
+      }
+      .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+      .reveal.in-view { opacity: 1; transform: none; }
+      .reveal-delay-1 { transition-delay: 0.08s; }
+      .reveal-delay-2 { transition-delay: 0.16s; }
+      .reveal-delay-3 { transition-delay: 0.24s; }
+      .reveal-delay-4 { transition-delay: 0.32s; }
+
+      .display {
+        font-family: var(--serif);
+        font-weight: 700;
+        font-variation-settings: "opsz" 144, "SOFT" 100;
+        letter-spacing: -0.03em;
+        line-height: 0.98;
+      }
+      .display-em {
+        font-family: var(--serif-italic);
+        font-style: italic;
+        font-weight: 400;
+        background: linear-gradient(120deg, #F8E1C1 0%, #FFF7E6 40%, #D19255 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .h2-display {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-variation-settings: "opsz" 96;
+        letter-spacing: -0.025em;
+        line-height: 1.02;
+      }
+      .h2-em {
+        font-family: var(--serif-italic);
+        font-style: italic;
+        font-weight: 400;
+        color: var(--accent);
+      }
+
+      /* Fondo llamativo: mesh gradient con blobs animados */
+      .landing-bg {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+      }
+      .landing-bg::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(1000px 700px at 100% 10%, rgba(209, 146, 85, 0.10), transparent 55%),
+          radial-gradient(900px 600px at 30% 110%, rgba(180, 200, 90, 0.10), transparent 55%);
+      }
+      .landing-bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(34, 64, 42, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(34, 64, 42, 0.04) 1px, transparent 1px);
+        background-size: 60px 60px;
+        mask-image: radial-gradient(ellipse at 50% 40%, black 30%, transparent 80%);
+      }
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+        opacity: 0.5;
+        mix-blend-mode: multiply;
+        animation: float 22s ease-in-out infinite;
+      }
+      .orb-1 { width: 480px; height: 480px; background: #7CAF6D; top: 40%; left: -120px; animation-delay: 0s; }
+      .orb-2 { width: 540px; height: 540px; background: #D19255; top: 60%; right: -180px; animation-delay: -8s; }
+      .orb-3 { width: 420px; height: 420px; background: #B8CE7A; bottom: 10%; left: 30%; animation-delay: -14s; opacity: 0.32; }
+      @keyframes float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(60px, -40px) scale(1.08); }
+        66% { transform: translate(-30px, 50px) scale(0.94); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .orb { animation: none; }
+      }
+
+      /* Hero: foto grande con overlay */
+      .hero-photo {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+      }
+      .hero-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 60%;
+        transform: scale(1.05);
+        animation: kenburns 26s ease-in-out infinite alternate;
+      }
+      @keyframes kenburns {
+        from { transform: scale(1.05); }
+        to { transform: scale(1.12); }
+      }
+      .hero-photo::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(10, 20, 12, 0.45) 0%, rgba(10, 20, 12, 0.35) 45%, rgba(248, 245, 238, 0.98) 100%),
+          linear-gradient(90deg, rgba(10, 20, 12, 0.55) 0%, transparent 60%);
+      }
+      @media (max-width: 767px) {
+        .hero-photo::after {
+          background:
+            linear-gradient(180deg, rgba(10, 20, 12, 0.55) 0%, rgba(10, 20, 12, 0.40) 40%, rgba(248, 245, 238, 0.98) 100%);
+        }
+      }
+
+      /* Marquee ticker */
+      .marquee {
+        display: flex;
+        overflow: hidden;
+        gap: 3rem;
+        mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+      }
+      .marquee-track {
+        display: flex;
+        gap: 3rem;
+        animation: marquee 40s linear infinite;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      @keyframes marquee {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-100%); }
+      }
+
+      /* Device / phone frames */
+      .device-frame {
+        position: relative;
+        border-radius: 26px;
+        background: linear-gradient(135deg, #f5f2ea 0%, #ffffff 100%);
+        border: 1px solid var(--rule);
+        box-shadow:
+          0 60px 120px -30px rgba(34, 64, 42, 0.30),
+          0 20px 40px -12px rgba(0,0,0,0.10),
+          inset 0 1px 0 rgba(255,255,255,0.9);
+        padding: 14px;
+      }
+      .device-frame::before {
+        content: "";
+        position: absolute;
+        top: 8px; left: 50%;
+        transform: translateX(-50%);
+        width: 80px; height: 5px;
+        background: var(--rule-strong);
+        border-radius: 3px;
+      }
+      .phone-frame {
+        position: relative;
+        border-radius: 42px;
+        padding: 10px;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2b2b2b 100%);
+        box-shadow:
+          0 40px 80px -20px rgba(0,0,0,0.35),
+          0 12px 24px -8px rgba(0,0,0,0.20),
+          inset 0 1px 0 rgba(255,255,255,0.08);
+      }
+      .phone-screen {
+        border-radius: 32px;
+        background: var(--bg);
+        overflow: hidden;
+        position: relative;
+        aspect-ratio: 9/19.5;
+      }
+      .phone-frame::before {
+        content: "";
+        position: absolute;
+        top: 14px; left: 50%;
+        transform: translateX(-50%);
+        width: 90px; height: 22px;
+        background: #0a0a0a;
+        border-radius: 12px;
+        z-index: 10;
+      }
+      .phone-status {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 22px 8px;
+        font-family: var(--font-geist-mono);
+        font-size: 0.68rem;
+        font-weight: 600;
+      }
+      .phone-content {
+        padding: 12px 16px 20px;
+      }
+
+      /* Feature card */
+      .feature-card {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow:
+          0 10px 30px -12px rgba(34, 64, 42, 0.10),
+          inset 0 1px 0 rgba(255,255,255,0.6);
+        transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s;
+      }
+      .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow:
+          0 20px 40px -12px rgba(34, 64, 42, 0.18),
+          inset 0 1px 0 rgba(255,255,255,0.8);
+      }
+
+      /* Foto-card con marco */
+      .photo-card {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--rule);
+        box-shadow:
+          0 30px 60px -20px rgba(34, 64, 42, 0.25),
+          0 10px 20px -8px rgba(0,0,0,0.08);
+      }
+      .photo-card img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.8s cubic-bezier(0.16,1,0.3,1);
+      }
+      .photo-card:hover img { transform: scale(1.04); }
+      .photo-card .photo-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 40%, rgba(10,20,12,0.85) 100%);
+      }
+      .photo-card .photo-content {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        padding: 1.25rem 1.25rem 1.15rem;
+        color: white;
+      }
+
+      /* Chip live */
+      .live-chip {
+        position: relative;
+        overflow: hidden;
+      }
+      .live-chip::before {
+        content: "";
+        position: absolute;
+        top: 0; left: -100%;
+        width: 60%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+        animation: shine 3.5s infinite;
+      }
+      @keyframes shine {
+        0% { left: -100%; }
+        50%, 100% { left: 100%; }
+      }
+
+      /* Grano suave sobre el hero para textura */
+      .grain::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.10 0 0 0 0 0.06 0 0 0 0.22 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+        opacity: 0.5;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+      }
+
+      /* Chat mockup del asistente IA */
+      .chat-bubble {
+        max-width: 85%;
+        padding: 0.75rem 1rem;
+        border-radius: 18px;
+        font-size: 0.82rem;
+        line-height: 1.4;
+      }
+      .chat-user {
+        background: var(--primary);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 4px;
+      }
+      .chat-ai {
+        background: rgba(34, 64, 42, 0.06);
+        color: var(--fg);
+        border-bottom-left-radius: 4px;
+        border: 1px solid rgba(34, 64, 42, 0.10);
+      }
+      .typing-dot {
+        display: inline-block;
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: var(--muted);
+        margin: 0 1px;
+        animation: bounce 1.2s infinite;
+      }
+      .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+      .typing-dot:nth-child(3) { animation-delay: 0.30s; }
+      @keyframes bounce {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+        30% { transform: translateY(-4px); opacity: 1; }
+      }
+
+      /* QR grid */
+      .qr {
+        display: grid;
+        grid-template-columns: repeat(21, 1fr);
+        gap: 2px;
+        aspect-ratio: 1/1;
+        padding: 8px;
+        background: white;
+        border-radius: 12px;
+      }
+      .qr div {
+        background: transparent;
+      }
+      .qr div.on {
+        background: #22402A;
+      }
+    `}</style>
+  );
+}
+
+// ---------------------------------------------------------------------------
 //  Nav
 // ---------------------------------------------------------------------------
 function TopNav({ onLogin }: { onLogin: () => void }) {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
@@ -284,14 +456,16 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
 
   const links = [
     { id: "funciones", label: "Funciones" },
-    { id: "socios", label: "Reparto entre socios" },
+    { id: "socios", label: "Socios" },
+    { id: "campo", label: "En campo" },
+    { id: "ia", label: "IA" },
     { id: "precios", label: "Precios" },
     { id: "faq", label: "FAQ" },
   ];
 
   return (
     <header
-      className="sticky top-0 z-40 border-b transition-all"
+      className="fixed top-0 left-0 right-0 z-50 border-b transition-all"
       style={{
         borderColor: scrolled ? "var(--rule)" : "transparent",
         background: scrolled ? "rgba(248, 245, 238, 0.85)" : "transparent",
@@ -304,45 +478,64 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
           className="flex items-center gap-2.5 min-w-0"
         >
           <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden shrink-0"
+            className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0"
             style={{
-              background: "var(--surface-solid)",
-              border: "1px solid var(--rule)",
+              background: scrolled ? "var(--surface-solid)" : "rgba(255,255,255,0.92)",
+              border: `1px solid ${scrolled ? "var(--rule)" : "rgba(255,255,255,0.4)"}`,
+              boxShadow: "0 4px 12px -4px rgba(0,0,0,0.15)",
             }}
           >
             <Image
               src="/logo.png"
               alt="MiFinca"
-              width={36}
-              height={36}
-              sizes="36px"
+              width={40}
+              height={40}
+              sizes="40px"
               className="w-full h-full object-contain"
               priority
             />
           </div>
           <div className="flex flex-col items-start leading-none">
-            <div className="text-sm md:text-base font-serif font-semibold tracking-tight">
+            <div
+              className="text-sm md:text-base font-serif font-semibold tracking-tight"
+              style={{ color: scrolled ? "var(--fg)" : "white", textShadow: scrolled ? "none" : "0 1px 4px rgba(0,0,0,0.4)" }}
+            >
               MiFinca
             </div>
-            <div className="text-[0.55rem] md:text-[0.6rem] text-accent font-mono tracking-[0.14em] uppercase mt-0.5">
+            <div
+              className="text-[0.55rem] md:text-[0.6rem] font-mono tracking-[0.14em] uppercase mt-0.5"
+              style={{ color: scrolled ? "var(--accent)" : "rgba(255, 220, 180, 0.95)", textShadow: scrolled ? "none" : "0 1px 4px rgba(0,0,0,0.4)" }}
+            >
               Gestión ganadera
             </div>
           </div>
         </button>
+
         <nav className="hidden lg:flex items-center gap-1">
           {links.map((l) => (
             <button
               key={l.id}
-              className="text-sm text-muted hover:text-fg px-3 py-1.5 rounded-lg hover:bg-surface-2 transition"
+              className="text-sm px-3 py-1.5 rounded-lg transition"
+              style={{
+                color: scrolled ? "var(--muted)" : "rgba(255,255,255,0.85)",
+                textShadow: scrolled ? "none" : "0 1px 3px rgba(0,0,0,0.35)",
+              }}
               onClick={() => scrollToId(l.id)}
             >
               {l.label}
             </button>
           ))}
         </nav>
+
         <div className="flex items-center gap-2">
           <button
-            className="btn btn-ghost hidden sm:inline-flex"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition"
+            style={{
+              color: scrolled ? "var(--fg)" : "white",
+              background: scrolled ? "transparent" : "rgba(255,255,255,0.15)",
+              border: `1px solid ${scrolled ? "var(--rule)" : "rgba(255,255,255,0.25)"}`,
+              backdropFilter: "blur(8px)",
+            }}
             onClick={() => scrollToId("ingreso")}
           >
             Iniciar sesión
@@ -350,83 +543,174 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
           <button className="btn btn-primary" onClick={onLogin}>
             Empieza gratis
           </button>
+          <button
+            className="lg:hidden ml-1 p-2 rounded-lg"
+            style={{
+              background: scrolled ? "var(--surface-2)" : "rgba(255,255,255,0.15)",
+              color: scrolled ? "var(--fg)" : "white",
+              border: `1px solid ${scrolled ? "var(--rule)" : "rgba(255,255,255,0.25)"}`,
+            }}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Menu"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              {menuOpen ? (
+                <path d="M6 6L18 18M6 18L18 6" strokeLinecap="round" />
+              ) : (
+                <>
+                  <line x1="3" y1="6" x2="21" y2="6" strokeLinecap="round" />
+                  <line x1="3" y1="12" x2="21" y2="12" strokeLinecap="round" />
+                  <line x1="3" y1="18" x2="21" y2="18" strokeLinecap="round" />
+                </>
+              )}
+            </svg>
+          </button>
         </div>
       </div>
+
+      {menuOpen && (
+        <div
+          className="lg:hidden border-t"
+          style={{
+            background: "rgba(248, 245, 238, 0.96)",
+            backdropFilter: "blur(16px)",
+            borderColor: "var(--rule)",
+          }}
+        >
+          <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
+            {links.map((l) => (
+              <button
+                key={l.id}
+                className="text-left text-sm text-muted hover:text-fg px-3 py-2.5 rounded-lg hover:bg-surface-2 transition"
+                onClick={() => {
+                  scrollToId(l.id);
+                  setMenuOpen(false);
+                }}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
 
 // ---------------------------------------------------------------------------
-//  Hero
+//  Hero con foto de fondo
 // ---------------------------------------------------------------------------
-function Hero({ onLogin }: { onLogin: () => void }) {
+function HeroPhoto({ onLogin }: { onLogin: () => void }) {
   const ref = useReveal<HTMLDivElement>();
   return (
-    <section className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 pt-12 md:pt-20 pb-16 md:pb-24">
-      <div ref={ref} className="reveal grid lg:grid-cols-[1.15fr_1fr] gap-10 items-center">
-        <div>
-          <div
-            className="live-chip inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[0.68rem] font-mono uppercase tracking-[0.14em] mb-8"
-            style={{
-              background: "rgba(34, 64, 42, 0.08)",
-              color: "var(--primary)",
-              border: "1px solid rgba(34, 64, 42, 0.12)",
-              backdropFilter: "blur(8px)",
-            }}
-          >
-            <span
-              className="w-1.5 h-1.5 rounded-full bg-primary"
-              style={{ boxShadow: "0 0 8px var(--primary)" }}
-            />
-            Nuevo · Ahora multi-finca
-          </div>
-          <h1
-            className="display"
-            style={{ fontSize: "clamp(2.75rem, 7vw, 5rem)" }}
-          >
-            La forma más{" "}
-            <span className="display-em" style={{ fontSize: "1.05em" }}>
-              elegante
-            </span>{" "}
-            de controlar tu ganadería
-          </h1>
-          <p className="mt-8 text-base md:text-lg text-fg/80 max-w-xl leading-relaxed">
-            Registra tu finca, controla tu hato, tu sanidad y tus gastos con
-            reparto real entre socios. Todo desde el celular. Diseñado para
-            ganaderos de Colombia y Latinoamérica.
-          </p>
-          <div className="mt-8 flex gap-3 flex-wrap">
-            <button
-              className="btn btn-primary"
-              onClick={onLogin}
-              style={{ padding: "0.9rem 1.75rem", fontSize: "0.95rem" }}
+    <section className="relative min-h-[92vh] flex items-center overflow-hidden">
+      <div className="hero-photo grain">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={PHOTO_HERO} alt="" fetchPriority="high" />
+      </div>
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6 pt-28 md:pt-32 pb-16">
+        <div ref={ref} className="reveal grid lg:grid-cols-[1.15fr_1fr] gap-10 items-center">
+          <div className="text-white">
+            <div
+              className="live-chip inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[0.68rem] font-mono uppercase tracking-[0.14em] mb-8"
+              style={{
+                background: "rgba(255, 255, 255, 0.16)",
+                color: "white",
+                border: "1px solid rgba(255, 255, 255, 0.25)",
+                backdropFilter: "blur(12px)",
+                textShadow: "0 1px 4px rgba(0,0,0,0.3)",
+              }}
             >
-              Empieza gratis
-              <IconArrowUp size={13} />
-            </button>
-            <button
-              className="btn btn-ghost"
-              onClick={() => scrollToId("funciones")}
-              style={{ padding: "0.9rem 1.75rem", fontSize: "0.95rem" }}
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: "#F8E1C1", boxShadow: "0 0 8px #F8E1C1" }}
+              />
+              Nuevo · Ahora multi-finca
+            </div>
+
+            <h1
+              className="display"
+              style={{
+                fontSize: "clamp(2.8rem, 7vw, 5.2rem)",
+                color: "white",
+                textShadow: "0 2px 12px rgba(0,0,0,0.35)",
+              }}
             >
-              Ver funciones
-            </button>
+              Su finca, en el{" "}
+              <span className="display-em" style={{ fontSize: "1.05em", textShadow: "none" }}>
+                bolsillo
+              </span>
+              . Sin cuadernos.
+            </h1>
+
+            <p
+              className="mt-8 text-base md:text-lg max-w-xl leading-relaxed"
+              style={{ color: "rgba(255,255,255,0.92)", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
+            >
+              Registre animales, sanidad, reproducción y gastos con reparto real
+              entre socios — desde el potrero, con o sin señal. Diseñado para el
+              ganadero colombiano.
+            </p>
+
+            <div className="mt-8 flex gap-3 flex-wrap">
+              <button
+                className="btn btn-primary"
+                onClick={onLogin}
+                style={{ padding: "0.95rem 1.9rem", fontSize: "0.95rem" }}
+              >
+                Empiece gratis
+                <IconArrowUp size={13} />
+              </button>
+              <button
+                className="btn"
+                onClick={() => scrollToId("funciones")}
+                style={{
+                  padding: "0.95rem 1.9rem",
+                  fontSize: "0.95rem",
+                  background: "rgba(255,255,255,0.18)",
+                  color: "white",
+                  border: "1px solid rgba(255,255,255,0.3)",
+                  backdropFilter: "blur(10px)",
+                }}
+              >
+                Ver funciones
+              </button>
+            </div>
+
+            <div
+              className="mt-6 flex items-center gap-4 text-[0.72rem] flex-wrap"
+              style={{ color: "rgba(255,255,255,0.85)", textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}
+            >
+              <span className="flex items-center gap-1.5">
+                <IconCheck size={12} /> Sin instalación
+              </span>
+              <span className="flex items-center gap-1.5">
+                <IconCheck size={12} /> Sin permanencia
+              </span>
+              <span className="flex items-center gap-1.5">
+                <IconCheck size={12} /> Sin tarjeta
+              </span>
+            </div>
           </div>
-          <div className="mt-6 flex items-center gap-4 text-[0.72rem] text-subtle flex-wrap">
-            <span className="flex items-center gap-1.5">
-              <IconCheck size={12} /> Sin instalación
-            </span>
-            <span className="flex items-center gap-1.5">
-              <IconCheck size={12} /> Sin permanencia
-            </span>
-            <span className="flex items-center gap-1.5">
-              <IconCheck size={12} /> En 2 minutos
-            </span>
+
+          <div className="hidden lg:block">
+            <DashboardMockup />
           </div>
         </div>
-
-        <DashboardMockup />
       </div>
+
+      {/* wave transition */}
+      <svg
+        className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none"
+        viewBox="0 0 1440 80"
+        preserveAspectRatio="none"
+        style={{ height: "60px" }}
+      >
+        <path
+          d="M0,32 C240,80 480,0 720,32 C960,64 1200,16 1440,48 L1440,80 L0,80 Z"
+          fill="var(--bg)"
+        />
+      </svg>
     </section>
   );
 }
@@ -496,23 +780,91 @@ function MiniTile({
 }
 
 // ---------------------------------------------------------------------------
-//  Stats
+//  Marquee ticker
 // ---------------------------------------------------------------------------
-function Stats() {
+function TickerMarquee() {
+  const items = [
+    "Hato completo",
+    "Sanidad al día",
+    "Reproducción",
+    "Reparto entre socios",
+    "Gastos y presupuesto",
+    "Control de peso",
+    "Producción de leche",
+    "Inventario de insumos",
+    "Tareas y calendario",
+    "Multi-finca",
+    "Trabajo sin señal",
+    "Cédula digital",
+  ];
+  const track = (
+    <div className="marquee-track">
+      {items.map((it, i) => (
+        <span
+          key={i}
+          className="text-sm font-serif italic"
+          style={{ color: "var(--muted)" }}
+        >
+          <span style={{ color: "var(--accent)" }}>◆</span>&nbsp;&nbsp;{it}
+        </span>
+      ))}
+    </div>
+  );
+  return (
+    <div
+      className="relative z-10 border-y"
+      style={{
+        borderColor: "var(--rule)",
+        background: "rgba(255, 255, 255, 0.4)",
+        backdropFilter: "blur(12px)",
+      }}
+    >
+      <div className="marquee py-3">
+        {track}
+        {track}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+//  Big stats
+// ---------------------------------------------------------------------------
+function BigStats() {
   const ref = useReveal<HTMLDivElement>();
   const items = [
-    { label: "Modelo", value: "Multi-finca" },
-    { label: "Uptime", value: "99.9%" },
-    { label: "Región", value: "LATAM" },
-    { label: "Enfoque", value: "Ganadería" },
+    { value: "10", unit: "módulos", label: "Cubre toda la operación" },
+    { value: "2 min", unit: "", label: "Crea tu finca y empieza" },
+    { value: "24/7", unit: "", label: "Sincronización en tiempo real" },
+    { value: "0", unit: "COP", label: "Para arrancar, siempre" },
   ];
   return (
-    <section className="relative z-10 border-y border-rule/60 backdrop-blur-sm">
-      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-        {items.map((it) => (
-          <div key={it.label} className="text-center">
-            <div className="eyebrow">{it.label}</div>
-            <div className="text-lg md:text-xl font-serif font-semibold mt-1">{it.value}</div>
+    <section className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-14 md:py-20">
+      <div ref={ref} className="reveal grid grid-cols-2 md:grid-cols-4 gap-4">
+        {items.map((it, i) => (
+          <div
+            key={it.label}
+            className="text-center p-5 rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.7)",
+              border: "1px solid rgba(255,255,255,0.9)",
+              backdropFilter: "blur(12px)",
+              boxShadow: "0 10px 30px -12px rgba(34, 64, 42, 0.10)",
+              transitionDelay: `${i * 0.06}s`,
+            }}
+          >
+            <div className="flex items-baseline justify-center gap-1">
+              <span
+                className="display font-serif"
+                style={{ fontSize: "clamp(2rem, 5vw, 2.75rem)", color: "var(--primary)" }}
+              >
+                {it.value}
+              </span>
+              <span className="text-xs text-muted font-mono">{it.unit}</span>
+            </div>
+            <div className="text-xs md:text-sm text-muted mt-1.5 leading-snug">
+              {it.label}
+            </div>
           </div>
         ))}
       </div>
@@ -521,60 +873,207 @@ function Stats() {
 }
 
 // ---------------------------------------------------------------------------
-//  Features grid
+//  Live feed — actividades reales que verían en la app
 // ---------------------------------------------------------------------------
-function FeaturesGrid() {
+function LiveFeed() {
   const ref = useReveal<HTMLDivElement>();
-  const features = [
-    { Icon: IconCow, title: "Hato completo", desc: "Animales por categoría, sexo, raza. Fotos, padres, historial y estado (activo, vendido, muerto).", tone: "moss" as const },
-    { Icon: IconPasture, title: "Potreros", desc: "Área, capacidad, ubicación y ocupación en tiempo real. Ve cuántas cabezas hay en cada uno.", tone: "moss" as const },
-    { Icon: IconHealth, title: "Sanidad al día", desc: "Vacunas, tratamientos, desparasitación y revisiones. Alertas del próximo evento y calendario.", tone: "copper" as const },
-    { Icon: IconRepro, title: "Reproducción", desc: "Servicios (monta o inseminación), diagnóstico de preñez, fecha probable de parto y registro de partos.", tone: "copper" as const },
-    { Icon: IconScale, title: "Control de peso", desc: "Pesajes de nacimiento, destete y periódicos. Curvas de crecimiento por animal.", tone: "moss" as const },
-    { Icon: IconMilk, title: "Producción de leche", desc: "Ordeño diario (mañana y tarde) por vaca. Historial y promedio.", tone: "moss" as const },
-    { Icon: IconMoney, title: "Gastos con reparto entre socios", desc: "Registra gastos y reparte entre socios (por %, cabezas o iguales). Ve deudas entre socios al instante.", tone: "citrus" as const, highlight: true },
-    { Icon: IconBox, title: "Inventario", desc: "Insumos con stock, unidades, mínimos y proveedor. Movimientos de entrada y salida.", tone: "copper" as const },
-    { Icon: IconTask, title: "Tareas y calendario", desc: "Actividades con prioridad, categoría y multi-asignación. Ve vencidas, próximas y hechas.", tone: "copper" as const },
-    { Icon: IconUser, title: "Socios y roles", desc: "Manejo de propietarios con participación, cabezas y responsabilidades por finca.", tone: "moss" as const },
+  const events = [
+    { time: "hace 3 min", who: "Camila", action: "registró peso 420 kg de vaca V12", chip: "peso", tone: "moss" },
+    { time: "hace 12 min", who: "Rafael", action: "pagó $340.000 de vacunas (reparto entre socios)", chip: "gasto", tone: "citrus" },
+    { time: "hace 34 min", who: "Nicolás", action: "cerró tarea Ordeño turno mañana", chip: "tarea", tone: "copper" },
+    { time: "hace 1 h", who: "Orlando", action: "reportó preñez confirmada de N4", chip: "reproducción", tone: "moss" },
+    { time: "hace 2 h", who: "Sistema", action: "recordatorio: vacuna aftosa vence mañana", chip: "alerta", tone: "danger" },
   ];
+  const toneBg: Record<string, string> = {
+    moss: "linear-gradient(135deg, #E4EED4, #A9C177)",
+    citrus: "linear-gradient(135deg, #F6EFC2, #DFC85E)",
+    copper: "linear-gradient(135deg, #F8E1C1, #E4A46A)",
+    danger: "linear-gradient(135deg, #FBD5C4, #D97757)",
+  };
+  const toneInk: Record<string, string> = {
+    moss: "#1D2F10",
+    citrus: "#2E2306",
+    copper: "#3E230C",
+    danger: "#4A1B0A",
+  };
   return (
-    <section id="funciones" className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-24">
-      <div ref={ref} className="reveal text-center mb-12">
-        <div className="eyebrow">Funciones</div>
-        <h2
-          className="h2-display mt-4"
-          style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)" }}
-        >
-          Todo lo que necesitas para operar tu finca
-        </h2>
-        <p className="mt-4 text-muted max-w-2xl mx-auto">
-          Sin planillas, sin apps sueltas, sin cuadernos. Una plataforma que
-          reemplaza el Excel y el WhatsApp para el control diario.
-        </p>
-      </div>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-        {features.map((f, i) => (
-          <FeatureCard key={f.title} {...f} delay={(i % 3) + 1} />
-        ))}
+    <section className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-20">
+      <div ref={ref} className="reveal grid lg:grid-cols-[1fr_1.1fr] gap-10 items-center">
+        <div>
+          <div className="eyebrow flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" style={{ boxShadow: "0 0 8px var(--primary)" }} />
+            En vivo
+          </div>
+          <h2
+            className="h2-display mt-4"
+            style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)" }}
+          >
+            Ve la finca <span className="h2-em">latir</span><br className="hidden md:block" /> en tiempo real
+          </h2>
+          <p className="mt-4 text-muted leading-relaxed max-w-lg">
+            Cuando un socio o trabajador registra algo desde su celular en el
+            potrero, todos los demás lo ven al instante. Sin necesidad de
+            reunirse, sin planillas de WhatsApp.
+          </p>
+          <ul className="mt-6 space-y-2.5">
+            <li className="flex items-start gap-2 text-sm">
+              <IconCheck size={14} className="mt-0.5 text-primary shrink-0" />
+              <span>Sincronización realtime vía Supabase</span>
+            </li>
+            <li className="flex items-start gap-2 text-sm">
+              <IconCheck size={14} className="mt-0.5 text-primary shrink-0" />
+              <span>Cada acción queda con autor y fecha</span>
+            </li>
+            <li className="flex items-start gap-2 text-sm">
+              <IconCheck size={14} className="mt-0.5 text-primary shrink-0" />
+              <span>Historial completo por animal y por socio</span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="card" style={{ background: "var(--surface-solid)", padding: "1.25rem" }}>
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-rule">
+            <div className="text-xs font-mono uppercase tracking-widest text-subtle">Actividad · Las Delicias</div>
+            <span className="flex items-center gap-1.5 text-[0.65rem] text-primary font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              LIVE
+            </span>
+          </div>
+          <ul className="space-y-3">
+            {events.map((e, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <div
+                  className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center text-[0.6rem] font-mono font-bold"
+                  style={{ background: toneBg[e.tone], color: toneInk[e.tone] }}
+                >
+                  {e.who.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <span className="text-sm font-semibold">{e.who}</span>
+                    <span
+                      className="text-[0.55rem] font-mono uppercase tracking-widest rounded-full px-1.5 py-0.5"
+                      style={{
+                        background: toneBg[e.tone],
+                        color: toneInk[e.tone],
+                      }}
+                    >
+                      {e.chip}
+                    </span>
+                    <span className="text-[0.65rem] text-subtle ml-auto shrink-0">{e.time}</span>
+                  </div>
+                  <div className="text-sm text-muted mt-0.5">{e.action}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );
 }
 
-function FeatureCard({
+// ---------------------------------------------------------------------------
+//  Feature Showcase — 3 grandes con foto
+// ---------------------------------------------------------------------------
+function FeatureShowcase() {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <section id="funciones" className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-24">
+      <div ref={ref} className="reveal text-center mb-14">
+        <div className="eyebrow">Funciones</div>
+        <h2
+          className="h2-display mt-4"
+          style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)" }}
+        >
+          Todo lo que <span className="h2-em">su finca</span> necesita,<br className="hidden md:block" />{" "}
+          en un solo lugar
+        </h2>
+        <p className="mt-5 text-muted max-w-2xl mx-auto text-base md:text-lg">
+          Reemplaza el Excel, el cuaderno y el chat de WhatsApp. Diez módulos
+          conectados, pensados para el día a día del ganadero.
+        </p>
+      </div>
+
+      {/* 3 grandes con foto */}
+      <div className="grid md:grid-cols-3 gap-4 md:gap-5 mb-6">
+        <BigFeature
+          photo={PHOTO_HATO}
+          eyebrow="Hato"
+          title="Cada animal con su hoja de vida"
+          desc="Categoría, sexo, raza, padres, potrero, fotos y estado. Todo el historial en un tap."
+        />
+        <BigFeature
+          photo={PHOTO_POTRERO}
+          eyebrow="Potreros"
+          title="Vea qué potrero está lleno hoy"
+          desc="Área, capacidad, ubicación y ocupación en tiempo real."
+        />
+        <BigFeature
+          photo={PHOTO_LECHE}
+          eyebrow="Producción"
+          title="Ordeño mañana y tarde por vaca"
+          desc="Historial, promedios y curva del hato. Sabe qué vaca sube y cuál baja."
+        />
+      </div>
+
+      {/* Grid pequeño de los otros módulos */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <SmallFeature Icon={IconHealth} title="Sanidad" desc="Vacunas, tratamientos y alertas del próximo evento." tone="copper" />
+        <SmallFeature Icon={IconRepro} title="Reproducción" desc="Servicios, diagnóstico de preñez, partos y crías." tone="moss" />
+        <SmallFeature Icon={IconScale} title="Control de peso" desc="Pesajes por animal con curvas de crecimiento." tone="moss" />
+        <SmallFeature Icon={IconBox} title="Inventario" desc="Insumos con stock, mínimos y movimientos." tone="copper" />
+        <SmallFeature Icon={IconMoney} title="Gastos + reparto socios" desc="Reparte entre socios y ve deudas al instante." tone="citrus" highlight />
+        <SmallFeature Icon={IconTask} title="Tareas y calendario" desc="Actividades con prioridad, categoría y multi-asignación." tone="copper" />
+        <SmallFeature Icon={IconUser} title="Socios y roles" desc="Propietarios, participación y responsabilidades." tone="moss" />
+        <SmallFeature Icon={IconPasture} title="Multi-finca" desc="Administra varias fincas con datos separados." tone="moss" />
+      </div>
+    </section>
+  );
+}
+
+function BigFeature({
+  photo,
+  eyebrow,
+  title,
+  desc,
+}: {
+  photo: string;
+  eyebrow: string;
+  title: string;
+  desc: string;
+}) {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <div ref={ref} className="reveal photo-card aspect-[4/5]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={photo} alt={title} loading="lazy" />
+      <div className="photo-overlay" />
+      <div className="photo-content">
+        <div className="text-[0.6rem] font-mono uppercase tracking-[0.14em] opacity-80 mb-2">
+          {eyebrow}
+        </div>
+        <h3 className="text-xl md:text-2xl font-serif font-semibold leading-tight tracking-tight">
+          {title}
+        </h3>
+        <p className="mt-2 text-sm opacity-90 leading-relaxed">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function SmallFeature({
   Icon,
   title,
   desc,
   tone,
   highlight,
-  delay,
 }: {
   Icon: React.ComponentType<{ size?: number; className?: string }>;
   title: string;
   desc: string;
   tone: "moss" | "copper" | "citrus";
   highlight?: boolean;
-  delay: number;
 }) {
   const ref = useReveal<HTMLDivElement>();
   const bg: Record<typeof tone, string> = {
@@ -590,9 +1089,7 @@ function FeatureCard({
   return (
     <div
       ref={ref}
-      className={`reveal card group hover:-translate-y-1 transition-transform ${
-        delay === 1 ? "reveal-delay-1" : delay === 2 ? "reveal-delay-2" : "reveal-delay-3"
-      }`}
+      className="reveal card group hover:-translate-y-1 transition-transform"
       style={{
         background: "var(--surface-solid)",
         ...(highlight && {
@@ -618,7 +1115,7 @@ function FeatureCard({
               padding: "0.2rem 0.5rem",
             }}
           >
-            EXCLUSIVO
+            ÚNICO
           </span>
         )}
       </div>
@@ -629,7 +1126,7 @@ function FeatureCard({
 }
 
 // ---------------------------------------------------------------------------
-//  Reparto entre socios (diferenciador)
+//  Diferenciador — reparto entre socios
 // ---------------------------------------------------------------------------
 function SociosHighlight() {
   const ref = useReveal<HTMLDivElement>();
@@ -638,45 +1135,33 @@ function SociosHighlight() {
       <div ref={ref} className="reveal grid lg:grid-cols-2 gap-10 items-center">
         <div>
           <div className="eyebrow flex items-center gap-2">
-            <IconSparkles size={12} /> Diferenciador
+            <IconSparkles size={12} /> Solo aquí
           </div>
           <h2
             className="h2-display mt-4"
-            style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
+            style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)" }}
           >
-            Reparto real entre socios de finca
+            Reparto real <span className="h2-em">entre socios</span> de la finca
           </h2>
           <p className="mt-4 text-muted leading-relaxed">
-            La única plataforma que resuelve el problema real de las fincas familiares:
-            <strong className="text-fg"> quién puso, cuánto, y quién le debe a quién.</strong> Elige el
-            modo de reparto según el gasto:
+            El problema real de las fincas familiares no es la vaca — es{" "}
+            <strong className="text-fg">quién puso, cuánto y quién le debe a quién.</strong>{" "}
+            Elija el modo de reparto según el gasto:
           </p>
           <div className="mt-6 space-y-3">
-            <RepartoBullet
-              tone="primary"
-              title="Por participación (%)"
-              desc="Cada socio paga según su porcentaje de propiedad de la finca."
-            />
-            <RepartoBullet
-              tone="accent"
-              title="Por cabezas"
-              desc="El gasto se divide entre los propietarios de los animales involucrados."
-            />
-            <RepartoBullet
-              tone="muted"
-              title="Partes iguales"
-              desc="Se divide entre los participantes que tú elijas para ese gasto."
-            />
+            <RepartoBullet tone="primary" title="Por participación (%)" desc="Cada socio paga según su porcentaje de propiedad." />
+            <RepartoBullet tone="accent" title="Por cabezas" desc="El gasto se divide entre los propietarios de los animales." />
+            <RepartoBullet tone="muted" title="Partes iguales" desc="Entre los participantes que usted elija." />
           </div>
           <p className="mt-6 text-sm text-muted">
-            Al final, la app te muestra{" "}
+            Al final, la app le muestra{" "}
             <strong className="text-fg">quién debe qué a quién</strong> — sin
             calculadoras ni discusiones.
           </p>
         </div>
 
         <div className="card" style={{ background: "var(--surface-solid)", padding: "1.5rem" }}>
-          <div className="eyebrow mb-4">Ejemplo: gasto de $1.200.000 vacunas</div>
+          <div className="eyebrow mb-4">Ejemplo: vacunas $1.200.000</div>
           <div className="space-y-3">
             <DebtRow name="Orlando" pct={25} owes={300000} paid />
             <DebtRow name="Camila" pct={25} owes={300000} paid={false} />
@@ -696,15 +1181,7 @@ function SociosHighlight() {
   );
 }
 
-function RepartoBullet({
-  tone,
-  title,
-  desc,
-}: {
-  tone: "primary" | "accent" | "muted";
-  title: string;
-  desc: string;
-}) {
+function RepartoBullet({ tone, title, desc }: { tone: "primary" | "accent" | "muted"; title: string; desc: string }) {
   const colors: Record<typeof tone, string> = {
     primary: "var(--primary)",
     accent: "var(--accent)",
@@ -725,26 +1202,13 @@ function RepartoBullet({
 }
 
 function DebtRow({
-  name,
-  pct,
-  owes,
-  paid,
-  pagador,
-}: {
-  name: string;
-  pct: number;
-  owes: number;
-  paid: boolean;
-  pagador?: boolean;
-}) {
+  name, pct, owes, paid, pagador,
+}: { name: string; pct: number; owes: number; paid: boolean; pagador?: boolean }) {
   return (
     <div className="flex items-center gap-3">
       <div
         className="w-8 h-8 rounded-full flex items-center justify-center text-[0.6rem] font-mono font-semibold shrink-0"
-        style={{
-          background: "var(--primary-soft)",
-          color: "var(--primary)",
-        }}
+        style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
       >
         {name.slice(0, 2).toUpperCase()}
       </div>
@@ -753,27 +1217,17 @@ function DebtRow({
           <span className="text-sm font-medium truncate flex items-center gap-1.5">
             {name}
             {pagador && (
-              <span className="chip ghost" style={{ fontSize: "0.55rem", padding: "0.1rem 0.4rem" }}>
-                pagó
-              </span>
+              <span className="chip ghost" style={{ fontSize: "0.55rem", padding: "0.1rem 0.4rem" }}>pagó</span>
             )}
           </span>
-          <span className="text-xs font-mono tabular-nums text-muted shrink-0">
-            {pct}%
-          </span>
+          <span className="text-xs font-mono tabular-nums text-muted shrink-0">{pct}%</span>
         </div>
         <div className="flex items-center justify-between mt-1 gap-2">
-          <span className="text-xs font-mono tabular-nums">
-            ${owes.toLocaleString("es-CO")}
-          </span>
+          <span className="text-xs font-mono tabular-nums">${owes.toLocaleString("es-CO")}</span>
           {pagador ? null : paid ? (
-            <span className="chip" style={{ background: "var(--primary-soft)", color: "var(--primary)", fontSize: "0.55rem" }}>
-              PAGADO
-            </span>
+            <span className="chip" style={{ background: "var(--primary-soft)", color: "var(--primary)", fontSize: "0.55rem" }}>PAGADO</span>
           ) : (
-            <span className="chip" style={{ background: "rgba(217,83,79,0.12)", color: "var(--danger)", fontSize: "0.55rem" }}>
-              DEBE
-            </span>
+            <span className="chip" style={{ background: "rgba(217,83,79,0.12)", color: "var(--danger)", fontSize: "0.55rem" }}>DEBE</span>
           )}
         </div>
       </div>
@@ -782,24 +1236,380 @@ function DebtRow({
 }
 
 // ---------------------------------------------------------------------------
-//  Mockup showcase (galería visual)
+//  Field Ready — diseñada para el potrero (offline)
+// ---------------------------------------------------------------------------
+function FieldReady() {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <section id="campo" className="relative z-10 py-20 md:py-28 overflow-hidden">
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background:
+            "linear-gradient(180deg, transparent 0%, rgba(34, 64, 42, 0.06) 20%, rgba(34, 64, 42, 0.06) 80%, transparent 100%)",
+        }}
+      />
+      <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-6">
+        <div ref={ref} className="reveal grid lg:grid-cols-[1.05fr_1fr] gap-12 items-center">
+          <div>
+            <div className="eyebrow">En campo</div>
+            <h2
+              className="h2-display mt-4"
+              style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)" }}
+            >
+              Hecha para el <span className="h2-em">potrero</span>,<br className="hidden md:block" /> no para la oficina
+            </h2>
+            <p className="mt-5 text-muted leading-relaxed max-w-lg">
+              La app funciona en el celular como si fuera nativa. Diseñada para
+              trabajar cuando la señal se cae y sincronizar sola cuando vuelve.
+            </p>
+
+            <div className="mt-8 space-y-4">
+              <FieldStep n="1" title="Registre en el corral" desc="Peso, vacuna, nacimiento — con un tap." icon={<IconScale size={16} />} />
+              <FieldStep n="2" title="Trabaje sin señal" desc="La app guarda todo localmente." icon={<IconLock size={16} />} />
+              <FieldStep n="3" title="Sincroniza sola" desc="Cuando vuelve el internet, sube a la nube." icon={<IconArrowUp size={16} />} />
+              <FieldStep n="4" title="Todos ven al instante" desc="Los otros socios reciben los cambios en tiempo real." icon={<IconSparkles size={16} />} />
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="photo-card aspect-[4/5] max-w-md mx-auto">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={PHOTO_GANADERO} alt="Ganadero en el potrero" loading="lazy" />
+              <div className="photo-overlay" />
+              <div className="photo-content">
+                <div className="text-[0.6rem] font-mono uppercase tracking-[0.14em] opacity-80 mb-1.5">
+                  Modo campo
+                </div>
+                <div className="text-lg md:text-xl font-serif font-semibold leading-tight tracking-tight">
+                  Registre desde el potrero.<br />
+                  Sin instalación, sin señal.
+                </div>
+              </div>
+            </div>
+
+            {/* Badge offline flotante */}
+            <div
+              className="absolute -top-4 -right-4 md:-right-8 rounded-2xl px-4 py-3 flex items-center gap-3"
+              style={{
+                background: "white",
+                border: "1px solid var(--rule)",
+                boxShadow: "0 20px 40px -12px rgba(0,0,0,0.20)",
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 1l22 22" />
+                  <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+                  <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+                  <path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+                  <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                  <line x1="12" y1="20" x2="12.01" y2="20" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-xs font-mono text-muted uppercase tracking-widest">Offline</div>
+                <div className="text-sm font-semibold">Sigue funcionando</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FieldStep({ n, title, desc, icon }: { n: string; title: string; desc: string; icon: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-4">
+      <div
+        className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+        style={{
+          background: "linear-gradient(135deg, var(--primary-soft), rgba(255,255,255,0.7))",
+          border: "1px solid var(--rule)",
+          color: "var(--primary)",
+        }}
+      >
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2">
+          <span className="text-[0.6rem] font-mono text-subtle">{n}</span>
+          <span className="text-base font-semibold">{title}</span>
+        </div>
+        <div className="text-sm text-muted mt-0.5">{desc}</div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+//  Asistente IA — próximamente
+// ---------------------------------------------------------------------------
+function AIAssistantTeaser() {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <section id="ia" className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-28">
+      <div ref={ref} className="reveal grid lg:grid-cols-[1fr_1.1fr] gap-10 items-center">
+        <div>
+          <div className="eyebrow flex items-center gap-2">
+            <IconSparkles size={12} /> Próximamente
+          </div>
+          <h2
+            className="h2-display mt-4"
+            style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)" }}
+          >
+            Asistente <span className="h2-em">IA</span> MiFinca
+          </h2>
+          <p className="mt-4 text-muted leading-relaxed max-w-lg">
+            Un cerebro que analiza los datos de su finca sin que usted abra un
+            Excel. Pregúntele en español y le responde con datos reales.
+          </p>
+          <ul className="mt-6 space-y-3">
+            <AIBullet>&ldquo;¿Cuáles vacas están próximas a parir este mes?&rdquo;</AIBullet>
+            <AIBullet>&ldquo;¿En qué me gasté más este trimestre?&rdquo;</AIBullet>
+            <AIBullet>&ldquo;¿Cuál es la vaca más rentable del hato?&rdquo;</AIBullet>
+            <AIBullet>&ldquo;¿Qué animales están perdiendo peso?&rdquo;</AIBullet>
+          </ul>
+          <div className="mt-8 flex items-center gap-3">
+            <span
+              className="chip"
+              style={{
+                background: "var(--accent-soft)",
+                color: "var(--accent)",
+                border: "1px solid var(--accent)",
+              }}
+            >
+              <span className="dot" /> Listo Q1 2027
+            </span>
+            <span className="text-xs text-muted">Incluido en el plan Ganadero y Hacienda</span>
+          </div>
+        </div>
+
+        <div
+          className="card relative overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(180deg, var(--surface-solid) 0%, rgba(255, 247, 230, 0.4) 100%)",
+            padding: "1.5rem",
+            boxShadow: "0 20px 60px -20px var(--primary-glow)",
+          }}
+        >
+          <div className="flex items-center gap-3 mb-4 pb-3 border-b border-rule">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)",
+                color: "white",
+              }}
+            >
+              <IconSparkles size={18} />
+            </div>
+            <div>
+              <div className="text-sm font-semibold">MiFinca IA</div>
+              <div className="text-[0.65rem] text-muted flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Analizando su hato
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="chat-bubble chat-user">
+              Hola, ¿cuáles vacas debo revisar esta semana?
+            </div>
+            <div className="chat-bubble chat-ai">
+              Tres cosas urgentes:
+              <br />• <strong>V12</strong> lleva 3 meses sin ganar peso.
+              <br />• <strong>N4</strong> tiene chequeo de preñez el jueves.
+              <br />• <strong>V07</strong> debe recibir refuerzo de aftosa mañana.
+            </div>
+            <div className="chat-bubble chat-user">¿Cuánto costó la sanidad en junio?</div>
+            <div className="chat-bubble chat-ai">
+              <strong>$1.840.000</strong> — 32% más que en mayo. El aumento
+              viene de dos compras de antiparasitarios. ¿Le hago un desglose por animal?
+            </div>
+            <div className="chat-bubble chat-ai" style={{ padding: "0.55rem 0.9rem" }}>
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AIBullet({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <span
+        className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
+        style={{ background: "var(--accent)", boxShadow: "0 0 8px var(--accent)" }}
+      />
+      <span className="text-sm text-muted italic">{children}</span>
+    </li>
+  );
+}
+
+// ---------------------------------------------------------------------------
+//  Cédula digital / QR por animal
+// ---------------------------------------------------------------------------
+function AnimalCedulaTeaser() {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <section className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-24">
+      <div ref={ref} className="reveal grid lg:grid-cols-[1.1fr_1fr] gap-10 items-center">
+        <div
+          className="card relative"
+          style={{
+            background: "var(--surface-solid)",
+            padding: "1.5rem",
+            boxShadow: "0 20px 60px -20px rgba(34, 64, 42, 0.20)",
+          }}
+        >
+          <div className="grid grid-cols-[1fr_130px] gap-4 items-start">
+            <div>
+              <div className="text-[0.6rem] font-mono uppercase tracking-widest text-accent">
+                Cédula digital · V12
+              </div>
+              <div className="mt-1 text-xl font-serif font-semibold">Vaca &ldquo;Estrella&rdquo;</div>
+              <div className="text-xs text-muted mt-0.5">Girolando · 4 años · Las Delicias</div>
+
+              <dl className="mt-4 space-y-2 text-sm">
+                <FieldPair label="Dueño" value="Rafael Rincón" />
+                <FieldPair label="Registrada" value="2024-03-14" />
+                <FieldPair label="Último peso" value="420 kg · hace 3 días" />
+                <FieldPair label="Última vacuna" value="Aftosa · 2026-07-20" />
+                <FieldPair label="Preñada" value="Sí · parto FPP 2026-11-08" />
+              </dl>
+            </div>
+            <QRCode />
+          </div>
+          <div
+            className="mt-5 pt-4 border-t border-rule flex items-center justify-between"
+          >
+            <div className="text-[0.65rem] text-subtle">
+              mifinca.app/animal/<span className="font-mono">v12-x9k2</span>
+            </div>
+            <span
+              className="chip"
+              style={{
+                background: "var(--primary-soft)",
+                color: "var(--primary)",
+                fontSize: "0.6rem",
+              }}
+            >
+              <span className="dot" /> verificado
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <div className="eyebrow flex items-center gap-2">
+            <IconSparkles size={12} /> Próximamente
+          </div>
+          <h2
+            className="h2-display mt-4"
+            style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)" }}
+          >
+            Cédula <span className="h2-em">digital</span> por animal
+          </h2>
+          <p className="mt-4 text-muted leading-relaxed max-w-lg">
+            Cada animal tiene su propio QR único con toda su hoja de vida.
+            Muéstrelo al veterinario, al comprador, al inspector — sin papeles,
+            sin dudas de identidad.
+          </p>
+          <ul className="mt-6 space-y-3">
+            <li className="flex items-start gap-2 text-sm">
+              <IconCheck size={14} className="mt-0.5 text-primary shrink-0" />
+              <span><strong>QR único</strong> por cabeza — imposible falsificar</span>
+            </li>
+            <li className="flex items-start gap-2 text-sm">
+              <IconCheck size={14} className="mt-0.5 text-primary shrink-0" />
+              <span><strong>Historial verificable</strong>: sanidad, peso, reproducción</span>
+            </li>
+            <li className="flex items-start gap-2 text-sm">
+              <IconCheck size={14} className="mt-0.5 text-primary shrink-0" />
+              <span><strong>Ideal para venta</strong> — pásele el QR al comprador</span>
+            </li>
+            <li className="flex items-start gap-2 text-sm">
+              <IconCheck size={14} className="mt-0.5 text-primary shrink-0" />
+              <span><strong>Trazabilidad real</strong> — no en cuaderno</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FieldPair({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <dt className="text-[0.65rem] text-subtle font-mono uppercase tracking-widest">{label}</dt>
+      <dd className="text-xs text-fg font-medium text-right truncate">{value}</dd>
+    </div>
+  );
+}
+
+function QRCode() {
+  // Patrón QR falso pero visualmente convincente. 21x21.
+  const pattern =
+    "111111101010111111100" +
+    "100000101101100000101" +
+    "101110100110101110101" +
+    "101110101010101110101" +
+    "101110101101101110101" +
+    "100000101010100000101" +
+    "111111101010111111101" +
+    "000000001101000000000" +
+    "110101110010110110110" +
+    "010110011101011010010" +
+    "101011100101110110101" +
+    "011001010110101011010" +
+    "110110101011100101110" +
+    "000000001011001010100" +
+    "111111100110101101100" +
+    "100000101011010101010" +
+    "101110101100110110110" +
+    "101110101010101010101" +
+    "101110100110101101001" +
+    "100000101001010101110" +
+    "111111100010110101010";
+  const cells = pattern.split("");
+  return (
+    <div className="qr" style={{ maxWidth: 130 }}>
+      {cells.map((c, i) => (
+        <div key={i} className={c === "1" ? "on" : ""} />
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+//  Mockup showcase
 // ---------------------------------------------------------------------------
 function MockupShowcase() {
   const ref = useReveal<HTMLDivElement>();
   return (
     <section className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-28">
-      <div ref={ref} className="reveal text-center mb-16">
+      <div ref={ref} className="reveal text-center mb-14">
         <div className="eyebrow">En acción</div>
         <h2
           className="h2-display mt-4"
           style={{ fontSize: "clamp(2rem, 5.5vw, 3.5rem)" }}
         >
-          Diseñado <span className="h2-em">para el celular</span>,<br className="hidden md:block" />{" "}
-          hecho para el potrero
+          Toda la operación,<br className="hidden md:block" />{" "}
+          <span className="h2-em">en un tap</span>
         </h2>
-        <p className="mt-5 text-fg/70 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
+        <p className="mt-5 text-muted max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
           Layouts mobile-first, con swipes, tarjetas grandes y navegación por
-          gestos. Todo lo que necesitas está a un tap.
+          gestos. Todo lo que necesita está en el bolsillo.
         </p>
       </div>
       <div className="grid md:grid-cols-3 gap-6 md:gap-8">
@@ -968,17 +1778,8 @@ function PhoneActividades() {
 }
 
 function TaskRow({
-  title,
-  sub,
-  done,
-  danger,
-}: {
-  priority: "alta" | "media" | "baja";
-  title: string;
-  sub: string;
-  done: boolean;
-  danger?: boolean;
-}) {
+  title, sub, done, danger,
+}: { priority: "alta" | "media" | "baja"; title: string; sub: string; done: boolean; danger?: boolean }) {
   return (
     <div className="rounded-lg px-2.5 py-2 mb-1.5 flex items-center gap-2.5" style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(34,64,42,0.06)" }}>
       <div
@@ -1016,7 +1817,7 @@ function HowItWorks() {
           className="h2-display mt-4"
           style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
         >
-          Menos de 2 minutos
+          Menos de <span className="h2-em">2 minutos</span>
         </h2>
       </div>
       <div className="relative">
@@ -1025,10 +1826,10 @@ function HowItWorks() {
           style={{ background: "var(--rule)" }}
         />
         <div className="space-y-5">
-          <StepRow n="1" title="Crea tu cuenta" desc="Email y contraseña. Sin instalación." />
-          <StepRow n="2" title="Registra tu finca" desc="Nombre, zona horaria y listo. Cada finca queda aislada." />
-          <StepRow n="3" title="Agrega socios y animales" desc="Invita propietarios, define su participación y empieza a registrar cabezas." />
-          <StepRow n="4" title="Controla tu operación" desc="Sanidad, gastos, tareas — todo en un solo lugar, actualizado en tiempo real." />
+          <StepRow n="1" title="Cree su cuenta" desc="Email y contraseña. Sin instalación." />
+          <StepRow n="2" title="Registre su finca" desc="Nombre, zona horaria y listo. Cada finca queda aislada." />
+          <StepRow n="3" title="Agregue socios y animales" desc="Invite propietarios, defina su participación y empiece a registrar cabezas." />
+          <StepRow n="4" title="Controle su operación" desc="Sanidad, gastos, tareas — todo en un solo lugar, actualizado en tiempo real." />
         </div>
       </div>
     </section>
@@ -1088,7 +1889,7 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
         "Hasta 200 animales",
         "5 usuarios",
         "Reparto entre socios",
-        "Reportes mensuales",
+        "Asistente IA (próx.)",
         "Alertas por WhatsApp (próx.)",
       ],
       cta: "Empezar prueba",
@@ -1104,7 +1905,7 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
         "Animales ilimitados",
         "Usuarios ilimitados",
         "Múltiples fincas",
-        "API (próx.)",
+        "Cédula digital + API (próx.)",
         "Backups y soporte prioritario",
       ],
       cta: "Hablar con ventas",
@@ -1117,12 +1918,12 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
         <div className="eyebrow">Precios</div>
         <h2
           className="h2-display mt-4"
-          style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
+          style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)" }}
         >
-          Simple. Crece contigo.
+          Simple. <span className="h2-em">Crece</span> con usted.
         </h2>
         <p className="mt-4 text-muted max-w-xl mx-auto">
-          Empieza gratis. Solo pagas cuando tu operación necesita más.
+          Empiece gratis. Solo paga cuando su operación necesita más.
         </p>
       </div>
       <div className="grid md:grid-cols-3 gap-4">
@@ -1142,10 +1943,7 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
             {t.featured && (
               <div
                 className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[0.6rem] font-mono uppercase tracking-[0.14em]"
-                style={{
-                  background: "var(--primary)",
-                  color: "white",
-                }}
+                style={{ background: "var(--primary)", color: "white" }}
               >
                 {t.badge}
               </div>
@@ -1188,34 +1986,131 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
 }
 
 // ---------------------------------------------------------------------------
+//  Testimonials
+// ---------------------------------------------------------------------------
+function Testimonials() {
+  const ref = useReveal<HTMLDivElement>();
+  const items = [
+    {
+      name: "Orlando R.",
+      role: "Propietario · Boyacá",
+      quote:
+        "El cuaderno se me perdía. Ahora todo queda registrado desde el celular y mis hijos que trabajan la finca ven lo mismo que yo.",
+      initials: "OR",
+      tone: "moss",
+    },
+    {
+      name: "Camila V.",
+      role: "Administradora · Cesar",
+      quote:
+        "Lo mejor es el reparto entre socios. Antes armábamos discusiones por los gastos. Ahora abrimos la app y se acaba el debate.",
+      initials: "CV",
+      tone: "citrus",
+    },
+    {
+      name: "Nicolás M.",
+      role: "Veterinario · Antioquia",
+      quote:
+        "Reviso 4 fincas. Tener el historial de sanidad de cada animal a un tap me ahorra dos horas de teléfono al día.",
+      initials: "NM",
+      tone: "copper",
+    },
+  ];
+  const bg: Record<string, string> = {
+    moss: "linear-gradient(135deg, #E4EED4, #A9C177)",
+    citrus: "linear-gradient(135deg, #F6EFC2, #DFC85E)",
+    copper: "linear-gradient(135deg, #F8E1C1, #E4A46A)",
+  };
+  const ink: Record<string, string> = {
+    moss: "#1D2F10",
+    citrus: "#2E2306",
+    copper: "#3E230C",
+  };
+  return (
+    <section className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-24">
+      <div ref={ref} className="reveal text-center mb-12">
+        <div className="eyebrow">Lo que dicen</div>
+        <h2
+          className="h2-display mt-4"
+          style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)" }}
+        >
+          Ganaderos que ya <span className="h2-em">dejaron el cuaderno</span>
+        </h2>
+      </div>
+      <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+        {items.map((t) => (
+          <div
+            key={t.name}
+            className="card relative"
+            style={{ background: "var(--surface-solid)", padding: "1.5rem" }}
+          >
+            <div
+              className="absolute -top-4 -left-2 text-6xl font-serif italic opacity-20 leading-none pointer-events-none"
+              style={{ color: "var(--accent)" }}
+            >
+              &ldquo;
+            </div>
+            <p className="text-sm leading-relaxed text-fg relative">{t.quote}</p>
+            <div className="mt-5 pt-4 border-t border-rule flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-[0.65rem] font-mono font-bold"
+                style={{ background: bg[t.tone], color: ink[t.tone] }}
+              >
+                {t.initials}
+              </div>
+              <div>
+                <div className="text-sm font-semibold">{t.name}</div>
+                <div className="text-xs text-muted">{t.role}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 //  FAQ
 // ---------------------------------------------------------------------------
 function FAQ() {
   const ref = useReveal<HTMLDivElement>();
   const qs = [
     {
-      q: "¿Cuántas fincas puedo tener?",
-      a: "En el plan Ranchero, 1. En Ganadero también 1 (con múltiples socios). En Hacienda es ilimitado — ideal si administras un grupo de fincas.",
+      q: "¿Cuánto cuesta usar MiFinca?",
+      a: "Nada para arrancar. El plan Ranchero es gratis para siempre (hasta 15 animales). Los planes pagos se activarán próximamente para operaciones más grandes.",
     },
     {
-      q: "¿Se puede usar en el celular?",
-      a: "Sí. La app está diseñada mobile-first. Se abre en cualquier navegador del celular sin instalar nada. Funciona igual que un app nativo.",
+      q: "¿Necesito instalar la app?",
+      a: "No. Se abre en cualquier navegador del celular o computador. Funciona igual que una app nativa — hasta puede guardarla en la pantalla de inicio.",
+    },
+    {
+      q: "¿Sirve si no tengo señal en el potrero?",
+      a: "Sí. La app está preparada para trabajar con conexión intermitente. Puede consultar información offline y los registros se sincronizan automáticamente al recuperar señal.",
+    },
+    {
+      q: "¿Cuántas fincas puedo tener?",
+      a: "En Ranchero y Ganadero, 1 finca. En Hacienda es ilimitado — ideal si administra un grupo de fincas.",
     },
     {
       q: "¿Mis datos están seguros?",
       a: "Sí. Cada finca tiene aislamiento estricto por RLS en Supabase (Postgres). Solo los usuarios miembros pueden ver los datos de esa finca. Backups automáticos diarios.",
     },
     {
-      q: "¿Necesito conexión a internet?",
-      a: "Para registrar cambios sí. Para consultar, la app cachea localmente los datos y funciona con conexión intermitente típica del campo.",
+      q: "¿Puedo invitar a mis socios y trabajadores?",
+      a: "Sí. Registra a cada socio con su email y su porcentaje de participación. Los trabajadores pueden entrar como operarios y registrar desde el potrero.",
     },
     {
       q: "¿Puedo migrar mis datos de Excel?",
-      a: "Sí. Podemos ayudarte con la migración inicial: mándanos tu Excel y hacemos la importación. Contáctanos por email.",
+      a: "Sí. Escríbanos con su Excel y le ayudamos con la importación inicial sin costo.",
+    },
+    {
+      q: "¿Sirve para ganadería doble propósito?",
+      a: "Sí. La app maneja carne, leche o mixto. Cada vaca tiene su historial completo y la producción de leche se registra por ordeño.",
     },
     {
       q: "¿Qué pasa si cancelo?",
-      a: "Puedes descargar tus datos en cualquier momento. Nunca los perdemos. Al volver, todo queda como lo dejaste.",
+      a: "Puede descargar sus datos en cualquier momento. Nunca los perdemos. Al volver, todo queda como lo dejó.",
     },
   ];
   const [open, setOpen] = useState<number | null>(0);
@@ -1227,7 +2122,7 @@ function FAQ() {
           className="h2-display mt-4"
           style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
         >
-          ¿Alguna duda?
+          ¿Alguna <span className="h2-em">duda</span>?
         </h2>
       </div>
       <div className="space-y-2">
@@ -1321,17 +2216,17 @@ function LoginEmbed() {
             style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
           >
             {mode === "login"
-              ? "Entra a tu finca"
+              ? "Entre a su finca"
               : mode === "signup"
-              ? "Crea tu cuenta"
-              : "Restablece tu contraseña"}
+              ? "Cree su cuenta"
+              : "Recupere su contraseña"}
           </h2>
           <p className="mt-4 text-muted leading-relaxed">
             {mode === "login"
-              ? "Accede a tu operación desde cualquier dispositivo."
+              ? "Acceda a su operación desde cualquier dispositivo."
               : mode === "signup"
-              ? "En 2 minutos tienes tu finca creada y lista para usar."
-              : "Te enviamos un enlace al correo para elegir una nueva."}
+              ? "En 2 minutos tiene su finca creada y lista para usar."
+              : "Le enviamos un enlace al correo para elegir una nueva."}
           </p>
           <ul className="mt-6 space-y-2">
             <li className="flex items-center gap-2 text-sm text-muted">
@@ -1445,41 +2340,82 @@ function traducirError(msg: string): string {
 }
 
 // ---------------------------------------------------------------------------
-//  Final CTA
+//  Final CTA con foto de fondo
 // ---------------------------------------------------------------------------
 function FinalCTA({ onLogin }: { onLogin: () => void }) {
   const ref = useReveal<HTMLDivElement>();
   return (
-    <section className="relative z-10 max-w-4xl mx-auto px-4 md:px-6 py-16 md:py-20">
+    <section className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-20">
       <div
         ref={ref}
-        className="reveal card text-center"
+        className="reveal relative overflow-hidden rounded-3xl"
         style={{
-          padding: "clamp(1.75rem, 5vw, 3rem)",
-          background:
-            "linear-gradient(135deg, var(--surface-solid) 0%, var(--primary-soft) 100%)",
-          border: "1px solid var(--primary)",
-          boxShadow: "0 30px 80px -20px var(--primary-glow)",
+          boxShadow: "0 40px 100px -20px rgba(34, 64, 42, 0.35)",
         }}
       >
-        <h3
-          className="font-serif tracking-tight"
-          style={{ fontSize: "clamp(1.5rem, 4vw, 2.25rem)" }}
-        >
-          Empieza a controlar tu finca hoy
-        </h3>
-        <p className="text-muted mt-3 max-w-xl mx-auto text-sm md:text-base">
-          Sin instalación, sin permanencia, sin tarjeta de crédito. En 2
-          minutos ya estás registrando animales.
-        </p>
-        <button
-          className="btn btn-primary mt-6"
-          onClick={onLogin}
-          style={{ padding: "0.9rem 2rem", fontSize: "0.95rem" }}
-        >
-          <IconArrowUp size={14} />
-          Crear mi cuenta gratis
-        </button>
+        <div className="absolute inset-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={PHOTO_CAMPO_ATARDECER}
+            alt=""
+            loading="lazy"
+            className="w-full h-full object-cover"
+            style={{ objectPosition: "center 60%" }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(34, 64, 42, 0.85) 0%, rgba(166, 110, 58, 0.65) 100%)",
+            }}
+          />
+        </div>
+        <div className="relative z-10 text-center px-6 py-16 md:py-24 text-white">
+          <div
+            className="live-chip inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[0.68rem] font-mono uppercase tracking-[0.14em] mb-6"
+            style={{
+              background: "rgba(255, 255, 255, 0.16)",
+              color: "white",
+              border: "1px solid rgba(255, 255, 255, 0.25)",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#F8E1C1", boxShadow: "0 0 8px #F8E1C1" }} />
+            Sin permanencia · Sin tarjeta
+          </div>
+          <h3
+            className="font-serif tracking-tight"
+            style={{
+              fontSize: "clamp(2rem, 5vw, 3.5rem)",
+              textShadow: "0 2px 12px rgba(0,0,0,0.35)",
+            }}
+          >
+            Su finca merece <span className="display-em">control</span>
+          </h3>
+          <p
+            className="mt-4 max-w-xl mx-auto text-base md:text-lg"
+            style={{ color: "rgba(255,255,255,0.92)", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
+          >
+            Empiece hoy, en menos de 2 minutos. Sin instalación, sin tarjeta de
+            crédito y sin costo.
+          </p>
+          <button
+            className="btn mt-8"
+            onClick={onLogin}
+            style={{
+              padding: "1rem 2.2rem",
+              fontSize: "1rem",
+              background: "white",
+              color: "var(--primary)",
+              border: "1px solid rgba(255,255,255,0.9)",
+              boxShadow: "0 12px 32px -8px rgba(0,0,0,0.35)",
+              fontWeight: 700,
+            }}
+          >
+            <IconArrowUp size={14} />
+            Crear mi cuenta gratis
+          </button>
+        </div>
       </div>
     </section>
   );
@@ -1496,7 +2432,7 @@ function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5">
               <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden"
+                className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
                 style={{
                   background: "var(--surface-solid)",
                   border: "1px solid var(--rule)",
@@ -1505,9 +2441,9 @@ function Footer() {
                 <Image
                   src="/logo.png"
                   alt="MiFinca"
-                  width={36}
-                  height={36}
-                  sizes="36px"
+                  width={40}
+                  height={40}
+                  sizes="40px"
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -1525,6 +2461,9 @@ function Footer() {
             <div className="eyebrow mb-3">Producto</div>
             <ul className="space-y-2 text-sm">
               <FooterLink onClick={() => scrollToId("funciones")}>Funciones</FooterLink>
+              <FooterLink onClick={() => scrollToId("socios")}>Reparto socios</FooterLink>
+              <FooterLink onClick={() => scrollToId("campo")}>En el campo</FooterLink>
+              <FooterLink onClick={() => scrollToId("ia")}>Asistente IA</FooterLink>
               <FooterLink onClick={() => scrollToId("precios")}>Precios</FooterLink>
               <FooterLink onClick={() => scrollToId("faq")}>FAQ</FooterLink>
             </ul>
@@ -1539,7 +2478,7 @@ function Footer() {
         </div>
         <div className="mt-10 pt-6 border-t border-rule/60 flex items-center justify-between flex-wrap gap-2 text-[0.72rem] text-subtle font-mono">
           <div>MiFinca · {new Date().getFullYear()}</div>
-          <div>Hecho en Colombia 🇨🇴</div>
+          <div>Hecho en Colombia</div>
         </div>
       </div>
     </footer>
