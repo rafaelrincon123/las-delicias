@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -54,7 +55,8 @@ export default function Sidebar(props: SidebarProps) {
   const path = usePathname();
   const { user } = useAuth();
   const { db } = useDB();
-  const { activa } = useFincaActiva();
+  const { activa, fincas, setActiva } = useFincaActiva();
+  const [pickerOpen, setPickerOpen] = useState(false);
   const sections = Array.from(new Set(NAV.map((n) => n.section)));
   const initials = user ? user.nombre.slice(0, 2).toUpperCase() : "";
   const share =
@@ -90,16 +92,27 @@ export default function Sidebar(props: SidebarProps) {
           overflowY: "auto",
         }}
       >
-        <div className="px-5 pt-6 pb-6 flex items-center gap-3">
+        <div className="px-5 pt-6 pb-3 flex items-center gap-3">
           <BrandMark />
-          <div className="flex-1 min-w-0">
-            <div className="text-[0.95rem] font-serif font-semibold tracking-tight leading-none truncate">
-              {activa?.nombre ?? "MiFinca"}
+          <button
+            type="button"
+            onClick={() => fincas.length > 1 && setPickerOpen((v) => !v)}
+            className="flex-1 min-w-0 text-left"
+            style={{ cursor: fincas.length > 1 ? "pointer" : "default" }}
+            title={fincas.length > 1 ? "Cambiar de finca" : undefined}
+          >
+            <div className="flex items-center gap-1">
+              <div className="text-[0.95rem] font-serif font-semibold tracking-tight leading-none truncate">
+                {activa?.nombre ?? "MiFinca"}
+              </div>
+              {fincas.length > 1 && (
+                <span className="text-muted text-xs">▾</span>
+              )}
             </div>
             <div className="text-[0.62rem] text-accent font-mono tracking-[0.14em] uppercase mt-1">
-              MiFinca
+              {fincas.length > 1 ? `${fincas.length} fincas` : "MiFinca"}
             </div>
-          </div>
+          </button>
           <button
             type="button"
             onClick={onClose}
@@ -109,6 +122,35 @@ export default function Sidebar(props: SidebarProps) {
             <IconClose size={16} />
           </button>
         </div>
+        {pickerOpen && fincas.length > 1 && (
+          <div className="px-3 pb-3 space-y-1">
+            {fincas.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 transition flex items-center justify-between gap-2"
+                style={{
+                  background: f.id === activa?.id ? "var(--primary-soft)" : "transparent",
+                  color: f.id === activa?.id ? "var(--primary)" : "var(--fg)",
+                  border: "1px solid var(--rule)",
+                }}
+                onClick={() => {
+                  setActiva(f.id);
+                  setPickerOpen(false);
+                  // Forzar re-hidratación del cache para esta finca
+                  window.location.reload();
+                }}
+              >
+                <span className="text-sm truncate">{f.nombre}</span>
+                {f.id === activa?.id && (
+                  <span className="text-[0.6rem] font-mono uppercase tracking-wider">
+                    activa
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
         <nav className="px-3 flex-1 flex flex-col gap-5 overflow-y-auto">
           {sections.map((section) => (
