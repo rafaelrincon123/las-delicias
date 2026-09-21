@@ -35,13 +35,39 @@ const PHOTO_HERO =
 const PHOTO_POTRERO =
   "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&w=1200&q=80";
 const PHOTO_HATO =
-  "https://images.unsplash.com/photo-1560884140-0b62a3d1a46d?auto=format&fit=crop&w=1200&q=80";
+  "https://images.unsplash.com/photo-1546445317-29f4545e9d53?auto=format&fit=crop&w=1200&q=80";
 const PHOTO_LECHE =
   "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&w=1200&q=80";
 const PHOTO_CAMPO_ATARDECER =
-  "https://images.unsplash.com/photo-1566408669057-71b78d76c85b?auto=format&fit=crop&w=1800&q=80";
+  "https://images.unsplash.com/photo-1471958680802-1345a694ba6d?auto=format&fit=crop&w=1800&q=80";
 const PHOTO_GANADERO =
-  "https://images.unsplash.com/photo-1601961405399-63d31099ada5?auto=format&fit=crop&w=800&q=80";
+  "https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?auto=format&fit=crop&w=800&q=80";
+
+/** Placeholder SVG (data URI) usado como fallback si Unsplash falla. */
+const PHOTO_FALLBACK =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1000' preserveAspectRatio='xMidYMid slice'>
+      <defs>
+        <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+          <stop offset='0%' stop-color='#22402A'/>
+          <stop offset='100%' stop-color='#A66E3A'/>
+        </linearGradient>
+      </defs>
+      <rect width='800' height='1000' fill='url(#g)'/>
+      <g fill='rgba(255,255,255,0.06)'>
+        <circle cx='200' cy='200' r='120'/>
+        <circle cx='600' cy='700' r='180'/>
+      </g>
+    </svg>`
+  );
+
+function handlePhotoError(e: React.SyntheticEvent<HTMLImageElement, Event>) {
+  const img = e.currentTarget;
+  if (img.dataset.fallback) return;
+  img.dataset.fallback = "1";
+  img.src = PHOTO_FALLBACK;
+}
 
 /** Hook simple que agrega la clase "in-view" al entrar en pantalla. */
 function useReveal<T extends HTMLElement>() {
@@ -606,7 +632,7 @@ function HeroPhoto({ onLogin }: { onLogin: () => void }) {
     <section className="relative min-h-[92vh] flex items-center overflow-hidden">
       <div className="hero-photo grain">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={PHOTO_HERO} alt="" fetchPriority="high" />
+        <img src={PHOTO_HERO} alt="" fetchPriority="high" onError={handlePhotoError} />
       </div>
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6 pt-28 md:pt-32 pb-16">
         <div ref={ref} className="reveal grid lg:grid-cols-[1.15fr_1fr] gap-10 items-center">
@@ -1047,7 +1073,7 @@ function BigFeature({
   return (
     <div ref={ref} className="reveal photo-card aspect-[4/5]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={photo} alt={title} loading="lazy" />
+      <img src={photo} alt={title} loading="lazy" onError={handlePhotoError} />
       <div className="photo-overlay" />
       <div className="photo-content">
         <div className="text-[0.6rem] font-mono uppercase tracking-[0.14em] opacity-80 mb-2">
@@ -1275,7 +1301,7 @@ function FieldReady() {
           <div className="relative">
             <div className="photo-card aspect-[4/5] max-w-md mx-auto">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={PHOTO_GANADERO} alt="Ganadero en el potrero" loading="lazy" />
+              <img src={PHOTO_GANADERO} alt="Ganadero en el potrero" loading="lazy" onError={handlePhotoError} />
               <div className="photo-overlay" />
               <div className="photo-content">
                 <div className="text-[0.6rem] font-mono uppercase tracking-[0.14em] opacity-80 mb-1.5">
@@ -2359,6 +2385,7 @@ function FinalCTA({ onLogin }: { onLogin: () => void }) {
             src={PHOTO_CAMPO_ATARDECER}
             alt=""
             loading="lazy"
+            onError={handlePhotoError}
             className="w-full h-full object-cover"
             style={{ objectPosition: "center 60%" }}
           />
