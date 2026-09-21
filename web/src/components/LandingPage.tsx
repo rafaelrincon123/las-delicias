@@ -23,11 +23,6 @@ import {
   IconLock,
   IconSparkles,
 } from "./icons";
-import {
-  ArtActividades,
-  ArtHato,
-  ArtGastos,
-} from "./HomeArt";
 
 interface Props {
   onLogin: () => void;
@@ -61,19 +56,107 @@ function scrollToId(id: string) {
 
 export default function LandingPage({ onLogin }: Props) {
   return (
-    <div className="min-h-screen relative overflow-x-hidden">
+    <div className="min-h-screen relative overflow-x-hidden landing-root">
       <style jsx global>{`
-        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease-out, transform 0.7s ease-out; }
+        .landing-root {
+          --serif: var(--font-fraunces), Georgia, serif;
+          --serif-italic: var(--font-instrument), Georgia, serif;
+        }
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
         .reveal.in-view { opacity: 1; transform: none; }
         .reveal-delay-1 { transition-delay: 0.08s; }
         .reveal-delay-2 { transition-delay: 0.16s; }
         .reveal-delay-3 { transition-delay: 0.24s; }
+
+        /* Display headline usa Fraunces con optical size grande */
+        .display {
+          font-family: var(--serif);
+          font-weight: 700;
+          font-variation-settings: "opsz" 144, "SOFT" 100;
+          letter-spacing: -0.03em;
+          line-height: 0.98;
+        }
+        .display-em {
+          font-family: var(--serif-italic);
+          font-style: italic;
+          font-weight: 400;
+          background: linear-gradient(120deg, var(--primary) 0%, var(--accent) 70%, #D19255 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .h2-display {
+          font-family: var(--serif);
+          font-weight: 600;
+          font-variation-settings: "opsz" 96;
+          letter-spacing: -0.025em;
+          line-height: 1.02;
+        }
+        .h2-em {
+          font-family: var(--serif-italic);
+          font-style: italic;
+          font-weight: 400;
+        }
+
+        /* Fondo llamativo: mesh gradient con blobs animados */
+        .landing-bg {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          overflow: hidden;
+        }
+        .landing-bg::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(1200px 800px at 10% -10%, rgba(124, 175, 109, 0.16), transparent 50%),
+            radial-gradient(1000px 700px at 100% 20%, rgba(209, 146, 85, 0.14), transparent 55%),
+            radial-gradient(900px 600px at 30% 110%, rgba(180, 200, 90, 0.12), transparent 55%),
+            radial-gradient(700px 500px at 90% 90%, rgba(166, 110, 58, 0.10), transparent 60%);
+        }
+        .landing-bg::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(34, 64, 42, 0.045) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(34, 64, 42, 0.045) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 75%);
+        }
+        .orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(90px);
+          opacity: 0.55;
+          mix-blend-mode: multiply;
+          animation: float 22s ease-in-out infinite;
+        }
+        .orb-1 { width: 480px; height: 480px; background: #7CAF6D; top: -80px; left: -120px; animation-delay: 0s; }
+        .orb-2 { width: 540px; height: 540px; background: #D19255; top: 20%; right: -180px; animation-delay: -8s; }
+        .orb-3 { width: 420px; height: 420px; background: #B8CE7A; bottom: 30%; left: 30%; animation-delay: -14s; opacity: 0.35; }
+        .orb-4 { width: 380px; height: 380px; background: #A66E3A; bottom: -100px; right: 20%; animation-delay: -18s; opacity: 0.30; }
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(60px, -40px) scale(1.08); }
+          66% { transform: translate(-30px, 50px) scale(0.94); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .orb { animation: none; }
+        }
+
+        /* Device frame para el hero mockup */
         .device-frame {
           position: relative;
-          border-radius: 22px;
-          background: var(--surface-solid);
+          border-radius: 26px;
+          background: linear-gradient(135deg, #f5f2ea 0%, #ffffff 100%);
           border: 1px solid var(--rule);
-          box-shadow: 0 40px 100px -20px var(--primary-glow), 0 8px 32px -12px rgba(0,0,0,0.12);
+          box-shadow:
+            0 60px 120px -30px rgba(34, 64, 42, 0.25),
+            0 20px 40px -12px rgba(0,0,0,0.10),
+            inset 0 1px 0 rgba(255,255,255,0.9);
           padding: 14px;
         }
         .device-frame::before {
@@ -81,23 +164,95 @@ export default function LandingPage({ onLogin }: Props) {
           position: absolute;
           top: 8px; left: 50%;
           transform: translateX(-50%);
-          width: 60px; height: 5px;
-          background: var(--rule);
+          width: 80px; height: 5px;
+          background: var(--rule-strong);
           border-radius: 3px;
         }
-        .kbd {
-          font-family: var(--font-geist-mono), monospace;
-          font-size: 0.65rem;
-          background: var(--surface-2);
-          border: 1px solid var(--rule);
-          border-radius: 4px;
-          padding: 2px 6px;
+
+        /* Phone mockup */
+        .phone-frame {
+          position: relative;
+          border-radius: 42px;
+          padding: 10px;
+          background: linear-gradient(135deg, #1a1a1a 0%, #2b2b2b 100%);
+          box-shadow:
+            0 40px 80px -20px rgba(0,0,0,0.35),
+            0 12px 24px -8px rgba(0,0,0,0.20),
+            inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+        .phone-screen {
+          border-radius: 32px;
+          background: var(--bg);
+          overflow: hidden;
+          position: relative;
+          aspect-ratio: 9/19.5;
+        }
+        .phone-frame::before {
+          content: "";
+          position: absolute;
+          top: 14px; left: 50%;
+          transform: translateX(-50%);
+          width: 90px; height: 22px;
+          background: #0a0a0a;
+          border-radius: 12px;
+          z-index: 10;
+        }
+        .phone-status {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 22px 8px;
+          font-family: var(--font-geist-mono);
+          font-size: 0.68rem;
+          font-weight: 600;
+        }
+        .phone-content {
+          padding: 12px 16px 20px;
+        }
+
+        /* Feature card hover */
+        .feature-card {
+          background: rgba(255, 255, 255, 0.65);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border: 1px solid rgba(255, 255, 255, 0.9);
+          box-shadow:
+            0 10px 30px -12px rgba(34, 64, 42, 0.10),
+            inset 0 1px 0 rgba(255,255,255,0.6);
+          transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s;
+        }
+        .feature-card:hover {
+          transform: translateY(-4px);
+          box-shadow:
+            0 20px 40px -12px rgba(34, 64, 42, 0.18),
+            inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+
+        /* Chip */
+        .live-chip {
+          position: relative;
+          overflow: hidden;
+        }
+        .live-chip::before {
+          content: "";
+          position: absolute;
+          top: 0; left: -100%;
+          width: 60%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+          animation: shine 3.5s infinite;
+        }
+        @keyframes shine {
+          0% { left: -100%; }
+          50%, 100% { left: 100%; }
         }
       `}</style>
 
-      <div className="app-bg" aria-hidden />
-      <div className="app-glow-1" aria-hidden />
-      <div className="app-glow-2" aria-hidden />
+      <div className="landing-bg" aria-hidden>
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
+        <div className="orb orb-4" />
+      </div>
 
       <TopNav onLogin={onLogin} />
       <Hero onLogin={onLogin} />
@@ -211,34 +366,31 @@ function Hero({ onLogin }: { onLogin: () => void }) {
       <div ref={ref} className="reveal grid lg:grid-cols-[1.15fr_1fr] gap-10 items-center">
         <div>
           <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[0.68rem] font-mono uppercase tracking-[0.14em] mb-6"
+            className="live-chip inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[0.68rem] font-mono uppercase tracking-[0.14em] mb-8"
             style={{
-              background: "var(--primary-soft)",
+              background: "rgba(34, 64, 42, 0.08)",
               color: "var(--primary)",
-              border: "1px solid var(--rule)",
+              border: "1px solid rgba(34, 64, 42, 0.12)",
+              backdropFilter: "blur(8px)",
             }}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <span
+              className="w-1.5 h-1.5 rounded-full bg-primary"
+              style={{ boxShadow: "0 0 8px var(--primary)" }}
+            />
             Nuevo · Ahora multi-finca
           </div>
           <h1
-            className="font-serif tracking-tight leading-[1.05]"
-            style={{ fontSize: "clamp(2.25rem, 5.5vw, 4rem)" }}
+            className="display"
+            style={{ fontSize: "clamp(2.75rem, 7vw, 5rem)" }}
           >
             La forma más{" "}
-            <span
-              style={{
-                background: "linear-gradient(120deg, var(--primary), var(--accent))",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
+            <span className="display-em" style={{ fontSize: "1.05em" }}>
               elegante
             </span>{" "}
             de controlar tu ganadería
           </h1>
-          <p className="mt-6 text-base md:text-lg text-muted max-w-xl leading-relaxed">
+          <p className="mt-8 text-base md:text-lg text-fg/80 max-w-xl leading-relaxed">
             Registra tu finca, controla tu hato, tu sanidad y tus gastos con
             reparto real entre socios. Todo desde el celular. Diseñado para
             ganaderos de Colombia y Latinoamérica.
@@ -390,7 +542,7 @@ function FeaturesGrid() {
       <div ref={ref} className="reveal text-center mb-12">
         <div className="eyebrow">Funciones</div>
         <h2
-          className="font-serif tracking-tight mt-3"
+          className="h2-display mt-4"
           style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)" }}
         >
           Todo lo que necesitas para operar tu finca
@@ -489,7 +641,7 @@ function SociosHighlight() {
             <IconSparkles size={12} /> Diferenciador
           </div>
           <h2
-            className="font-serif tracking-tight mt-3"
+            className="h2-display mt-4"
             style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
           >
             Reparto real entre socios de finca
@@ -635,77 +787,217 @@ function DebtRow({
 function MockupShowcase() {
   const ref = useReveal<HTMLDivElement>();
   return (
-    <section className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-24">
-      <div ref={ref} className="reveal text-center mb-12">
+    <section className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-20 md:py-28">
+      <div ref={ref} className="reveal text-center mb-16">
         <div className="eyebrow">En acción</div>
         <h2
-          className="font-serif tracking-tight mt-3"
-          style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
+          className="h2-display mt-4"
+          style={{ fontSize: "clamp(2rem, 5.5vw, 3.5rem)" }}
         >
-          Diseño hecho para el celular, en el potrero
+          Diseñado <span className="h2-em">para el celular</span>,<br className="hidden md:block" />{" "}
+          hecho para el potrero
         </h2>
-        <p className="mt-4 text-muted max-w-2xl mx-auto">
+        <p className="mt-5 text-fg/70 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
           Layouts mobile-first, con swipes, tarjetas grandes y navegación por
           gestos. Todo lo que necesitas está a un tap.
         </p>
       </div>
-      <div className="grid md:grid-cols-3 gap-4">
-        <PhoneMockup
-          Art={ArtHato}
-          title="Hato"
-          value="147 activos"
-          bg="linear-gradient(135deg, #E4EED4 0%, #A9C177 100%)"
-        />
-        <PhoneMockup
-          Art={ArtGastos}
-          title="Gastos"
-          value="$3.2M este mes"
-          bg="linear-gradient(135deg, #F6EFC2 0%, #DFC85E 100%)"
-        />
-        <PhoneMockup
-          Art={ArtActividades}
-          title="Actividades"
-          value="8 pendientes"
-          bg="linear-gradient(135deg, #F8E1C1 0%, #E4A46A 100%)"
-        />
+      <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+        <PhoneHato />
+        <PhoneGastos />
+        <PhoneActividades />
       </div>
     </section>
   );
 }
 
-function PhoneMockup({
-  Art,
+function PhoneShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="phone-frame max-w-[280px] mx-auto md:max-w-none">
+      <div className="phone-screen">
+        <div className="phone-status text-fg">
+          <span>9:41</span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-1.5 rounded-sm bg-fg/70" />
+            <span className="w-3 h-1.5 rounded-sm bg-fg/50" />
+            <span className="w-4 h-2 border border-fg/60 rounded-sm relative">
+              <span className="absolute inset-0.5 bg-fg/70 rounded-sm" style={{ width: "72%" }} />
+            </span>
+          </span>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function PhoneHato() {
+  return (
+    <PhoneShell>
+      <div
+        className="phone-content"
+        style={{ background: "linear-gradient(180deg, #E4EED4 0%, transparent 100%)" }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[0.55rem] font-mono uppercase tracking-widest text-fg/50">Hato</div>
+            <div className="display" style={{ fontSize: "1.75rem" }}>147</div>
+            <div className="text-[0.6rem] text-fg/60 -mt-1">animales activos</div>
+          </div>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#22402A", color: "white" }}>
+            <IconCow size={16} />
+          </div>
+        </div>
+        <div className="rounded-xl p-2.5 mb-2" style={{ background: "rgba(255,255,255,0.7)", border: "1px solid rgba(34,64,42,0.06)" }}>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full text-[0.55rem] font-mono font-bold flex items-center justify-center" style={{ background: "#22402A", color: "white" }}>V2</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[0.72rem] font-semibold truncate">Vaca #V2</div>
+              <div className="text-[0.55rem] text-fg/60">Girolando · Potrero 1</div>
+            </div>
+            <div className="text-[0.6rem] font-mono text-fg/70">420kg</div>
+          </div>
+        </div>
+        <div className="rounded-xl p-2.5 mb-2" style={{ background: "rgba(255,255,255,0.7)", border: "1px solid rgba(34,64,42,0.06)" }}>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full text-[0.55rem] font-mono font-bold flex items-center justify-center" style={{ background: "#A66E3A", color: "white" }}>T7</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[0.72rem] font-semibold truncate">Ternero #T7</div>
+              <div className="text-[0.55rem] text-fg/60">3 meses · Cebú</div>
+            </div>
+            <div className="text-[0.6rem] font-mono text-fg/70">85kg</div>
+          </div>
+        </div>
+        <div className="rounded-xl p-2.5" style={{ background: "rgba(255,255,255,0.7)", border: "1px solid rgba(34,64,42,0.06)" }}>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full text-[0.55rem] font-mono font-bold flex items-center justify-center" style={{ background: "#22402A", color: "white" }}>N4</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[0.72rem] font-semibold truncate">Novilla #N4</div>
+              <div className="text-[0.55rem] text-fg/60">Holstein · Potrero 3</div>
+            </div>
+            <div className="text-[0.6rem] font-mono text-fg/70">310kg</div>
+          </div>
+        </div>
+      </div>
+    </PhoneShell>
+  );
+}
+
+function PhoneGastos() {
+  return (
+    <PhoneShell>
+      <div
+        className="phone-content"
+        style={{ background: "linear-gradient(180deg, #F6EFC2 0%, transparent 100%)" }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[0.55rem] font-mono uppercase tracking-widest text-fg/50">Gastos · Sep</div>
+            <div className="display" style={{ fontSize: "1.6rem" }}>$3.2M</div>
+            <div className="text-[0.6rem] text-fg/60 -mt-1">de $5M presupuesto</div>
+          </div>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#A66E3A", color: "white" }}>
+            <IconMoney size={15} />
+          </div>
+        </div>
+        <div className="flex items-end gap-1.5 mb-3 h-14 px-1">
+          {[35, 55, 42, 80, 62, 90, 70].map((h, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-t"
+              style={{
+                height: `${h}%`,
+                background: i === 5 ? "#22402A" : "rgba(34, 64, 42, 0.32)",
+              }}
+            />
+          ))}
+        </div>
+        <div className="rounded-xl p-2.5 mb-2" style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(34,64,42,0.06)" }}>
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <div className="text-[0.72rem] font-semibold truncate">Vacunas Q3</div>
+              <div className="text-[0.55rem] text-fg/60">Sanidad · Rafael pagó</div>
+            </div>
+            <div className="text-[0.72rem] font-mono font-semibold shrink-0">$1.2M</div>
+          </div>
+          <div className="mt-1.5 flex gap-1">
+            {["OR","CA","NI","RA"].map((i, ix) => (
+              <span key={i} className="text-[0.5rem] font-mono rounded-full px-1.5 py-0.5" style={{ background: ix < 2 ? "rgba(34,64,42,0.15)" : "rgba(181,75,42,0.15)", color: ix < 2 ? "#22402A" : "#B54B2A" }}>{i}</span>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-xl p-2.5" style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(34,64,42,0.06)" }}>
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <div className="text-[0.72rem] font-semibold truncate">Sal + concentrado</div>
+              <div className="text-[0.55rem] text-fg/60">Alimentación · 4 socios</div>
+            </div>
+            <div className="text-[0.72rem] font-mono font-semibold shrink-0">$680k</div>
+          </div>
+        </div>
+      </div>
+    </PhoneShell>
+  );
+}
+
+function PhoneActividades() {
+  return (
+    <PhoneShell>
+      <div
+        className="phone-content"
+        style={{ background: "linear-gradient(180deg, #F8E1C1 0%, transparent 100%)" }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[0.55rem] font-mono uppercase tracking-widest text-fg/50">Actividades</div>
+            <div className="display" style={{ fontSize: "1.6rem" }}>8</div>
+            <div className="text-[0.6rem] text-fg/60 -mt-1"><span className="text-danger font-semibold">2 vencidas</span></div>
+          </div>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#A66E3A", color: "white" }}>
+            <IconTask size={15} />
+          </div>
+        </div>
+        <TaskRow priority="alta" title="Vacuna aftosa" sub="Vencida ayer" done={false} danger />
+        <TaskRow priority="media" title="Pesaje mensual" sub="Hoy" done={false} />
+        <TaskRow priority="baja" title="Reparación cerca" sub="Mañana" done={true} />
+        <TaskRow priority="media" title="Ordeño turno tarde" sub="Hoy · 5pm" done={false} />
+        <TaskRow priority="alta" title="Diagnóstico preñez" sub="Jueves" done={false} />
+      </div>
+    </PhoneShell>
+  );
+}
+
+function TaskRow({
   title,
-  value,
-  bg,
+  sub,
+  done,
+  danger,
 }: {
-  Art: React.ComponentType<{ size?: number; className?: string }>;
+  priority: "alta" | "media" | "baja";
   title: string;
-  value: string;
-  bg: string;
+  sub: string;
+  done: boolean;
+  danger?: boolean;
 }) {
   return (
-    <div
-      className="rounded-3xl p-5 aspect-[9/16] flex flex-col justify-between relative overflow-hidden"
-      style={{
-        background: bg,
-        color: "#1D2F10",
-        boxShadow: "0 20px 60px -20px rgba(0,0,0,0.2)",
-      }}
-    >
-      <div>
-        <div className="text-[0.6rem] font-mono uppercase tracking-[0.14em] opacity-70">
-          MiFinca · {title}
-        </div>
-        <div className="mt-2 font-mono text-3xl font-bold">{value}</div>
+    <div className="rounded-lg px-2.5 py-2 mb-1.5 flex items-center gap-2.5" style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(34,64,42,0.06)" }}>
+      <div
+        className="w-4 h-4 rounded flex items-center justify-center shrink-0"
+        style={{
+          background: done ? "#22402A" : "transparent",
+          border: done ? "none" : "1.5px solid rgba(34,64,42,0.35)",
+        }}
+      >
+        {done && <IconCheck size={10} className="text-white" />}
       </div>
-      <div className="flex justify-center items-end">
-        <div className="w-32 h-32 md:w-40 md:h-40 opacity-90">
-          <Art />
+      <div className="flex-1 min-w-0">
+        <div
+          className="text-[0.7rem] font-semibold truncate"
+          style={{ textDecoration: done ? "line-through" : "none", opacity: done ? 0.5 : 1 }}
+        >
+          {title}
         </div>
-      </div>
-      <div className="absolute bottom-4 left-4 right-4 flex justify-center">
-        <div className="h-1 w-20 rounded-full bg-fg/20" />
+        <div className={`text-[0.55rem] ${danger ? "text-danger font-semibold" : "text-fg/55"}`}>{sub}</div>
       </div>
     </div>
   );
@@ -721,7 +1013,7 @@ function HowItWorks() {
       <div ref={ref} className="reveal text-center mb-12">
         <div className="eyebrow">Cómo empezar</div>
         <h2
-          className="font-serif tracking-tight mt-3"
+          className="h2-display mt-4"
           style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
         >
           Menos de 2 minutos
@@ -824,7 +1116,7 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
       <div ref={ref} className="reveal text-center mb-12">
         <div className="eyebrow">Precios</div>
         <h2
-          className="font-serif tracking-tight mt-3"
+          className="h2-display mt-4"
           style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
         >
           Simple. Crece contigo.
@@ -932,7 +1224,7 @@ function FAQ() {
       <div ref={ref} className="reveal text-center mb-10">
         <div className="eyebrow">Preguntas frecuentes</div>
         <h2
-          className="font-serif tracking-tight mt-3"
+          className="h2-display mt-4"
           style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
         >
           ¿Alguna duda?
@@ -1025,7 +1317,7 @@ function LoginEmbed() {
         <div>
           <div className="eyebrow">Ingreso</div>
           <h2
-            className="font-serif tracking-tight mt-3"
+            className="h2-display mt-4"
             style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)" }}
           >
             {mode === "login"

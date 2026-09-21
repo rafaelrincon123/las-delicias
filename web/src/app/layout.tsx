@@ -1,9 +1,25 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { Fraunces, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import NavShell from "@/components/NavShell";
 import AuthGate from "@/components/AuthGate";
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  display: "swap",
+  axes: ["opsz", "SOFT"],
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  variable: "--font-instrument",
+  weight: ["400"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://las-delicias-mddw.vercel.app"),
@@ -37,7 +53,7 @@ export default function RootLayout({
     <html
       lang="es"
       data-theme="light"
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${fraunces.variable} ${instrumentSerif.variable}`}
     >
       <body className="min-h-screen antialiased">
         <AuthGate>
