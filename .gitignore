@@ -12,6 +12,11 @@ build/
 .env
 .env.local
 .env.*.local
+.kie-key.local
+
+# logo working files (no van al repo)
+web/public/logo-opciones/
+web/public/logo-viejo-lasdelicias.png
 
 # logs
 *.log
