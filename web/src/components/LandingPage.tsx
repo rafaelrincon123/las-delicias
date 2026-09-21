@@ -92,6 +92,7 @@ export default function LandingPage({ onLogin }: Props) {
 
       <TopNav onLogin={onLogin} />
       <Hero onLogin={onLogin} />
+      <AppSummary />
       <ModulesOverview />
       <SociosSection />
       <ThreePillars />
@@ -224,14 +225,6 @@ function LandingStyles() {
           0 12px 24px -8px rgba(184, 206, 122, 0.35),
           inset 0 1px 0 rgba(255, 255, 255, 0.30);
       }
-      .badge-circle .b-num {
-        font-family: var(--font-geist-mono), monospace;
-        font-size: 0.55rem;
-        letter-spacing: 0.16em;
-        color: var(--lime-bright);
-        opacity: 0.75;
-        line-height: 1;
-      }
       .badge-circle .b-icon {
         color: var(--lime-bright);
         display: flex;
@@ -265,9 +258,6 @@ function LandingStyles() {
         }
         .badge-circle .b-label {
           font-size: 0.6rem;
-        }
-        .badge-circle .b-num {
-          font-size: 0.48rem;
         }
       }
 
@@ -772,31 +762,138 @@ function Hero({ onLogin }: { onLogin: () => void }) {
 
           {/* Badges: grid 2x2 con separación */}
           <div className="hidden lg:grid grid-cols-2 gap-5 justify-items-center content-center">
-            <FloatingBadge num="01" label="Sin instalación" icon={<IconCheck size={16} />} />
-            <FloatingBadge num="02" label="Sin tarjeta" icon={<IconLock size={14} />} />
-            <FloatingBadge num="03" label="Multi-finca" icon={<IconPasture size={16} />} />
-            <FloatingBadge num="04" label="Realtime" icon={<IconSparkles size={14} />} />
+            <FloatingBadge label="Sin instalación" icon={<IconCheck size={20} />} />
+            <FloatingBadge label="Sin tarjeta" icon={<IconLock size={18} />} />
+            <FloatingBadge label="Multi-finca" icon={<IconPasture size={20} />} />
+            <FloatingBadge label="En vivo" icon={<IconSparkles size={18} />} />
           </div>
         </div>
 
         {/* Móvil / tablet: grid 2x2 centrado */}
         <div className="lg:hidden mt-12 grid grid-cols-2 gap-4 justify-items-center max-w-sm mx-auto">
-          <FloatingBadge num="01" label="Sin instalación" icon={<IconCheck size={14} />} />
-          <FloatingBadge num="02" label="Sin tarjeta" icon={<IconLock size={12} />} />
-          <FloatingBadge num="03" label="Multi-finca" icon={<IconPasture size={14} />} />
-          <FloatingBadge num="04" label="Realtime" icon={<IconSparkles size={12} />} />
+          <FloatingBadge label="Sin instalación" icon={<IconCheck size={18} />} />
+          <FloatingBadge label="Sin tarjeta" icon={<IconLock size={16} />} />
+          <FloatingBadge label="Multi-finca" icon={<IconPasture size={18} />} />
+          <FloatingBadge label="En vivo" icon={<IconSparkles size={16} />} />
         </div>
       </div>
     </section>
   );
 }
 
-function FloatingBadge({ num, label, icon }: { num: string; label: string; icon: React.ReactNode }) {
+function FloatingBadge({ label, icon }: { label: string; icon: React.ReactNode }) {
   return (
     <div className="badge-circle shrink-0">
-      <span className="b-num">[ {num} ]</span>
       <span className="b-icon">{icon}</span>
       <span className="b-label">{label}</span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+//  Resumen — qué puede hacer la app
+// ---------------------------------------------------------------------------
+function AppSummary() {
+  const ref = useReveal<HTMLDivElement>();
+  const items = [
+    {
+      Icon: IconCow,
+      verb: "Lleve la hoja de vida",
+      desc: "de cada animal: raza, categoría, peso, padres, potrero, fotos y estado (activo, vendido, muerto).",
+    },
+    {
+      Icon: IconHealth,
+      verb: "No se le pase una vacuna",
+      desc: "programe vacunas, tratamientos y desparasitaciones. La app le avisa qué toca la próxima semana.",
+    },
+    {
+      Icon: IconRepro,
+      verb: "Controle preñeces y partos",
+      desc: "servicios (monta o inseminación), diagnóstico, fecha probable de parto y registro de crías nuevas.",
+    },
+    {
+      Icon: IconMoney,
+      verb: "Reparta gastos entre socios",
+      desc: "por porcentaje, por cabezas o partes iguales. Vea al instante quién debe qué a quién.",
+    },
+    {
+      Icon: IconTask,
+      verb: "Organice las tareas del día",
+      desc: "ordeño, mantenimiento, sanidad — con prioridad, categoría y responsable. En calendario o en lista.",
+    },
+    {
+      Icon: IconSparkles,
+      verb: "Trabaje con todo su equipo",
+      desc: "invite socios y trabajadores. Cada quien registra desde el potrero y todos ven los cambios al instante.",
+    },
+  ];
+  return (
+    <section className="relative py-24 md:py-32" style={{ background: "var(--sand)" }}>
+      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6">
+        <div className="text-center mb-14 md:mb-16 max-w-3xl mx-auto">
+          <span
+            className="inline-block text-[0.65rem] font-mono uppercase tracking-[0.14em] px-3 py-1.5 rounded-full mb-5 font-semibold"
+            style={{ background: "var(--forest)", color: "var(--lime-bright)" }}
+          >
+            QUÉ HACE MIFINCA
+          </span>
+          <h2 className="display-lg uppercase" style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", color: "var(--forest)" }}>
+            Todo el control<br />
+            de la finca,{" "}
+            <em style={{ color: "var(--forest-3)", fontStyle: "normal" }}>en una sola app.</em>
+          </h2>
+          <p className="mt-5 text-base md:text-lg" style={{ color: "rgba(20, 38, 26, 0.72)" }}>
+            Registre, controle y decida — desde el celular, sin cuaderno, sin Excel.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4 md:gap-5">
+          {items.map((it) => (
+            <SummaryItem key={it.verb} {...it} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SummaryItem({
+  Icon, verb, desc,
+}: {
+  Icon: React.ComponentType<{ size?: number }>;
+  verb: string;
+  desc: string;
+}) {
+  return (
+    <div
+      className="rounded-3xl p-6 md:p-7 flex items-start gap-5"
+      style={{
+        background: "white",
+        border: "1px solid rgba(20, 38, 26, 0.08)",
+        boxShadow: "0 4px 16px -8px rgba(20, 38, 26, 0.08)",
+      }}
+    >
+      <div
+        className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+        style={{
+          background: "linear-gradient(160deg, var(--lime) 0%, #A3BE6C 100%)",
+          color: "var(--forest)",
+          boxShadow: "0 8px 20px -6px rgba(184, 206, 122, 0.55)",
+        }}
+      >
+        <Icon size={22} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3
+          className="uppercase font-bold leading-tight tracking-tight"
+          style={{ fontSize: "1.1rem", color: "var(--forest)" }}
+        >
+          {verb}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed" style={{ color: "rgba(20, 38, 26, 0.68)" }}>
+          {desc}
+        </p>
+      </div>
     </div>
   );
 }
@@ -816,7 +913,7 @@ function ModulesOverview() {
     { icon: <IconTask size={20} />, name: "Tareas" },
     { icon: <IconBox size={20} />, name: "Inventario" },
     { icon: <IconUser size={20} />, name: "Socios" },
-    { icon: <IconSparkles size={20} />, name: "Realtime" },
+    { icon: <IconSparkles size={20} />, name: "En vivo" },
   ];
   return (
     <section
@@ -864,10 +961,10 @@ function ThreePillars() {
   const pillars = [
     {
       eyebrow: "Tiempo real",
-      title: "Datos en vivo, sin refresh",
+      title: "Datos al instante, sin recargar",
       desc: "Cuando un socio o trabajador registra algo desde el potrero, todos lo ven al instante. Con autor y fecha.",
       icon: <IconSparkles size={22} />,
-      badge: "REALTIME",
+      badge: "AL INSTANTE",
     },
     {
       eyebrow: "Solo aquí",
@@ -1110,7 +1207,7 @@ function FAQ() {
     },
     {
       q: "¿Mis datos están seguros?",
-      a: "Cada finca tiene aislamiento estricto por RLS en Supabase (Postgres). Solo los usuarios miembros ven los datos. Backups diarios automáticos.",
+      a: "Sí. Cada finca queda aislada en la base de datos: solo los usuarios que usted invite pueden ver sus animales, gastos y demás. Hacemos copias de respaldo automáticas todos los días.",
     },
     {
       q: "¿Puedo invitar a mis socios y trabajadores?",
@@ -1460,7 +1557,7 @@ function StickyValueBar() {
         <span className="dot" /> Cifrado &middot; RLS por finca
       </span>
       <span className="item hidden md:inline-flex">
-        <span className="dot" /> Colombia &middot; Realtime
+        <span className="dot" /> Colombia &middot; En vivo
       </span>
     </div>
   );
@@ -1628,10 +1725,10 @@ function PhonesShowcase() {
         <div className="text-center mb-14 md:mb-20">
           <h2 className="display-lg uppercase text-white" style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)" }}>
             Toda la operación,<br />
-            <em style={{ color: "var(--lime-bright)", fontStyle: "normal" }}>en un tap.</em>
+            <em style={{ color: "var(--lime-bright)", fontStyle: "normal" }}>a un toque.</em>
           </h2>
           <p className="mt-5 max-w-xl mx-auto text-base md:text-lg" style={{ color: "rgba(255,255,255,0.72)" }}>
-            Mobile-first. Con swipes, tarjetas grandes y navegación por gestos.
+            Pensada para el celular. Con toques, arrastres y tarjetas grandes.
           </p>
         </div>
 
@@ -1665,133 +1762,254 @@ function PhoneShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+// --- Réplica de la UI real: /hato ---
+// Grid 2x3 de tiles-mod coloridos (paleta moss/sea/sand/coral/plum/sky/clay).
 function PhoneHato() {
+  const tiles = [
+    { label: "Animales", sub: "cabezas activas", metric: "11", from: "#E4EED4", to: "#A9C177", ink: "#3E5A24", fg: "#1D2F10", Icon: IconCow },
+    { label: "Potreros", sub: "lotes", metric: "4", from: "#D5EBE4", to: "#7EBFA9", ink: "#1E5A48", fg: "#0F2E23", Icon: IconPasture },
+    { label: "Peso", sub: "pesajes", from: "#F0EADA", to: "#CBB98D", ink: "#5A4A22", fg: "#2E240F", Icon: IconScale },
+    { label: "Sanidad", sub: "cercanos", metric: "3", from: "#FBDACF", to: "#F19277", ink: "#8A3B24", fg: "#4A1B0F", Icon: IconHealth, alert: true },
+    { label: "Reprod.", sub: "preñeces", metric: "2", from: "#E9D9E6", to: "#B48AB0", ink: "#5A2C57", fg: "#2E1230", Icon: IconRepro },
+    { label: "Inventario", sub: "insumos", from: "#EBE0D1", to: "#B99A7A", ink: "#5A3C20", fg: "#2E1D0C", Icon: IconBox },
+  ];
   return (
     <PhoneShell>
-      <div className="phone-content" style={{ background: "linear-gradient(180deg, #DDE7BE 0%, transparent 100%)" }}>
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <div className="text-[0.55rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.55)" }}>Hato</div>
-            <div className="text-3xl font-bold" style={{ color: "var(--forest)" }}>147</div>
-            <div className="text-[0.6rem] -mt-1" style={{ color: "rgba(14,27,18,0.55)" }}>animales activos</div>
+      <div className="phone-content" style={{ background: "var(--cream)", height: "100%" }}>
+        <div className="flex items-center justify-between mb-3.5">
+          <div className="text-[0.6rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.5)" }}>
+            Las Delicias
           </div>
-          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "var(--forest)", color: "white" }}>
-            <IconCow size={16} />
+          <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "rgba(20,38,26,0.08)" }}>
+            <IconUser size={12} />
           </div>
         </div>
-        {[
-          { code: "V2", name: "Vaca #V2", meta: "Girolando · P.1", peso: "420kg", ink: "var(--forest)" },
-          { code: "T7", name: "Ternero #T7", meta: "3m · Cebú", peso: "85kg", ink: "#5F8248" },
-          { code: "N4", name: "Novilla #N4", meta: "Holstein · P.3", peso: "310kg", ink: "var(--forest)" },
-        ].map((a) => (
-          <div key={a.code} className="rounded-xl p-2.5 mb-2" style={{ background: "rgba(255,255,255,0.85)", border: "1px solid rgba(20,38,26,0.06)" }}>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full text-[0.55rem] font-bold flex items-center justify-center" style={{ background: a.ink, color: "white" }}>{a.code}</div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[0.72rem] font-semibold truncate" style={{ color: "var(--forest)" }}>{a.name}</div>
-                <div className="text-[0.55rem]" style={{ color: "rgba(14,27,18,0.55)" }}>{a.meta}</div>
-              </div>
-              <div className="text-[0.65rem] font-mono" style={{ color: "var(--forest)" }}>{a.peso}</div>
-            </div>
-          </div>
-        ))}
+        <div className="grid grid-cols-2 gap-2">
+          {tiles.map((t) => (
+            <MiniTile key={t.label} {...t} />
+          ))}
+        </div>
       </div>
     </PhoneShell>
   );
 }
 
+function MiniTile({
+  label, sub, metric, from, to, ink, fg, Icon, alert,
+}: {
+  label: string; sub: string; metric?: string; from: string; to: string; ink: string; fg: string;
+  Icon: React.ComponentType<{ size?: number }>; alert?: boolean;
+}) {
+  return (
+    <div
+      className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center text-center aspect-square"
+      style={{
+        background: `radial-gradient(120% 100% at 100% 0%, color-mix(in oklab, white 30%, ${from}) 0%, transparent 55%), linear-gradient(155deg, ${from} 0%, ${to} 100%)`,
+        color: fg,
+        border: `1px solid color-mix(in oklab, ${ink} 12%, transparent)`,
+        boxShadow: `0 1px 0 rgba(255,255,255,0.55) inset, 0 6px 14px -8px ${ink}44`,
+        padding: "0.5rem",
+      }}
+    >
+      {alert && (
+        <span
+          className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full"
+          style={{ background: "#d9534f", boxShadow: "0 0 4px #d9534f, 0 0 0 2px rgba(255,255,255,0.6)" }}
+        />
+      )}
+      {metric && (
+        <span
+          className="absolute top-1.5 right-1.5 h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center text-[0.5rem] font-bold"
+          style={{ background: "rgba(255,255,255,0.85)", color: ink }}
+        >
+          {metric}
+        </span>
+      )}
+      <div
+        className="w-8 h-8 rounded-lg flex items-center justify-center mb-1"
+        style={{ background: ink, color: "white" }}
+      >
+        <Icon size={14} />
+      </div>
+      <div className="text-[0.55rem] font-bold leading-tight" style={{ color: fg }}>{label}</div>
+      <div className="text-[0.42rem]" style={{ color: `${fg}99` }}>{sub}</div>
+    </div>
+  );
+}
+
+// --- Réplica de la UI real: /gastos ---
+// 3 HeroStat + lista de gastos con avatares de socios pagados.
 function PhoneGastos() {
   return (
     <PhoneShell>
-      <div className="phone-content" style={{ background: "linear-gradient(180deg, #EFE8D8 0%, transparent 100%)" }}>
+      <div className="phone-content" style={{ background: "var(--cream)", height: "100%" }}>
         <div className="flex items-center justify-between mb-3">
-          <div>
-            <div className="text-[0.55rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.55)" }}>Gastos · Sep</div>
-            <div className="text-3xl font-bold" style={{ color: "var(--forest)" }}>$3.2M</div>
-            <div className="text-[0.6rem] -mt-1" style={{ color: "rgba(14,27,18,0.55)" }}>de $5M presupuesto</div>
+          <div className="text-[0.6rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.5)" }}>
+            Gastos e ingresos
           </div>
-          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#5F8248", color: "white" }}>
-            <IconMoney size={15} />
+          <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "rgba(20,38,26,0.08)" }}>
+            <IconMoney size={12} />
           </div>
         </div>
-        <div className="flex items-end gap-1.5 mb-3 h-14 px-1">
-          {[35, 55, 42, 80, 62, 90, 70].map((h, i) => (
-            <div key={i} className="flex-1 rounded-t" style={{
-              height: `${h}%`,
-              background: i === 5 ? "var(--forest)" : "rgba(20, 38, 26, 0.28)",
-            }} />
-          ))}
+
+        <div className="grid grid-cols-3 gap-1.5 mb-3">
+          <HeroStatMini label="Ingresos" value="$4.8M" from="#E4EED4" to="#A9C177" ink="#3E5A24" />
+          <HeroStatMini label="Gastos" value="$3.2M" from="#FBDACF" to="#F19277" ink="#8A3B24" />
+          <HeroStatMini label="Balance" value="+$1.6M" from="#D5EBE4" to="#7EBFA9" ink="#1E5A48" />
         </div>
-        <div className="rounded-xl p-2.5 mb-2" style={{ background: "rgba(255,255,255,0.85)", border: "1px solid rgba(20,38,26,0.06)" }}>
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <div className="text-[0.72rem] font-semibold truncate" style={{ color: "var(--forest)" }}>Vacunas Q3</div>
-              <div className="text-[0.55rem]" style={{ color: "rgba(14,27,18,0.55)" }}>Rafael pagó</div>
-            </div>
-            <div className="text-[0.72rem] font-mono font-semibold shrink-0" style={{ color: "var(--forest)" }}>$1.2M</div>
-          </div>
-          <div className="mt-1.5 flex gap-1">
-            {["OR","CA","NI","RA"].map((i, ix) => (
-              <span key={i} className="text-[0.5rem] font-mono rounded-full px-1.5 py-0.5" style={{ background: ix < 2 ? "rgba(184,206,122,0.35)" : "rgba(181,75,42,0.18)", color: ix < 2 ? "var(--forest)" : "#B54B2A" }}>{i}</span>
-            ))}
-          </div>
+
+        <div className="flex gap-1.5 mb-2">
+          <span className="text-[0.55rem] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ background: "var(--forest)", color: "var(--lime-bright)" }}>Gastos</span>
+          <span className="text-[0.55rem] uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ color: "rgba(14,27,18,0.55)" }}>Ingresos</span>
         </div>
-        <div className="rounded-xl p-2.5" style={{ background: "rgba(255,255,255,0.85)", border: "1px solid rgba(20,38,26,0.06)" }}>
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <div className="text-[0.72rem] font-semibold truncate" style={{ color: "var(--forest)" }}>Sal + concentrado</div>
-              <div className="text-[0.55rem]" style={{ color: "rgba(14,27,18,0.55)" }}>Alimentación · 4 socios</div>
-            </div>
-            <div className="text-[0.72rem] font-mono font-semibold shrink-0" style={{ color: "var(--forest)" }}>$680k</div>
-          </div>
-        </div>
+
+        <ExpenseRow titulo="Vacunas Q3" cat="Sanidad" fecha="12 sep" monto="$1.200.000" payer="RA" partners={["OR","CA","NI","RA"]} paidBy={["OR","NI","RA"]} />
+        <ExpenseRow titulo="Sal + concentrado" cat="Alimentación" fecha="08 sep" monto="$680.000" payer="CA" partners={["OR","CA","NI","RA"]} paidBy={["OR","CA","NI","RA"]} />
+        <ExpenseRow titulo="Diesel" cat="Otros" fecha="05 sep" monto="$320.000" payer="RA" partners={["OR","CA","NI","RA"]} paidBy={["CA","RA"]} />
       </div>
     </PhoneShell>
   );
 }
 
-function PhoneActividades() {
+function HeroStatMini({ label, value, from, to, ink }: { label: string; value: string; from: string; to: string; ink: string }) {
   return (
-    <PhoneShell>
-      <div className="phone-content" style={{ background: "linear-gradient(180deg, #F0E1C4 0%, transparent 100%)" }}>
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <div className="text-[0.55rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.55)" }}>Actividades</div>
-            <div className="text-3xl font-bold" style={{ color: "var(--forest)" }}>8</div>
-            <div className="text-[0.6rem] -mt-1"><span className="font-semibold" style={{ color: "#B54B2A" }}>2 vencidas</span></div>
-          </div>
-          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#B54B2A", color: "white" }}>
-            <IconTask size={15} />
-          </div>
-        </div>
-        <TaskRow title="Vacuna aftosa" sub="Vencida ayer" done={false} danger />
-        <TaskRow title="Pesaje mensual" sub="Hoy" done={false} />
-        <TaskRow title="Reparación cerca" sub="Mañana" done={true} />
-        <TaskRow title="Ordeño turno tarde" sub="Hoy · 5pm" done={false} />
-        <TaskRow title="Diagnóstico preñez" sub="Jueves" done={false} />
-      </div>
-    </PhoneShell>
+    <div
+      className="rounded-lg px-1.5 py-1.5"
+      style={{
+        background: `linear-gradient(155deg, ${from} 0%, ${to} 100%)`,
+        color: ink,
+      }}
+    >
+      <div className="text-[0.45rem] font-mono uppercase tracking-widest" style={{ opacity: 0.7 }}>{label}</div>
+      <div className="text-[0.7rem] font-bold leading-tight mt-0.5">{value}</div>
+    </div>
   );
 }
 
-function TaskRow({ title, sub, done, danger }: { title: string; sub: string; done: boolean; danger?: boolean }) {
+function ExpenseRow({
+  titulo, cat, fecha, monto, payer, partners, paidBy,
+}: { titulo: string; cat: string; fecha: string; monto: string; payer: string; partners: string[]; paidBy: string[] }) {
   return (
-    <div className="rounded-lg px-2.5 py-2 mb-1.5 flex items-center gap-2.5" style={{ background: "rgba(255,255,255,0.85)", border: "1px solid rgba(20,38,26,0.06)" }}>
-      <div className="w-4 h-4 rounded flex items-center justify-center shrink-0" style={{
-        background: done ? "var(--forest)" : "transparent",
-        border: done ? "none" : "1.5px solid rgba(20,38,26,0.35)",
-      }}>
-        {done && <IconCheck size={10} className="text-white" />}
+    <div className="rounded-xl px-2.5 py-2 mb-1.5" style={{ background: "white", border: "1px solid rgba(20,38,26,0.06)" }}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-[0.68rem] font-semibold truncate" style={{ color: "var(--forest)" }}>{titulo}</div>
+          <div className="text-[0.5rem]" style={{ color: "rgba(14,27,18,0.55)" }}>{cat} · {fecha} · pagó {payer}</div>
+        </div>
+        <div className="text-[0.68rem] font-mono font-bold shrink-0" style={{ color: "var(--forest)" }}>{monto}</div>
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-[0.7rem] font-semibold truncate" style={{
-          textDecoration: done ? "line-through" : "none",
-          opacity: done ? 0.5 : 1,
-          color: "var(--forest)",
-        }}>{title}</div>
-        <div className="text-[0.55rem]" style={{ color: danger ? "#B54B2A" : "rgba(14,27,18,0.55)", fontWeight: danger ? 600 : 400 }}>{sub}</div>
+      <div className="mt-1 flex gap-0.5">
+        {partners.map((p) => {
+          const pagado = paidBy.includes(p);
+          return (
+            <span
+              key={p}
+              className="text-[0.42rem] font-mono rounded-full w-[18px] h-[14px] flex items-center justify-center font-bold"
+              style={{
+                background: pagado ? "rgba(184,206,122,0.4)" : "rgba(181,75,42,0.15)",
+                color: pagado ? "var(--forest)" : "#8A3B24",
+              }}
+            >
+              {p}
+            </span>
+          );
+        })}
       </div>
     </div>
+  );
+}
+
+// --- Réplica de la UI real: /tareas (vista calendario) ---
+function PhoneActividades() {
+  const dias = ["L","M","M","J","V","S","D"];
+  // Simular grid de mes con puntos coloreados en días con actividades.
+  const cells = Array.from({ length: 35 }, (_, i) => {
+    const day = i - 1; // -1..33
+    const inMonth = day > 0 && day <= 30;
+    const today = day === 15;
+    const eventos = {
+      2: ["sanidad"],
+      5: ["manejo"],
+      8: ["sanidad", "manejo"],
+      12: ["reproduccion"],
+      14: ["manejo"],
+      15: ["sanidad", "reproduccion"],
+      18: ["alimentacion"],
+      22: ["sanidad"],
+      25: ["manejo", "reproduccion"],
+      28: ["sanidad"],
+    }[day] as string[] | undefined;
+    return { day, inMonth, today, eventos };
+  });
+  const dotColor: Record<string, string> = {
+    sanidad: "#D97757",
+    manejo: "var(--forest)",
+    reproduccion: "#B48AB0",
+    alimentacion: "#D19255",
+  };
+  return (
+    <PhoneShell>
+      <div className="phone-content" style={{ background: "var(--cream)", height: "100%" }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-[0.6rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.5)" }}>
+            Actividades
+          </div>
+          <div className="flex gap-1">
+            <span className="text-[0.5rem] uppercase tracking-widest px-1.5 py-0.5 rounded-full font-semibold" style={{ background: "var(--forest)", color: "var(--lime-bright)" }}>Cal.</span>
+            <span className="text-[0.5rem] uppercase tracking-widest px-1.5 py-0.5 rounded-full" style={{ color: "rgba(14,27,18,0.55)" }}>Lista</span>
+          </div>
+        </div>
+
+        <div className="text-center mb-2">
+          <div className="text-[0.85rem] font-bold uppercase" style={{ color: "var(--forest)" }}>Septiembre 2026</div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-0.5 mb-1.5">
+          {dias.map((d, i) => (
+            <div key={i} className="text-[0.5rem] text-center font-mono uppercase" style={{ color: "rgba(14,27,18,0.45)" }}>{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-0.5">
+          {cells.map((c, i) => (
+            <div
+              key={i}
+              className="aspect-square rounded flex flex-col items-center justify-center relative"
+              style={{
+                background: c.today ? "var(--forest)" : c.inMonth ? "white" : "transparent",
+                border: c.inMonth && !c.today ? "1px solid rgba(20,38,26,0.06)" : "none",
+              }}
+            >
+              {c.inMonth && (
+                <>
+                  <span className="text-[0.5rem] font-semibold" style={{ color: c.today ? "var(--lime-bright)" : "var(--forest)" }}>
+                    {c.day}
+                  </span>
+                  {c.eventos && (
+                    <div className="flex gap-0.5 mt-0.5">
+                      {c.eventos.slice(0, 3).map((e, idx) => (
+                        <span key={idx} className="w-1 h-1 rounded-full" style={{ background: c.today ? "var(--lime-bright)" : dotColor[e] }} />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 rounded-xl px-2.5 py-2" style={{ background: "white", border: "1px solid rgba(20,38,26,0.06)" }}>
+          <div className="text-[0.5rem] font-mono uppercase tracking-widest mb-1" style={{ color: "rgba(14,27,18,0.5)" }}>Hoy · 15 sep</div>
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#D97757" }} />
+            <div className="text-[0.6rem] font-semibold" style={{ color: "var(--forest)" }}>Vacuna aftosa · V12</div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#B48AB0" }} />
+            <div className="text-[0.6rem] font-semibold" style={{ color: "var(--forest)" }}>Diagnóstico preñez · N4</div>
+          </div>
+        </div>
+      </div>
+    </PhoneShell>
   );
 }
 
