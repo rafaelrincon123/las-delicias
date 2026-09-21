@@ -93,7 +93,11 @@ export default function LandingPage({ onLogin }: Props) {
       <TopNav onLogin={onLogin} />
       <Hero onLogin={onLogin} />
       <ModulesOverview />
+      <SociosSection />
       <ThreePillars />
+      <PhonesShowcase />
+      <AIAssistantSection />
+      <AnimalCedulaSection />
       <Pricing onLogin={onLogin} />
       <FAQ />
       <LoginEmbed />
@@ -426,6 +430,97 @@ function LandingStyles() {
         border-color: var(--forest-2);
         box-shadow: 0 0 0 4px rgba(34, 64, 42, 0.10);
       }
+
+      /* Phone frames */
+      .phone-frame {
+        position: relative;
+        border-radius: 42px;
+        padding: 10px;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2b2b2b 100%);
+        box-shadow:
+          0 40px 80px -20px rgba(0,0,0,0.45),
+          0 12px 24px -8px rgba(0,0,0,0.25),
+          inset 0 1px 0 rgba(255,255,255,0.08);
+      }
+      .phone-screen {
+        border-radius: 32px;
+        background: var(--cream);
+        overflow: hidden;
+        position: relative;
+        aspect-ratio: 9/19.5;
+      }
+      .phone-frame::before {
+        content: "";
+        position: absolute;
+        top: 14px; left: 50%;
+        transform: translateX(-50%);
+        width: 90px; height: 22px;
+        background: #0a0a0a;
+        border-radius: 12px;
+        z-index: 10;
+      }
+      .phone-status {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 22px 8px;
+        font-family: var(--font-geist-mono), monospace;
+        font-size: 0.68rem;
+        font-weight: 600;
+      }
+      .phone-content {
+        padding: 12px 16px 20px;
+      }
+
+      /* Chat bubbles */
+      .chat-bubble-user, .chat-bubble-ai {
+        max-width: 85%;
+        padding: 0.75rem 1rem;
+        border-radius: 18px;
+        font-size: 0.85rem;
+        line-height: 1.45;
+        word-wrap: break-word;
+      }
+      .chat-bubble-user {
+        background: var(--forest);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 4px;
+      }
+      .chat-bubble-ai {
+        background: rgba(20, 38, 26, 0.06);
+        color: var(--ink);
+        border-bottom-left-radius: 4px;
+        border: 1px solid rgba(20, 38, 26, 0.08);
+      }
+      .typing-dot {
+        display: inline-block;
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: var(--forest-3);
+        margin: 0 1px;
+        animation: bounce 1.2s infinite;
+      }
+      .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+      .typing-dot:nth-child(3) { animation-delay: 0.30s; }
+      @keyframes bounce {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+        30% { transform: translateY(-4px); opacity: 1; }
+      }
+
+      /* QR code fake */
+      .qr {
+        display: grid;
+        grid-template-columns: repeat(21, 1fr);
+        gap: 2px;
+        aspect-ratio: 1/1;
+        padding: 8px;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid rgba(20, 38, 26, 0.08);
+      }
+      .qr div { background: transparent; }
+      .qr div.on { background: var(--forest); }
     `}</style>
   );
 }
@@ -1254,7 +1349,8 @@ function Footer() {
             </div>
             <ul className="space-y-2.5 text-sm">
               <li><FooterLink onClick={() => scrollToId("modulos")}>Módulos</FooterLink></li>
-              <li><FooterLink onClick={() => scrollToId("pilares")}>Pilares</FooterLink></li>
+              <li><FooterLink onClick={() => scrollToId("socios")}>Reparto socios</FooterLink></li>
+              <li><FooterLink onClick={() => scrollToId("ia")}>Asistente IA</FooterLink></li>
               <li><FooterLink onClick={() => scrollToId("precios")}>Precios</FooterLink></li>
               <li><FooterLink onClick={() => scrollToId("faq")}>FAQ</FooterLink></li>
             </ul>
@@ -1317,6 +1413,554 @@ function StickyValueBar() {
       <span className="item hidden md:inline-flex">
         <span className="dot" /> Colombia &middot; Realtime
       </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+//  Reparto entre socios — diferenciador con visual
+// ---------------------------------------------------------------------------
+function SociosSection() {
+  const ref = useReveal<HTMLDivElement>();
+  const socios = [
+    { name: "Orlando", initials: "OR", pct: 25, owes: 300000, paid: true },
+    { name: "Camila", initials: "CA", pct: 25, owes: 300000, paid: false },
+    { name: "Nicolás", initials: "NI", pct: 25, owes: 300000, paid: true },
+    { name: "Rafael", initials: "RA", pct: 25, owes: 300000, paid: false, pagador: true },
+  ];
+  return (
+    <section id="socios" className="relative py-24 md:py-32" style={{ background: "var(--cream)" }}>
+      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-[1fr_1.1fr] gap-12 items-center">
+        <div>
+          <span
+            className="inline-block text-[0.65rem] font-mono uppercase tracking-[0.14em] px-3 py-1.5 rounded-full mb-6"
+            style={{ background: "var(--lime)", color: "var(--forest)" }}
+          >
+            SOLO AQUÍ
+          </span>
+          <h2 className="display-lg uppercase" style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", color: "var(--forest)" }}>
+            Reparto real<br />
+            <em style={{ color: "var(--forest-3)", fontStyle: "normal" }}>entre socios</em>
+          </h2>
+          <p className="mt-6 text-base leading-relaxed max-w-lg" style={{ color: "rgba(20, 38, 26, 0.72)" }}>
+            El problema de las fincas familiares no es la vaca — es{" "}
+            <strong style={{ color: "var(--forest)" }}>quién puso, cuánto y quién le debe a quién.</strong>{" "}
+            Tres modos de reparto según el gasto:
+          </p>
+          <div className="mt-8 space-y-3">
+            <RepartoBullet title="Por participación (%)" desc="Cada socio paga según su porcentaje." />
+            <RepartoBullet title="Por cabezas" desc="Divide entre los dueños de los animales." />
+            <RepartoBullet title="Partes iguales" desc="Entre los participantes que usted elija." />
+          </div>
+          <p className="mt-8 text-sm" style={{ color: "rgba(20, 38, 26, 0.72)" }}>
+            Al final, la app le muestra{" "}
+            <strong style={{ color: "var(--forest)" }}>quién debe qué a quién</strong> — sin
+            calculadora, sin discusiones.
+          </p>
+        </div>
+
+        <div
+          className="rounded-3xl p-7 md:p-8"
+          style={{
+            background: "white",
+            border: "2px solid rgba(20, 38, 26, 0.08)",
+            boxShadow: "0 30px 60px -20px rgba(20, 38, 26, 0.18)",
+          }}
+        >
+          <div className="flex items-center justify-between pb-5 border-b" style={{ borderColor: "rgba(20, 38, 26, 0.08)" }}>
+            <div>
+              <div className="text-[0.65rem] font-mono uppercase tracking-widest" style={{ color: "var(--forest-3)", opacity: 0.7 }}>
+                Vacunas Q3
+              </div>
+              <div className="text-2xl font-bold mt-1" style={{ color: "var(--forest)" }}>
+                $1.200.000
+              </div>
+            </div>
+            <span
+              className="text-[0.6rem] font-mono uppercase tracking-widest px-2.5 py-1 rounded-full font-semibold"
+              style={{ background: "var(--lime)", color: "var(--forest)" }}
+            >
+              Sanidad
+            </span>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {socios.map((s) => (
+              <DebtRow key={s.name} {...s} />
+            ))}
+          </div>
+
+          <div
+            className="mt-5 pt-4 border-t flex items-center justify-between text-sm"
+            style={{ borderColor: "rgba(20, 38, 26, 0.08)" }}
+          >
+            <span className="font-mono uppercase text-[0.7rem] tracking-widest" style={{ color: "var(--forest-3)", opacity: 0.7 }}>
+              Pendiente hacia Rafael
+            </span>
+            <span className="font-bold text-lg" style={{ color: "#B54B2A" }}>
+              $300.000
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RepartoBullet({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div
+        className="mt-1.5 w-2.5 h-2.5 rounded-full shrink-0"
+        style={{ background: "var(--lime)", boxShadow: "0 0 10px rgba(184,206,122,0.6)" }}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold uppercase tracking-tight" style={{ color: "var(--forest)" }}>
+          {title}
+        </div>
+        <div className="text-sm mt-0.5" style={{ color: "rgba(20, 38, 26, 0.65)" }}>
+          {desc}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DebtRow({
+  initials, name, pct, owes, paid, pagador,
+}: { initials: string; name: string; pct: number; owes: number; paid: boolean; pagador?: boolean }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className="w-10 h-10 rounded-full flex items-center justify-center text-[0.7rem] font-bold shrink-0"
+        style={{ background: pagador ? "var(--forest)" : "rgba(184, 206, 122, 0.25)", color: pagador ? "var(--lime-bright)" : "var(--forest)" }}
+      >
+        {initials}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-sm font-semibold uppercase tracking-tight flex items-center gap-2" style={{ color: "var(--forest)" }}>
+            {name}
+            {pagador && (
+              <span className="text-[0.55rem] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded-full" style={{ background: "var(--forest)", color: "var(--lime-bright)" }}>
+                pagó
+              </span>
+            )}
+          </span>
+          <span className="text-xs font-mono" style={{ color: "rgba(20, 38, 26, 0.55)" }}>{pct}%</span>
+        </div>
+        <div className="flex items-center justify-between mt-1 gap-2">
+          <span className="text-sm font-mono font-medium" style={{ color: "var(--forest)" }}>
+            ${owes.toLocaleString("es-CO")}
+          </span>
+          {pagador ? null : paid ? (
+            <span className="text-[0.55rem] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded-full" style={{ background: "rgba(184, 206, 122, 0.35)", color: "var(--forest)" }}>
+              PAGADO
+            </span>
+          ) : (
+            <span className="text-[0.55rem] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded-full" style={{ background: "rgba(181, 75, 42, 0.14)", color: "#B54B2A" }}>
+              DEBE
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+//  Phones Showcase — 3 devices con UI real
+// ---------------------------------------------------------------------------
+function PhonesShowcase() {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <section className="relative py-24 md:py-32 overflow-hidden" style={{ background: "var(--forest)", color: "white" }}>
+      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6">
+        <div className="text-center mb-14 md:mb-20">
+          <h2 className="display-lg uppercase text-white" style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)" }}>
+            Toda la operación,<br />
+            <em style={{ color: "var(--lime-bright)", fontStyle: "normal" }}>en un tap.</em>
+          </h2>
+          <p className="mt-5 max-w-xl mx-auto text-base md:text-lg" style={{ color: "rgba(255,255,255,0.72)" }}>
+            Mobile-first. Con swipes, tarjetas grandes y navegación por gestos.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 md:gap-10">
+          <PhoneHato />
+          <PhoneGastos />
+          <PhoneActividades />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PhoneShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="phone-frame max-w-[280px] mx-auto">
+      <div className="phone-screen">
+        <div className="phone-status" style={{ color: "var(--ink)" }}>
+          <span>9:41</span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-1.5 rounded-sm" style={{ background: "rgba(14,27,18,0.6)" }} />
+            <span className="w-3 h-1.5 rounded-sm" style={{ background: "rgba(14,27,18,0.4)" }} />
+            <span className="w-4 h-2 rounded-sm relative" style={{ border: "1px solid rgba(14,27,18,0.55)" }}>
+              <span className="absolute inset-0.5 rounded-sm" style={{ width: "72%", background: "rgba(14,27,18,0.65)" }} />
+            </span>
+          </span>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function PhoneHato() {
+  return (
+    <PhoneShell>
+      <div className="phone-content" style={{ background: "linear-gradient(180deg, #DDE7BE 0%, transparent 100%)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[0.55rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.55)" }}>Hato</div>
+            <div className="text-3xl font-bold" style={{ color: "var(--forest)" }}>147</div>
+            <div className="text-[0.6rem] -mt-1" style={{ color: "rgba(14,27,18,0.55)" }}>animales activos</div>
+          </div>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "var(--forest)", color: "white" }}>
+            <IconCow size={16} />
+          </div>
+        </div>
+        {[
+          { code: "V2", name: "Vaca #V2", meta: "Girolando · P.1", peso: "420kg", ink: "var(--forest)" },
+          { code: "T7", name: "Ternero #T7", meta: "3m · Cebú", peso: "85kg", ink: "#5F8248" },
+          { code: "N4", name: "Novilla #N4", meta: "Holstein · P.3", peso: "310kg", ink: "var(--forest)" },
+        ].map((a) => (
+          <div key={a.code} className="rounded-xl p-2.5 mb-2" style={{ background: "rgba(255,255,255,0.85)", border: "1px solid rgba(20,38,26,0.06)" }}>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full text-[0.55rem] font-bold flex items-center justify-center" style={{ background: a.ink, color: "white" }}>{a.code}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[0.72rem] font-semibold truncate" style={{ color: "var(--forest)" }}>{a.name}</div>
+                <div className="text-[0.55rem]" style={{ color: "rgba(14,27,18,0.55)" }}>{a.meta}</div>
+              </div>
+              <div className="text-[0.65rem] font-mono" style={{ color: "var(--forest)" }}>{a.peso}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </PhoneShell>
+  );
+}
+
+function PhoneGastos() {
+  return (
+    <PhoneShell>
+      <div className="phone-content" style={{ background: "linear-gradient(180deg, #EFE8D8 0%, transparent 100%)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[0.55rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.55)" }}>Gastos · Sep</div>
+            <div className="text-3xl font-bold" style={{ color: "var(--forest)" }}>$3.2M</div>
+            <div className="text-[0.6rem] -mt-1" style={{ color: "rgba(14,27,18,0.55)" }}>de $5M presupuesto</div>
+          </div>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#5F8248", color: "white" }}>
+            <IconMoney size={15} />
+          </div>
+        </div>
+        <div className="flex items-end gap-1.5 mb-3 h-14 px-1">
+          {[35, 55, 42, 80, 62, 90, 70].map((h, i) => (
+            <div key={i} className="flex-1 rounded-t" style={{
+              height: `${h}%`,
+              background: i === 5 ? "var(--forest)" : "rgba(20, 38, 26, 0.28)",
+            }} />
+          ))}
+        </div>
+        <div className="rounded-xl p-2.5 mb-2" style={{ background: "rgba(255,255,255,0.85)", border: "1px solid rgba(20,38,26,0.06)" }}>
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <div className="text-[0.72rem] font-semibold truncate" style={{ color: "var(--forest)" }}>Vacunas Q3</div>
+              <div className="text-[0.55rem]" style={{ color: "rgba(14,27,18,0.55)" }}>Rafael pagó</div>
+            </div>
+            <div className="text-[0.72rem] font-mono font-semibold shrink-0" style={{ color: "var(--forest)" }}>$1.2M</div>
+          </div>
+          <div className="mt-1.5 flex gap-1">
+            {["OR","CA","NI","RA"].map((i, ix) => (
+              <span key={i} className="text-[0.5rem] font-mono rounded-full px-1.5 py-0.5" style={{ background: ix < 2 ? "rgba(184,206,122,0.35)" : "rgba(181,75,42,0.18)", color: ix < 2 ? "var(--forest)" : "#B54B2A" }}>{i}</span>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-xl p-2.5" style={{ background: "rgba(255,255,255,0.85)", border: "1px solid rgba(20,38,26,0.06)" }}>
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <div className="text-[0.72rem] font-semibold truncate" style={{ color: "var(--forest)" }}>Sal + concentrado</div>
+              <div className="text-[0.55rem]" style={{ color: "rgba(14,27,18,0.55)" }}>Alimentación · 4 socios</div>
+            </div>
+            <div className="text-[0.72rem] font-mono font-semibold shrink-0" style={{ color: "var(--forest)" }}>$680k</div>
+          </div>
+        </div>
+      </div>
+    </PhoneShell>
+  );
+}
+
+function PhoneActividades() {
+  return (
+    <PhoneShell>
+      <div className="phone-content" style={{ background: "linear-gradient(180deg, #F0E1C4 0%, transparent 100%)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[0.55rem] font-mono uppercase tracking-widest" style={{ color: "rgba(14,27,18,0.55)" }}>Actividades</div>
+            <div className="text-3xl font-bold" style={{ color: "var(--forest)" }}>8</div>
+            <div className="text-[0.6rem] -mt-1"><span className="font-semibold" style={{ color: "#B54B2A" }}>2 vencidas</span></div>
+          </div>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#B54B2A", color: "white" }}>
+            <IconTask size={15} />
+          </div>
+        </div>
+        <TaskRow title="Vacuna aftosa" sub="Vencida ayer" done={false} danger />
+        <TaskRow title="Pesaje mensual" sub="Hoy" done={false} />
+        <TaskRow title="Reparación cerca" sub="Mañana" done={true} />
+        <TaskRow title="Ordeño turno tarde" sub="Hoy · 5pm" done={false} />
+        <TaskRow title="Diagnóstico preñez" sub="Jueves" done={false} />
+      </div>
+    </PhoneShell>
+  );
+}
+
+function TaskRow({ title, sub, done, danger }: { title: string; sub: string; done: boolean; danger?: boolean }) {
+  return (
+    <div className="rounded-lg px-2.5 py-2 mb-1.5 flex items-center gap-2.5" style={{ background: "rgba(255,255,255,0.85)", border: "1px solid rgba(20,38,26,0.06)" }}>
+      <div className="w-4 h-4 rounded flex items-center justify-center shrink-0" style={{
+        background: done ? "var(--forest)" : "transparent",
+        border: done ? "none" : "1.5px solid rgba(20,38,26,0.35)",
+      }}>
+        {done && <IconCheck size={10} className="text-white" />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[0.7rem] font-semibold truncate" style={{
+          textDecoration: done ? "line-through" : "none",
+          opacity: done ? 0.5 : 1,
+          color: "var(--forest)",
+        }}>{title}</div>
+        <div className="text-[0.55rem]" style={{ color: danger ? "#B54B2A" : "rgba(14,27,18,0.55)", fontWeight: danger ? 600 : 400 }}>{sub}</div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+//  Asistente IA — sección completa con chat mockup
+// ---------------------------------------------------------------------------
+function AIAssistantSection() {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <section id="ia" className="relative py-24 md:py-32" style={{ background: "var(--cream)" }}>
+      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-[1fr_1.1fr] gap-12 items-center">
+        <div>
+          <span
+            className="inline-block text-[0.65rem] font-mono uppercase tracking-[0.14em] px-3 py-1.5 rounded-full mb-6 font-semibold"
+            style={{ background: "rgba(184, 206, 122, 0.25)", color: "var(--forest)", border: "1px solid var(--lime)" }}
+          >
+            PRÓXIMAMENTE · Q1 2027
+          </span>
+          <h2 className="display-lg uppercase" style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", color: "var(--forest)" }}>
+            Asistente<br />
+            <em style={{ color: "var(--forest-3)", fontStyle: "normal" }}>IA MiFinca.</em>
+          </h2>
+          <p className="mt-6 text-base leading-relaxed max-w-lg" style={{ color: "rgba(20, 38, 26, 0.72)" }}>
+            Un cerebro que analiza los datos de su finca sin que abra un
+            Excel. Pregúntele en español y le responde con datos reales.
+          </p>
+          <ul className="mt-8 space-y-3">
+            <AIBullet>&ldquo;¿Cuáles vacas están próximas a parir este mes?&rdquo;</AIBullet>
+            <AIBullet>&ldquo;¿En qué me gasté más este trimestre?&rdquo;</AIBullet>
+            <AIBullet>&ldquo;¿Cuál es la vaca más rentable del hato?&rdquo;</AIBullet>
+            <AIBullet>&ldquo;¿Qué animales están perdiendo peso?&rdquo;</AIBullet>
+          </ul>
+          <div className="mt-8 text-sm" style={{ color: "rgba(20, 38, 26, 0.65)" }}>
+            Incluido en los planes <strong style={{ color: "var(--forest)" }}>Ganadero</strong> y <strong style={{ color: "var(--forest)" }}>Hacienda</strong>.
+          </div>
+        </div>
+
+        <div
+          className="rounded-3xl p-6 md:p-7"
+          style={{
+            background: "white",
+            border: "2px solid rgba(20, 38, 26, 0.08)",
+            boxShadow: "0 30px 60px -20px rgba(20, 38, 26, 0.18)",
+          }}
+        >
+          <div className="flex items-center gap-3 pb-4 border-b" style={{ borderColor: "rgba(20, 38, 26, 0.08)" }}>
+            <div
+              className="w-11 h-11 rounded-full flex items-center justify-center"
+              style={{ background: "var(--forest)", color: "var(--lime-bright)" }}
+            >
+              <IconSparkles size={18} />
+            </div>
+            <div>
+              <div className="text-sm font-bold uppercase tracking-tight" style={{ color: "var(--forest)" }}>MiFinca IA</div>
+              <div className="text-[0.65rem] flex items-center gap-1.5" style={{ color: "rgba(20, 38, 26, 0.55)" }}>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--lime)" }} /> Analizando su hato
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3 mt-5">
+            <div className="chat-bubble-user">
+              Hola, ¿cuáles vacas debo revisar esta semana?
+            </div>
+            <div className="chat-bubble-ai">
+              Tres cosas urgentes:
+              <br />• <strong>V12</strong> lleva 3 meses sin ganar peso.
+              <br />• <strong>N4</strong> tiene chequeo de preñez el jueves.
+              <br />• <strong>V07</strong> debe recibir refuerzo de aftosa mañana.
+            </div>
+            <div className="chat-bubble-user">¿Cuánto costó la sanidad en junio?</div>
+            <div className="chat-bubble-ai">
+              <strong>$1.840.000</strong> — 32% más que en mayo. El aumento
+              viene de dos compras de antiparasitarios. ¿Le hago un desglose por animal?
+            </div>
+            <div className="chat-bubble-ai typing" style={{ padding: "0.55rem 0.9rem", display: "inline-block" }}>
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AIBullet({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <span className="mt-2 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--forest-3)" }} />
+      <span className="text-sm italic" style={{ color: "rgba(20, 38, 26, 0.75)" }}>{children}</span>
+    </li>
+  );
+}
+
+// ---------------------------------------------------------------------------
+//  Cédula digital / QR por animal
+// ---------------------------------------------------------------------------
+function AnimalCedulaSection() {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <section className="relative py-24 md:py-32" style={{ background: "var(--forest)", color: "white" }}>
+      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-[1.1fr_1fr] gap-12 items-center">
+        <div
+          className="rounded-3xl p-6 md:p-7"
+          style={{ background: "white", color: "var(--forest)", boxShadow: "0 30px 60px -20px rgba(0,0,0,0.35)" }}
+        >
+          <div className="grid grid-cols-[1fr_140px] gap-4 items-start">
+            <div>
+              <div className="text-[0.6rem] font-mono uppercase tracking-widest" style={{ color: "var(--forest-3)" }}>
+                CÉDULA DIGITAL · V12
+              </div>
+              <div className="mt-1 text-2xl font-bold uppercase tracking-tight">Vaca &ldquo;Estrella&rdquo;</div>
+              <div className="text-xs mt-0.5" style={{ color: "rgba(20, 38, 26, 0.55)" }}>Girolando · 4 años · Las Delicias</div>
+
+              <dl className="mt-5 space-y-2 text-sm">
+                <FieldPair label="Dueño" value="Rafael Rincón" />
+                <FieldPair label="Registrada" value="2024-03-14" />
+                <FieldPair label="Último peso" value="420 kg · hace 3 días" />
+                <FieldPair label="Última vacuna" value="Aftosa · 2026-07-20" />
+                <FieldPair label="Preñada" value="Sí · FPP 2026-11-08" />
+              </dl>
+            </div>
+            <QRCode />
+          </div>
+          <div className="mt-5 pt-4 border-t flex items-center justify-between" style={{ borderColor: "rgba(20, 38, 26, 0.08)" }}>
+            <div className="text-[0.65rem] font-mono" style={{ color: "rgba(20, 38, 26, 0.55)" }}>
+              mifinca.app/animal/<span style={{ color: "var(--forest)" }}>v12-x9k2</span>
+            </div>
+            <span
+              className="text-[0.55rem] font-mono uppercase tracking-widest px-2 py-1 rounded-full font-semibold"
+              style={{ background: "var(--lime)", color: "var(--forest)" }}
+            >
+              ✓ verificado
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <span
+            className="inline-block text-[0.65rem] font-mono uppercase tracking-[0.14em] px-3 py-1.5 rounded-full mb-6 font-semibold"
+            style={{ background: "rgba(184, 206, 122, 0.16)", color: "var(--lime-bright)", border: "1px solid rgba(184, 206, 122, 0.4)" }}
+          >
+            PRÓXIMAMENTE
+          </span>
+          <h2 className="display-lg uppercase text-white" style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)" }}>
+            Cédula digital<br />
+            <em style={{ color: "var(--lime-bright)", fontStyle: "normal" }}>por animal.</em>
+          </h2>
+          <p className="mt-6 text-base leading-relaxed max-w-lg" style={{ color: "rgba(255, 255, 255, 0.75)" }}>
+            Cada animal con su QR único. Muéstrelo al veterinario, al
+            comprador o al inspector — sin papeles, sin dudas.
+          </p>
+          <ul className="mt-8 space-y-3">
+            <CedulaBullet><strong>QR único</strong> por cabeza — imposible falsificar</CedulaBullet>
+            <CedulaBullet><strong>Historial verificable</strong>: sanidad, peso, reproducción</CedulaBullet>
+            <CedulaBullet><strong>Ideal para venta</strong> — pásele el QR al comprador</CedulaBullet>
+            <CedulaBullet><strong>Trazabilidad real</strong> — no en cuaderno</CedulaBullet>
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CedulaBullet({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-3">
+      <span
+        className="mt-1 w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+        style={{ background: "var(--lime)", color: "var(--forest)" }}
+      >
+        <IconCheck size={11} />
+      </span>
+      <span className="text-sm" style={{ color: "rgba(255, 255, 255, 0.85)" }}>{children}</span>
+    </li>
+  );
+}
+
+function FieldPair({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <dt className="text-[0.6rem] font-mono uppercase tracking-widest" style={{ color: "rgba(20, 38, 26, 0.5)" }}>{label}</dt>
+      <dd className="text-xs font-medium text-right truncate" style={{ color: "var(--forest)" }}>{value}</dd>
+    </div>
+  );
+}
+
+function QRCode() {
+  const pattern =
+    "111111101010111111100" +
+    "100000101101100000101" +
+    "101110100110101110101" +
+    "101110101010101110101" +
+    "101110101101101110101" +
+    "100000101010100000101" +
+    "111111101010111111101" +
+    "000000001101000000000" +
+    "110101110010110110110" +
+    "010110011101011010010" +
+    "101011100101110110101" +
+    "011001010110101011010" +
+    "110110101011100101110" +
+    "000000001011001010100" +
+    "111111100110101101100" +
+    "100000101011010101010" +
+    "101110101100110110110" +
+    "101110101010101010101" +
+    "101110100110101101001" +
+    "100000101001010101110" +
+    "111111100010110101010";
+  const cells = pattern.split("");
+  return (
+    <div className="qr" style={{ maxWidth: 140 }}>
+      {cells.map((c, i) => (
+        <div key={i} className={c === "1" ? "on" : ""} />
+      ))}
     </div>
   );
 }
