@@ -3,9 +3,19 @@
 --
 --  Contexto: Camila es propietaria (25%) de la finca "Las Delicias". Se
 --  cambia el correo con el que entra a la app, sin perder ninguna data
---  (animales, gastos, tareas, historial). El propietario "Camila" queda
---  vinculado al nuevo auth.user, y el user viejo queda deshabilitado
---  (no se elimina para conservar historial en auth.users / auth.logs).
+--  (animales, gastos, tareas, historial).
+--
+--  IMPORTANTE — la migración toca 3 vínculos distintos:
+--    1. auth.users:            crear el user nuevo (manual), deshabilitar el viejo.
+--    2. finca_miembros:        la MEMBRESÍA — permite entrar a la app.
+--                              Si el viejo NO era miembro (solo era propietario
+--                              para el reparto, sin login real), hay que
+--                              INSERTAR una fila nueva en vez de UPDATE.
+--    3. propietarios:          el VÍNCULO persona↔user — hace que la app
+--                              reconozca al user como esa socia. Si el
+--                              propietario nunca fue vinculado (auth_user_id
+--                              era NULL), el UPDATE debe ir por nombre y
+--                              no por auth_user_id.
 --
 --  Requisito previo: el usuario camirincon@outlook.es debe existir en
 --  Supabase Auth ANTES de correr este script. Crearlo desde el dashboard:
@@ -42,10 +52,23 @@ BEGIN
   RAISE NOTICE 'Viejo user_id: %', old_uid;
   RAISE NOTICE 'Nuevo user_id: %', new_uid;
 
-  -- 1. Reasignar el vínculo propietario ↔ auth
+  -- 1. Reasignar el vínculo propietarios.auth_user_id (si ya existía)
   UPDATE propietarios SET auth_user_id = new_uid WHERE auth_user_id = old_uid;
   GET DIAGNOSTICS n_prop = ROW_COUNT;
-  RAISE NOTICE 'propietarios reasignados: %', n_prop;
+  RAISE NOTICE 'propietarios reasignados por auth_user_id: %', n_prop;
+
+  -- 1.b Si el propietario Camila NO estaba vinculado a ningún user (auth_user_id NULL),
+  --     vincularlo ahora por nombre. Si Camila hoy tampoco tiene auth_user_id, esto
+  --     la deja lista para entrar como la socia correcta.
+  IF n_prop = 0 THEN
+    UPDATE propietarios
+       SET auth_user_id = new_uid
+     WHERE lower(nombre) LIKE 'camila%'
+       AND auth_user_id IS NULL
+       AND finca_id IN (SELECT id FROM fincas WHERE nombre = 'Las Delicias');
+    GET DIAGNOSTICS n_prop = ROW_COUNT;
+    RAISE NOTICE 'propietarios vinculados por nombre (fallback): %', n_prop;
+  END IF;
 
   -- 2. Reasignar la membresía a la(s) finca(s)
   --    (unique constraint (finca_id, user_id) impide colisión — si el
@@ -55,6 +78,18 @@ BEGIN
   UPDATE finca_miembros SET user_id = new_uid WHERE user_id = old_uid;
   GET DIAGNOSTICS n_mbr = ROW_COUNT;
   RAISE NOTICE 'finca_miembros reasignados: %', n_mbr;
+
+  -- 2.b Si el user viejo NO era miembro (solo era propietario "de papel"),
+  --     agregar al user nuevo como miembro admin de Las Delicias.
+  IF n_mbr = 0 THEN
+    INSERT INTO finca_miembros (finca_id, user_id, rol, activo, invitado_por)
+    SELECT f.id, new_uid, 'admin', true, f.owner_user_id
+    FROM fincas f
+    WHERE f.nombre = 'Las Delicias'
+    ON CONFLICT (finca_id, user_id) DO NOTHING;
+    GET DIAGNOSTICS n_mbr = ROW_COUNT;
+    RAISE NOTICE 'finca_miembros insertados (fallback): %', n_mbr;
+  END IF;
 
   -- 3. Si el user viejo era owner de alguna finca, transferir ownership
   UPDATE fincas SET owner_user_id = new_uid WHERE owner_user_id = old_uid;
