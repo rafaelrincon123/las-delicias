@@ -33,7 +33,7 @@ export default function Header({ onOpenNav }: HeaderProps) {
   const key = Object.keys(TITLES).find((k) =>
     k === "/" ? path === "/" : k === "/panel" ? path === "/panel" : path.startsWith(k)
   );
-  const meta = key ? TITLES[key] : { title: activa?.nombre ?? "MiFinca", sub: "" };
+  const meta = key ? TITLES[key] : { title: activa?.nombre ?? "RumeApp", sub: "" };
   const [confirming, setConfirming] = useState(false);
 
   const today = new Date();

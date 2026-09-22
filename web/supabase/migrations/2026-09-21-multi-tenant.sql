@@ -1,5 +1,5 @@
 -- ============================================================================
---  MiFinca — Fase 1: Multi-tenancy
+--  RumeApp — Fase 1: Multi-tenancy
 --  Convierte la app de single-tenant (Las Delicias) a SaaS multi-finca.
 --
 --  Qué hace:

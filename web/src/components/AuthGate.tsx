@@ -144,7 +144,7 @@ function LoginScreen() {
           >
             <Image
               src="/logo.png"
-              alt="MiFinca"
+              alt="RumeApp"
               width={128}
               height={128}
               priority
@@ -152,7 +152,7 @@ function LoginScreen() {
               className="w-full h-full object-contain p-3"
             />
           </div>
-          <h1 className="display-lg tracking-tight font-serif">MiFinca</h1>
+          <h1 className="display-lg tracking-tight font-serif">RumeApp</h1>
           <div className="text-[0.68rem] font-mono uppercase tracking-[0.14em] text-accent mt-1">
             Gestión ganadera
           </div>

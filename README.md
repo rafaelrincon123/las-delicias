@@ -1,4 +1,4 @@
-# MiFinca
+# RumeApp
 
 App web multi-tenant para el control del hato de cualquier finca — animales, potreros, sanidad, reproducción, tareas, gastos e inventario. Cada ganadero se registra, crea su finca y la administra de forma aislada. Next.js 14 + Supabase (Postgres + Auth + Realtime + Storage).
 

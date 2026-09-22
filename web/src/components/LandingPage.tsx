@@ -453,9 +453,6 @@ function LandingStyles() {
           font-size: 0.56rem;
         }
       }
-      /* Deja aire para que la sticky bar no pise contenido */
-      main { padding-bottom: 72px; }
-      @media (max-width: 640px) { main { padding-bottom: 56px; } }
 
       /* Inputs redondeados */
       .landing-input {
@@ -627,7 +624,7 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
           >
             <Image
               src="/logo.png"
-              alt="MiFinca"
+              alt="RumeApp"
               width={40}
               height={40}
               sizes="40px"
@@ -642,7 +639,7 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
               textShadow: scrolled ? "none" : "0 1px 4px rgba(0,0,0,0.4)",
             }}
           >
-            MiFinca
+            RumeApp
           </div>
         </button>
 
@@ -855,7 +852,7 @@ function AppSummary() {
             className="inline-block text-[0.65rem] font-mono uppercase tracking-[0.14em] px-3 py-1.5 rounded-full mb-5 font-semibold"
             style={{ background: "var(--forest)", color: "var(--lime-bright)" }}
           >
-            QUÉ HACE MIFINCA
+            QUÉ HACE RUMEAPP
           </span>
           <h2 className="display-lg uppercase" style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", color: "var(--forest)" }}>
             Todo el control<br />
@@ -1214,7 +1211,7 @@ function FAQ() {
   const ref = useReveal<HTMLDivElement>();
   const qs = [
     {
-      q: "¿Cuánto cuesta usar MiFinca?",
+      q: "¿Cuánto cuesta usar RumeApp?",
       a: "Nada para arrancar. El plan Ranchero es gratis para siempre (hasta 15 animales). Los planes pagos son para operaciones más grandes.",
     },
     {
@@ -1499,9 +1496,9 @@ function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center overflow-hidden">
-                <Image src="/logo.png" alt="MiFinca" width={44} height={44} sizes="44px" className="w-full h-full object-contain" />
+                <Image src="/logo.png" alt="RumeApp" width={44} height={44} sizes="44px" className="w-full h-full object-contain" />
               </div>
-              <div className="text-xl font-bold uppercase tracking-tight">MiFinca</div>
+              <div className="text-xl font-bold uppercase tracking-tight">RumeApp</div>
             </div>
             <p className="mt-5 text-sm max-w-md leading-relaxed" style={{ color: "rgba(255,255,255,0.72)" }}>
               La plataforma de gestión ganadera para fincas de Colombia y
@@ -1534,7 +1531,7 @@ function Footer() {
         <div className="mt-14 pt-6 border-t flex items-center justify-between flex-wrap gap-3 text-[0.72rem] font-mono uppercase tracking-widest"
           style={{ borderColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.55)" }}
         >
-          <div>MiFinca &middot; {new Date().getFullYear()}</div>
+          <div>RumeApp &middot; {new Date().getFullYear()}</div>
           <div>Hecho en Colombia</div>
         </div>
       </div>
@@ -2111,7 +2108,7 @@ function AIAssistantSection() {
           </span>
           <h2 className="display-lg uppercase" style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", color: "var(--forest)" }}>
             Asistente<br />
-            <em style={{ color: "var(--forest-3)", fontStyle: "normal" }}>IA MiFinca.</em>
+            <em style={{ color: "var(--forest-3)", fontStyle: "normal" }}>IA RumeApp.</em>
           </h2>
           <p className="mt-6 text-base leading-relaxed max-w-lg" style={{ color: "rgba(20, 38, 26, 0.72)" }}>
             Un cerebro que analiza los datos de su finca sin que abra un
@@ -2144,7 +2141,7 @@ function AIAssistantSection() {
               <IconSparkles size={18} />
             </div>
             <div>
-              <div className="text-sm font-bold uppercase tracking-tight" style={{ color: "var(--forest)" }}>MiFinca IA</div>
+              <div className="text-sm font-bold uppercase tracking-tight" style={{ color: "var(--forest)" }}>RumeApp IA</div>
               <div className="text-[0.65rem] flex items-center gap-1.5" style={{ color: "rgba(20, 38, 26, 0.55)" }}>
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--lime)" }} /> Analizando su hato
               </div>
@@ -2219,7 +2216,7 @@ function AnimalCedulaSection() {
           </div>
           <div className="mt-5 pt-4 border-t flex items-center justify-between" style={{ borderColor: "rgba(20, 38, 26, 0.08)" }}>
             <div className="text-[0.65rem] font-mono" style={{ color: "rgba(20, 38, 26, 0.55)" }}>
-              mifinca.app/animal/<span style={{ color: "var(--forest)" }}>v12-x9k2</span>
+              rumeapp.co/animal/<span style={{ color: "var(--forest)" }}>v12-x9k2</span>
             </div>
             <span
               className="text-[0.55rem] font-mono uppercase tracking-widest px-2 py-1 rounded-full font-semibold"

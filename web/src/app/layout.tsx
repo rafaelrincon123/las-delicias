@@ -14,18 +14,18 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://las-delicias-mddw.vercel.app"),
-  title: "MiFinca · Gestión ganadera",
+  title: "RumeApp · Gestión ganadera",
   description: "Registra tu finca y controla tu hato: animales, sanidad, gastos y más.",
   openGraph: {
-    title: "MiFinca — Gestión ganadera",
+    title: "RumeApp — Gestión ganadera",
     description: "La app para cualquier ganadero: hato, sanidad, gastos y actividades.",
     type: "website",
     locale: "es_CO",
-    siteName: "MiFinca",
+    siteName: "RumeApp",
   },
   twitter: {
     card: "summary",
-    title: "MiFinca — Gestión ganadera",
+    title: "RumeApp — Gestión ganadera",
     description: "Registra tu finca y controla tu hato.",
   },
 };

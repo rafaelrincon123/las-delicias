@@ -103,14 +103,14 @@ export default function Sidebar(props: SidebarProps) {
           >
             <div className="flex items-center gap-1">
               <div className="text-[0.95rem] font-serif font-semibold tracking-tight leading-none truncate">
-                {activa?.nombre ?? "MiFinca"}
+                {activa?.nombre ?? "RumeApp"}
               </div>
               {fincas.length > 1 && (
                 <span className="text-muted text-xs">▾</span>
               )}
             </div>
             <div className="text-[0.62rem] text-accent font-mono tracking-[0.14em] uppercase mt-1">
-              {fincas.length > 1 ? `${fincas.length} fincas` : "MiFinca"}
+              {fincas.length > 1 ? `${fincas.length} fincas` : "RumeApp"}
             </div>
           </button>
           <button
@@ -240,7 +240,7 @@ function BrandMark() {
     >
       <Image
         src="/logo.png"
-        alt="MiFinca"
+        alt="RumeApp"
         width={44}
         height={44}
         sizes="44px"

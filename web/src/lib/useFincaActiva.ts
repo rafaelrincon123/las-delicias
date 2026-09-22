@@ -6,7 +6,7 @@ import { AUTH_EVENT_NAME } from "./auth";
 import { setActiveFincaId } from "./db";
 import type { Finca, PlanFinca } from "./types";
 
-const STORAGE_KEY = "mifinca:activaId";
+const STORAGE_KEY = "rumeapp:activaId";
 const CHANGED_EVENT = "finca:changed";
 
 interface RowFinca {

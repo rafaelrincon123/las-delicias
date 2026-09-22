@@ -54,7 +54,7 @@ export default function OnboardingWizard({ email }: Props) {
 
       <div className="w-full max-w-lg relative z-10">
         <div className="text-center mb-8">
-          <h1 className="display-lg tracking-tight font-serif">Bienvenido a MiFinca</h1>
+          <h1 className="display-lg tracking-tight font-serif">Bienvenido a RumeApp</h1>
           <p className="text-sm text-muted mt-3 max-w-md mx-auto">
             Primero registremos tu finca. Podrás agregar animales, sanidad, gastos y
             más una vez creada.
