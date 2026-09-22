@@ -69,7 +69,7 @@ function useReveal<T extends HTMLElement>() {
           io.unobserve(el);
         }
       },
-      { threshold: 0.12 }
+      { threshold: 0.05, rootMargin: "0px 0px -50px 0px" }
     );
     io.observe(el);
     return () => io.disconnect();
@@ -137,7 +137,7 @@ function LandingStyles() {
         font-family: var(--font-space-grotesk), system-ui, sans-serif;
       }
 
-      .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+      .reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.45s cubic-bezier(0.16,1,0.3,1), transform 0.45s cubic-bezier(0.16,1,0.3,1); }
       .reveal.in-view { opacity: 1; transform: none; }
 
       /* Display XXL */
@@ -406,50 +406,56 @@ function LandingStyles() {
       /* Sticky bottom bar */
       .sticky-bar {
         position: fixed;
-        bottom: 16px;
+        bottom: 14px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 40;
         display: flex;
         align-items: center;
-        gap: 1.5rem;
-        padding: 0.75rem 1.5rem;
+        gap: 1.1rem;
+        padding: 0.5rem 1.1rem;
         border-radius: 999px;
-        background: rgba(14, 27, 18, 0.88);
-        border: 1px solid rgba(184, 206, 122, 0.3);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        background: rgba(14, 27, 18, 0.7);
+        border: 1px solid rgba(184, 206, 122, 0.25);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
         color: white;
-        box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.35);
         max-width: calc(100% - 32px);
+        opacity: 0.82;
+        transition: opacity 0.25s ease;
       }
+      .sticky-bar:hover { opacity: 1; }
       .sticky-bar .item {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        font-size: 0.72rem;
+        gap: 0.45rem;
+        font-size: 0.66rem;
         font-weight: 500;
         letter-spacing: 0.02em;
         text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.9);
+        color: rgba(255, 255, 255, 0.88);
         white-space: nowrap;
       }
       .sticky-bar .dot {
-        width: 6px; height: 6px;
+        width: 5px; height: 5px;
         border-radius: 50%;
         background: var(--lime-bright);
-        box-shadow: 0 0 10px var(--lime-bright);
+        box-shadow: 0 0 8px var(--lime-bright);
       }
       @media (max-width: 640px) {
         .sticky-bar {
-          bottom: 12px;
-          padding: 0.6rem 1rem;
-          gap: 0.9rem;
+          bottom: 10px;
+          padding: 0.42rem 0.85rem;
+          gap: 0.75rem;
         }
         .sticky-bar .item {
-          font-size: 0.6rem;
+          font-size: 0.56rem;
         }
       }
+      /* Deja aire para que la sticky bar no pise contenido */
+      main { padding-bottom: 72px; }
+      @media (max-width: 640px) { main { padding-bottom: 56px; } }
 
       /* Inputs redondeados */
       .landing-input {
@@ -735,7 +741,7 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
 function Hero({ onLogin }: { onLogin: () => void }) {
   const ref = useReveal<HTMLDivElement>();
   return (
-    <section className="relative min-h-[96vh] flex items-center overflow-hidden">
+    <section className="relative min-h-[88vh] md:min-h-[92vh] flex items-center overflow-hidden">
       <div className="hero-photo">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={PHOTO_HERO} alt="" onError={handlePhotoError} />
@@ -842,7 +848,7 @@ function AppSummary() {
     },
   ];
   return (
-    <section className="relative py-24 md:py-32" style={{ background: "var(--sand)" }}>
+    <section className="relative py-16 md:py-24" style={{ background: "var(--sand)" }}>
       <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6">
         <div className="text-center mb-14 md:mb-16 max-w-3xl mx-auto">
           <span
@@ -1556,7 +1562,13 @@ function FooterLink({ children, onClick }: { children: React.ReactNode; onClick:
 function StickyValueBar() {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 400);
+    const onScroll = () => {
+      const y = window.scrollY;
+      const bottomLeft =
+        document.documentElement.scrollHeight - window.innerHeight - y;
+      // Aparece después del hero y desaparece al acercarse al footer/CTA
+      setVisible(y > 400 && bottomLeft > 600);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
