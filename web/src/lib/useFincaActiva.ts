@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getSupabase } from "./supabase";
 import { AUTH_EVENT_NAME } from "./auth";
-import { setActiveFincaId } from "./db";
+import { setActiveFincaId, initDB } from "./db";
 import type { Finca, PlanFinca } from "./types";
 
 const STORAGE_KEY = "rumeapp:activaId";
@@ -188,6 +188,25 @@ export async function crearFinca(opts: {
   const row = Array.isArray(data) ? data[0] : data;
   const finca = fromRow(row as RowFinca);
   writeStoredId(finca.id);
+
+  // Activar la finca YA (no esperar al próximo refresh de useFincaActiva)
+  // y esperar a que el cache local recargue — en particular `propietarios`,
+  // que es justo lo que `useAuth` necesita para vincular la sesión con el
+  // propietario recién creado por el RPC. Sin este await, `useAuth.user`
+  // queda pegado en `null` (calculado antes de que existiera el
+  // propietario) y la app muestra "Cuenta sin vincular" aunque todo esté
+  // bien en el servidor.
+  setActiveFincaId(finca.id);
+  try {
+    await initDB();
+  } catch (e) {
+    console.error("[crearFinca] initDB tras crear finca", e);
+  }
+
   emitFincaChanged();
+  // Fuerza a useAuth a recalcular `user` contra el cache ya actualizado.
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(AUTH_EVENT_NAME));
+  }
   return finca;
 }
