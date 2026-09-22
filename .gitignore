@@ -17,6 +17,7 @@ build/
 # logo working files (no van al repo)
 web/public/logo-opciones/
 web/public/logo-viejo-lasdelicias.png
+web/public/logo-viejo-mifinca.png
 
 # logs
 *.log
