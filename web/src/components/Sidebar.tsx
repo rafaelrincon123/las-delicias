@@ -230,22 +230,13 @@ export default function Sidebar(props: SidebarProps) {
 
 function BrandMark() {
   return (
-    <div
-      className="w-11 h-11 rounded-xl flex items-center justify-center relative overflow-hidden shrink-0"
-      style={{
-        background: "var(--surface-solid)",
-        border: "1px solid var(--rule)",
-        boxShadow: "0 4px 16px -4px var(--primary-glow)",
-      }}
-    >
-      <Image
-        src="/logo.png"
-        alt="RumeApp"
-        width={44}
-        height={44}
-        sizes="44px"
-        className="w-full h-full object-contain p-0.5"
-      />
-    </div>
+    <Image
+      src="/logo.png"
+      alt="RumeApp"
+      width={48}
+      height={48}
+      sizes="48px"
+      className="w-12 h-12 object-contain shrink-0"
+    />
   );
 }

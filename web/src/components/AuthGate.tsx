@@ -43,7 +43,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     if (pathname === "/" && !showLogin) {
       return <LandingPage onLogin={() => setShowLogin(true)} />;
     }
-    return <LoginScreen />;
+    const canGoBack = pathname === "/";
+    return <LoginScreen onBackToLanding={canGoBack ? () => setShowLogin(false) : undefined} />;
   }
 
   // Con sesión pero aún no sabemos si tiene finca: esperar.
@@ -72,7 +73,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
 type Mode = "login" | "signup" | "reset";
 
-function LoginScreen() {
+function LoginScreen({ onBackToLanding }: { onBackToLanding?: () => void }) {
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -132,26 +133,37 @@ function LoginScreen() {
       <div className="app-glow-1" aria-hidden />
       <div className="app-glow-2" aria-hidden />
 
+      {onBackToLanding && (
+        <button
+          type="button"
+          onClick={onBackToLanding}
+          className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full text-sm text-muted hover:text-fg hover:bg-surface-2 transition"
+          aria-label="Volver al inicio"
+        >
+          <span aria-hidden>←</span>
+          <span>Inicio</span>
+        </button>
+      )}
+
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <div
-            className="w-32 h-32 rounded-3xl flex items-center justify-center mx-auto mb-4 overflow-hidden relative"
-            style={{
-              background: "var(--surface-solid)",
-              border: "1px solid var(--rule)",
-              boxShadow: "0 12px 40px -8px var(--primary-glow)",
-            }}
+          <button
+            type="button"
+            onClick={onBackToLanding}
+            disabled={!onBackToLanding}
+            className="mx-auto block mb-5 transition hover:opacity-80 disabled:cursor-default"
+            aria-label={onBackToLanding ? "Volver al inicio" : "RumeApp"}
           >
             <Image
               src="/logo.png"
               alt="RumeApp"
-              width={128}
-              height={128}
+              width={160}
+              height={160}
               priority
-              sizes="128px"
-              className="w-full h-full object-contain p-3"
+              sizes="160px"
+              className="w-40 h-40 object-contain"
             />
-          </div>
+          </button>
           <h1 className="display-lg tracking-tight font-serif">RumeApp</h1>
           <div className="text-[0.68rem] font-mono uppercase tracking-[0.14em] text-accent mt-1">
             Gestión ganadera

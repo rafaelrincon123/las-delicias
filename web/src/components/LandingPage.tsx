@@ -614,26 +614,20 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="flex items-center gap-2.5 min-w-0"
         >
-          <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center overflow-hidden shrink-0"
+          <Image
+            src="/logo.png"
+            alt="RumeApp"
+            width={52}
+            height={52}
+            sizes="52px"
+            className="w-11 h-11 md:w-13 md:h-13 object-contain shrink-0"
             style={{
-              background: scrolled ? "white" : "rgba(255,255,255,0.95)",
-              border: `1px solid ${scrolled ? "rgba(20,38,26,0.10)" : "rgba(255,255,255,0.4)"}`,
-              boxShadow: "0 4px 12px -4px rgba(0,0,0,0.15)",
+              filter: scrolled ? "none" : "drop-shadow(0 2px 6px rgba(0,0,0,0.35))",
             }}
-          >
-            <Image
-              src="/logo.png"
-              alt="RumeApp"
-              width={40}
-              height={40}
-              sizes="40px"
-              className="w-full h-full object-contain"
-              priority
-            />
-          </div>
+            priority
+          />
           <div
-            className="text-base md:text-lg font-bold tracking-tight"
+            className="text-lg md:text-xl font-bold tracking-tight"
             style={{
               color: scrolled ? "var(--forest)" : "white",
               textShadow: scrolled ? "none" : "0 1px 4px rgba(0,0,0,0.4)",
@@ -1495,10 +1489,15 @@ function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center overflow-hidden">
-                <Image src="/logo.png" alt="RumeApp" width={44} height={44} sizes="44px" className="w-full h-full object-contain" />
-              </div>
-              <div className="text-xl font-bold uppercase tracking-tight">RumeApp</div>
+              <Image
+                src="/logo.png"
+                alt="RumeApp"
+                width={56}
+                height={56}
+                sizes="56px"
+                className="w-14 h-14 object-contain"
+              />
+              <div className="text-2xl font-bold uppercase tracking-tight">RumeApp</div>
             </div>
             <p className="mt-5 text-sm max-w-md leading-relaxed" style={{ color: "rgba(255,255,255,0.72)" }}>
               La plataforma de gestión ganadera para fincas de Colombia y
