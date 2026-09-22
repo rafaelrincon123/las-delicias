@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { useAuth } from "@/lib/useAuth";
 import { useFincaActiva } from "@/lib/useFincaActiva";
@@ -12,6 +12,7 @@ import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import { IconUser } from "@/components/icons";
 import PlanUsageBanner from "@/components/PlanUsageBanner";
+import { Miembro, listarMiembros } from "@/lib/equipo";
 
 interface SocioStats {
   animales: number;
@@ -26,10 +27,25 @@ export default function SociosPage() {
   const [editing, setEditing] = useState<Propietario | null>(null);
   const [creating, setCreating] = useState(false);
   const [reassignSource, setReassignSource] = useState<Propietario | null>(null);
+  const [linkTarget, setLinkTarget] = useState<Propietario | null>(null);
+  const [miembros, setMiembros] = useState<Miembro[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   const isOwner = !!(activa && authUserId && activa.ownerUserId === authUserId);
+  const miMiembro = useMemo(
+    () => miembros.find((m) => m.userId === authUserId) ?? null,
+    [miembros, authUserId]
+  );
+  const puedoGestionar = isOwner || miMiembro?.rol === "admin";
+
+  useEffect(() => {
+    if (!activa) return;
+    listarMiembros(activa.id)
+      .then(setMiembros)
+      .catch((e) => console.error("[socios] listarMiembros", e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activa?.id]);
 
   const socios = useMemo(() => {
     if (!db) return [] as Propietario[];
@@ -78,6 +94,49 @@ export default function SociosPage() {
           if (p.authUserId === authUserId) return { ...p, authUserId: undefined };
           return p;
         })
+      );
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function vincularAMiembro(prop: Propietario, userId: string) {
+    setBusy(prop.id);
+    setErr(null);
+    try {
+      const sb = getSupabase();
+      const { error } = await sb.rpc("vincular_propietario_a_miembro", {
+        p_propietario_id: prop.id,
+        p_user_id: userId,
+      });
+      if (error) throw new Error(error.message);
+      updateCollection("propietarios", (list) =>
+        list.map((p) => {
+          if (p.id === prop.id) return { ...p, authUserId: userId };
+          if (p.authUserId === userId) return { ...p, authUserId: undefined };
+          return p;
+        })
+      );
+      setLinkTarget(null);
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function desvincular(prop: Propietario) {
+    if (!confirm(`¿Desvincular a "${prop.nombre}" de su cuenta de acceso?`)) return;
+    setBusy(prop.id);
+    setErr(null);
+    try {
+      const sb = getSupabase();
+      const { error } = await sb.rpc("desvincular_propietario", { p_propietario_id: prop.id });
+      if (error) throw new Error(error.message);
+      updateCollection("propietarios", (list) =>
+        list.map((p) => (p.id === prop.id ? { ...p, authUserId: undefined } : p))
       );
     } catch (e) {
       setErr((e as Error).message);
@@ -145,9 +204,9 @@ export default function SociosPage() {
             </span>
           </div>
         </div>
-        {!isOwner && (
+        {!puedoGestionar && (
           <p className="text-xs text-muted mt-2">
-            Solo el owner de la finca puede vincular, reasignar o eliminar socios.
+            Solo el owner o un admin de la finca pueden vincular, reasignar o eliminar socios.
             Puedes ver la lista.
           </p>
         )}
@@ -156,7 +215,7 @@ export default function SociosPage() {
             {err}
           </div>
         )}
-        {isOwner && (
+        {puedoGestionar && (
           <div className="mt-3 flex justify-end">
             <button className="btn btn-primary" onClick={() => setCreating(true)}>
               + Nuevo socio
@@ -217,7 +276,7 @@ export default function SociosPage() {
                   {p.authUserId ? "Vinculado a auth" : "Sin vincular"}
                 </div>
                 <div className="flex gap-1.5 flex-wrap">
-                  {isOwner && !isMe && (
+                  {puedoGestionar && !isMe && (
                     <button
                       className="btn btn-ghost"
                       style={{ fontSize: "0.75rem", padding: "0.35rem 0.7rem" }}
@@ -227,7 +286,27 @@ export default function SociosPage() {
                       Vincularme
                     </button>
                   )}
-                  {isOwner && (
+                  {puedoGestionar && (
+                    <button
+                      className="btn btn-ghost"
+                      style={{ fontSize: "0.75rem", padding: "0.35rem 0.7rem" }}
+                      onClick={() => setLinkTarget(p)}
+                      disabled={busy === p.id}
+                    >
+                      Vincular a…
+                    </button>
+                  )}
+                  {puedoGestionar && p.authUserId && (
+                    <button
+                      className="btn btn-ghost"
+                      style={{ fontSize: "0.75rem", padding: "0.35rem 0.7rem" }}
+                      onClick={() => desvincular(p)}
+                      disabled={busy === p.id}
+                    >
+                      Desvincular
+                    </button>
+                  )}
+                  {puedoGestionar && (
                     <>
                       <button
                         className="btn btn-ghost"
@@ -281,6 +360,59 @@ export default function SociosPage() {
             setCreating(false);
           }}
         />
+      </Modal>
+
+      {/* Modal vincular a miembro del equipo */}
+      <Modal
+        open={!!linkTarget}
+        onClose={() => setLinkTarget(null)}
+        title={linkTarget ? `Vincular ${linkTarget.nombre} a…` : ""}
+        eyebrow="Equipo"
+      >
+        {linkTarget && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted">
+              Elige quién del equipo es <strong>{linkTarget.nombre}</strong>. Si esa persona ya
+              estaba vinculada a otro socio, se desvincula de ese automáticamente.
+            </p>
+            {miembros.filter((m) => m.activo).length === 0 ? (
+              <p className="text-sm text-muted">
+                Todavía no has creado a nadie en tu equipo.{" "}
+                <a href="/equipo" className="underline">
+                  Ve a Equipo
+                </a>{" "}
+                para agregar personas primero.
+              </p>
+            ) : (
+              <div className="grid gap-2">
+                {miembros
+                  .filter((m) => m.activo)
+                  .map((m) => (
+                    <button
+                      key={m.userId}
+                      className="card text-left flex items-center justify-between"
+                      onClick={() => vincularAMiembro(linkTarget, m.userId)}
+                      disabled={busy !== null}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <div>
+                        <div className="text-sm font-semibold">
+                          {m.nombre ?? m.email}
+                          {m.userId === linkTarget.authUserId && (
+                            <span className="text-[0.65rem] text-accent ml-2">(actual)</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted">
+                          {m.email} · {m.rol}
+                        </div>
+                      </div>
+                      <IconUser size={14} />
+                    </button>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
 
       {/* Modal reasignar */}

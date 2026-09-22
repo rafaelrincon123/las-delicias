@@ -25,6 +25,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# supabase CLI (estado local del link, no del proyecto)
+web/supabase/.temp/
+
 # misc
 .DS_Store
 Thumbs.db
