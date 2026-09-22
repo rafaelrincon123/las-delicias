@@ -7,6 +7,7 @@ import { IconLogout, IconUser } from "./icons";
 
 interface Props {
   email: string | null;
+  initialError?: string | null;
 }
 
 const TZS = [
@@ -17,12 +18,12 @@ const TZS = [
   { value: "America/Santiago",   label: "Chile (Santiago)" },
 ];
 
-export default function OnboardingWizard({ email }: Props) {
+export default function OnboardingWizard({ email, initialError }: Props) {
   const [nombreFinca, setNombreFinca] = useState("");
   const [nombrePropietario, setNombrePropietario] = useState("");
   const [timezone, setTimezone] = useState("America/Bogota");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError ?? null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -21,6 +21,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "/gastos": { title: "Gastos", sub: "Contabilidad de la finca" },
   "/inventario": { title: "Inventario", sub: "Insumos, stock y movimientos" },
   "/socios": { title: "Socios", sub: "Propietarios y participaciones" },
+  "/plan": { title: "Plan y facturación", sub: "Elige el plan de tu operación" },
 };
 
 interface HeaderProps {

@@ -17,6 +17,9 @@ import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import PhotoInput from "@/components/PhotoInput";
 import HeroStat from "@/components/HeroStat";
+import PlanUsageBanner from "@/components/PlanUsageBanner";
+import { PLAN_LIMITS, planLabel } from "@/lib/plans";
+import { useFincaActiva } from "@/lib/useFincaActiva";
 
 const ESTADOS: { value: EstadoAnimal; label: string }[] = [
   { value: "activo", label: "Activo" },
@@ -74,6 +77,9 @@ export default function AnimalesPage() {
         <HeroStat label="Crías" value={stats.crias} tone="citrus" />
         <HeroStat label="Machos" value={stats.machos} tone="copper" />
       </section>
+
+      <PlanUsageBanner resource="animales" used={db?.animales.length ?? 0} />
+
 
       <div className="flex flex-wrap items-center gap-2 justify-between">
         <div className="flex items-center gap-2 flex-wrap">
@@ -749,6 +755,7 @@ function AnimalForm({
   onCancel: () => void;
 }) {
   const { db } = useDB();
+  const { activa } = useFincaActiva();
   const [form, setForm] = useState<Animal>(
     initial ?? {
       id: uid(),
@@ -768,6 +775,16 @@ function AnimalForm({
     if (!form.nroIdentificacion.trim()) {
       alert("El número de identificación es obligatorio");
       return;
+    }
+    // Bloqueo por plan solo al AGREGAR (edición no chequea porque no cambia count).
+    if (!initial && db && activa) {
+      const limit = PLAN_LIMITS[activa.plan].maxAnimales;
+      if (limit !== null && db.animales.length >= limit) {
+        alert(
+          `Alcanzaste el límite de ${limit} animales del plan ${planLabel(activa.plan)}. Ve a la sección Plan para cambiar de plan.`
+        );
+        return;
+      }
     }
     updateCollection("animales", (list) => {
       const withoutOld = list.filter((a) => a.id !== form.id);

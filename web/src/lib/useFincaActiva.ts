@@ -166,12 +166,22 @@ export async function crearFinca(opts: {
   nombre: string;
   timezone?: string;
   nombrePropietario?: string;
+  tamanoAprox?: number | null;
+  telefono?: string | null;
+  departamento?: string | null;
+  ciudad?: string | null;
+  referidoVia?: string | null;
 }): Promise<Finca> {
   const sb = getSupabase();
   const { data, error } = await sb.rpc("crear_finca", {
     p_nombre: opts.nombre,
     p_timezone: opts.timezone ?? "America/Bogota",
     p_nombre_propietario: opts.nombrePropietario ?? null,
+    p_tamano_aprox: opts.tamanoAprox ?? null,
+    p_telefono: opts.telefono ?? null,
+    p_departamento: opts.departamento ?? null,
+    p_ciudad: opts.ciudad ?? null,
+    p_referido_via: opts.referidoVia ?? null,
   });
   if (error) throw new Error(error.message);
   if (!data) throw new Error("La finca no fue creada");

@@ -11,6 +11,7 @@ import { fmtPct } from "@/lib/format";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import { IconUser } from "@/components/icons";
+import PlanUsageBanner from "@/components/PlanUsageBanner";
 
 interface SocioStats {
   animales: number;
@@ -126,6 +127,7 @@ export default function SociosPage() {
 
   return (
     <div className="space-y-4">
+      <PlanUsageBanner resource="usuarios" used={socios.length} />
       <div className="card">
         <div className="flex items-baseline justify-between gap-3 flex-wrap">
           <div>

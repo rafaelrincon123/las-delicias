@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 import { useFincaActiva } from "@/lib/useFincaActiva";
 import {
   loginWithEmail,
-  signupWithEmail,
   sendPasswordReset,
   updatePassword,
   logout,
@@ -15,13 +14,52 @@ import {
 import { IconLock, IconUser } from "./icons";
 import OnboardingWizard from "./OnboardingWizard";
 import LandingPage from "./LandingPage";
+import SignupWizard, {
+  PENDING_SIGNUP_KEY,
+  PendingSignup,
+  completarCreacionFinca,
+} from "./SignupWizard";
+
+function readPendingSignup(): PendingSignup | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(PENDING_SIGNUP_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as PendingSignup;
+  } catch {
+    return null;
+  }
+}
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const { hasSession, user, ready, authEmail, recoveryMode, clearRecovery } =
     useAuth();
-  const { ready: fincaReady, activa } = useFincaActiva();
+  const { ready: fincaReady, activa, refresh: refreshFinca } = useFincaActiva();
   const pathname = usePathname();
   const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
+  const [autoCreating, setAutoCreating] = useState(false);
+  const [autoError, setAutoError] = useState<string | null>(null);
+
+  // Si el user completó el wizard, requirió confirmación de email, y ahora
+  // vuelve con sesión pero sin finca → completar automáticamente aquí.
+  useEffect(() => {
+    if (!ready || !fincaReady) return;
+    if (!hasSession) return;
+    if (activa) return;
+    const pending = readPendingSignup();
+    if (!pending) return;
+    if (autoCreating) return;
+    setAutoCreating(true);
+    setAutoError(null);
+    completarCreacionFinca(pending)
+      .then(() => void refreshFinca())
+      .catch((err: unknown) => {
+        setAutoError((err as Error).message ?? "No pudimos crear tu finca.");
+        try { window.localStorage.removeItem(PENDING_SIGNUP_KEY); } catch {}
+      })
+      .finally(() => setAutoCreating(false));
+  }, [ready, fincaReady, hasSession, activa, autoCreating, refreshFinca]);
 
   if (!ready) {
     return (
@@ -38,27 +76,35 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   if (!hasSession) {
+    if (showSignup) {
+      return <SignupWizard onBack={() => setShowSignup(false)} />;
+    }
     // Sin sesión en la raíz → landing pública (marketing). En cualquier
     // otra ruta protegida saltamos directo al login.
     if (pathname === "/" && !showLogin) {
       return <LandingPage onLogin={() => setShowLogin(true)} />;
     }
     const canGoBack = pathname === "/";
-    return <LoginScreen onBackToLanding={canGoBack ? () => setShowLogin(false) : undefined} />;
+    return (
+      <LoginScreen
+        onBackToLanding={canGoBack ? () => setShowLogin(false) : undefined}
+        onGoSignup={() => setShowSignup(true)}
+      />
+    );
   }
 
   // Con sesión pero aún no sabemos si tiene finca: esperar.
-  if (!fincaReady) {
+  if (!fincaReady || autoCreating) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted text-sm">
-        Cargando tu finca…
+        {autoCreating ? "Terminando de armar tu finca…" : "Cargando tu finca…"}
       </div>
     );
   }
 
   // Sesión sin finca → wizard de onboarding (crear la primera finca).
   if (!activa) {
-    return <OnboardingWizard email={authEmail} />;
+    return <OnboardingWizard email={authEmail} initialError={autoError} />;
   }
 
   // Sesión con finca pero el usuario no está vinculado como propietario.
@@ -71,9 +117,15 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-type Mode = "login" | "signup" | "reset";
+type Mode = "login" | "reset";
 
-function LoginScreen({ onBackToLanding }: { onBackToLanding?: () => void }) {
+function LoginScreen({
+  onBackToLanding,
+  onGoSignup,
+}: {
+  onBackToLanding?: () => void;
+  onGoSignup?: () => void;
+}) {
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -93,25 +145,11 @@ function LoginScreen({ onBackToLanding }: { onBackToLanding?: () => void }) {
       setError("Escribe tu contraseña.");
       return;
     }
-    if (mode === "signup" && password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
-      return;
-    }
     setLoading(true);
     try {
       if (mode === "login") {
         const res = await loginWithEmail(email.trim(), password);
         if (!res.ok) setError(traducirError(res.error));
-      } else if (mode === "signup") {
-        const res = await signupWithEmail(email.trim(), password);
-        if (!res.ok) {
-          setError(traducirError(res.error));
-        } else if (res.needsConfirmation) {
-          setInfo(
-            "Revisa tu correo para confirmar la cuenta y luego inicia sesión."
-          );
-          setMode("login");
-        }
       } else {
         const res = await sendPasswordReset(email.trim());
         if (!res.ok) {
@@ -171,8 +209,6 @@ function LoginScreen({ onBackToLanding }: { onBackToLanding?: () => void }) {
           <p className="text-sm text-muted mt-3">
             {mode === "login"
               ? "Entra a tu finca"
-              : mode === "signup"
-              ? "Crea tu cuenta y registra tu finca"
               : "Te enviamos un enlace para restablecer tu contraseña"}
           </p>
         </div>
@@ -204,12 +240,8 @@ function LoginScreen({ onBackToLanding }: { onBackToLanding?: () => void }) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={
-                    mode === "signup" ? "Al menos 8 caracteres" : "Tu contraseña"
-                  }
-                  autoComplete={
-                    mode === "signup" ? "new-password" : "current-password"
-                  }
+                  placeholder="Tu contraseña"
+                  autoComplete="current-password"
                 />
               </div>
             )}
@@ -232,16 +264,8 @@ function LoginScreen({ onBackToLanding }: { onBackToLanding?: () => void }) {
             >
               <IconUser size={14} />
               {loading
-                ? mode === "login"
-                  ? "Entrando…"
-                  : mode === "signup"
-                  ? "Creando…"
-                  : "Enviando…"
-                : mode === "login"
-                ? "Entrar"
-                : mode === "signup"
-                ? "Crear cuenta"
-                : "Enviar enlace"}
+                ? mode === "login" ? "Entrando…" : "Enviando…"
+                : mode === "login" ? "Entrar" : "Enviar enlace"}
             </button>
 
             {mode === "login" && (
@@ -264,14 +288,12 @@ function LoginScreen({ onBackToLanding }: { onBackToLanding?: () => void }) {
               onClick={() => {
                 setError(null);
                 setInfo(null);
-                if (mode === "login") setMode("signup");
+                if (mode === "login" && onGoSignup) onGoSignup();
                 else setMode("login");
               }}
             >
               {mode === "login"
                 ? "¿No tienes cuenta? Regístrate"
-                : mode === "signup"
-                ? "Ya tengo cuenta — iniciar sesión"
                 : "Volver a iniciar sesión"}
             </button>
           </form>
