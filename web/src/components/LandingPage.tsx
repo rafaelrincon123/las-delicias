@@ -479,13 +479,27 @@ function LandingStyles() {
           0 40px 80px -20px rgba(0,0,0,0.45),
           0 12px 24px -8px rgba(0,0,0,0.25),
           inset 0 1px 0 rgba(255,255,255,0.08);
+        /* Forma de celular: proporción fija incluyendo padding del marco.
+           260/(260*19.5/9)=9/19.5, más 20px de padding vertical ≈ ancho/altura fijos */
+        width: 100%;
+        max-width: 280px;
+        margin-inline: auto;
       }
       .phone-screen {
         border-radius: 32px;
         background: var(--cream);
         overflow: hidden;
         position: relative;
-        aspect-ratio: 9/19.5;
+        /* Aspect ratio estricto para que el phone mantenga forma de celular */
+        aspect-ratio: 9 / 19.5;
+        width: 100%;
+      }
+      .phone-screen > .phone-body {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
       .phone-frame::before {
         content: "";
@@ -1732,7 +1746,7 @@ function PhonesShowcase() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 md:gap-10">
+        <div className="grid md:grid-cols-3 gap-8 md:gap-10 items-start">
           <PhoneHato />
           <PhoneGastos />
           <PhoneActividades />
@@ -1744,20 +1758,22 @@ function PhonesShowcase() {
 
 function PhoneShell({ children, active }: { children: React.ReactNode; active: "hato" | "gastos" | "tareas" }) {
   return (
-    <div className="phone-frame max-w-[280px] mx-auto">
-      <div className="phone-screen flex flex-col">
-        <div className="phone-status" style={{ color: "var(--ink)" }}>
-          <span>9:41</span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-1.5 rounded-sm" style={{ background: "rgba(14,27,18,0.6)" }} />
-            <span className="w-3 h-1.5 rounded-sm" style={{ background: "rgba(14,27,18,0.4)" }} />
-            <span className="w-4 h-2 rounded-sm relative" style={{ border: "1px solid rgba(14,27,18,0.55)" }}>
-              <span className="absolute inset-0.5 rounded-sm" style={{ width: "72%", background: "rgba(14,27,18,0.65)" }} />
+    <div className="phone-frame">
+      <div className="phone-screen">
+        <div className="phone-body">
+          <div className="phone-status shrink-0" style={{ color: "var(--ink)" }}>
+            <span>9:41</span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-1.5 rounded-sm" style={{ background: "rgba(14,27,18,0.6)" }} />
+              <span className="w-3 h-1.5 rounded-sm" style={{ background: "rgba(14,27,18,0.4)" }} />
+              <span className="w-4 h-2 rounded-sm relative" style={{ border: "1px solid rgba(14,27,18,0.55)" }}>
+                <span className="absolute inset-0.5 rounded-sm" style={{ width: "72%", background: "rgba(14,27,18,0.65)" }} />
+              </span>
             </span>
-          </span>
+          </div>
+          <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
+          <PhoneBottomNav active={active} />
         </div>
-        <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
-        <PhoneBottomNav active={active} />
       </div>
     </div>
   );
