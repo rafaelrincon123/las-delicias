@@ -4,6 +4,8 @@ import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import NavShell from "@/components/NavShell";
 import AuthGate from "@/components/AuthGate";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -16,6 +18,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://rumea.app"),
   title: "RumeApp · Gestión ganadera",
   description: "Registra tu finca y controla tu hato: animales, sanidad, gastos y más.",
+  appleWebApp: { capable: true, title: "RumeApp", statusBarStyle: "default" },
   openGraph: {
     title: "RumeApp — Gestión ganadera",
     description: "La app para cualquier ganadero: hato, sanidad, gastos y actividades.",
@@ -53,6 +56,8 @@ export default function RootLayout({
           <div className="app-glow-2" aria-hidden />
           <NavShell>{children}</NavShell>
         </AuthGate>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
