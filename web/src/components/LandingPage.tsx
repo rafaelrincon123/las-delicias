@@ -2226,7 +2226,7 @@ function AnimalCedulaSection() {
           </div>
           <div className="mt-5 pt-4 border-t flex items-center justify-between" style={{ borderColor: "rgba(20, 38, 26, 0.08)" }}>
             <div className="text-[0.65rem] font-mono" style={{ color: "rgba(20, 38, 26, 0.55)" }}>
-              rumeapp.co/animal/<span style={{ color: "var(--forest)" }}>v12-x9k2</span>
+              rumea.app/animal/<span style={{ color: "var(--forest)" }}>v12-x9k2</span>
             </div>
             <span
               className="text-[0.55rem] font-mono uppercase tracking-widest px-2 py-1 rounded-full font-semibold"
