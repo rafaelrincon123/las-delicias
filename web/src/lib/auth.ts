@@ -38,7 +38,16 @@ export async function signupWithEmail(
   | { ok: false; error: string }
 > {
   const sb = getSupabase();
-  const { data, error } = await sb.auth.signUp({ email, password });
+  // Volver al mismo origen del registro: el wizard guarda la finca pendiente
+  // en localStorage, que es por origen; si el link de confirmación cae en
+  // otro dominio (la Site URL de Supabase), la finca no se autocrea.
+  const emailRedirectTo =
+    typeof window !== "undefined" ? `${window.location.origin}/` : undefined;
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo },
+  });
   if (error) return { ok: false, error: error.message };
   emit();
   const needsConfirmation = !data.session;
