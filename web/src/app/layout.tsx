@@ -4,6 +4,7 @@ import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import NavShell from "@/components/NavShell";
 import AuthGate from "@/components/AuthGate";
+import ErrorReporter from "@/components/ErrorReporter";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -56,6 +57,7 @@ export default function RootLayout({
           <div className="app-glow-2" aria-hidden />
           <NavShell>{children}</NavShell>
         </AuthGate>
+        <ErrorReporter />
         <Analytics />
         <SpeedInsights />
       </body>

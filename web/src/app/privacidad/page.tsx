@@ -46,8 +46,8 @@ export default function PrivacidadPage() {
               <p>
                 RumeApp es operada por Rafael Rincón, desde Colombia. Para cualquier tema relacionado con tus
                 datos personales puedes escribir a{" "}
-                <a href="mailto:rafael.rincong@gmail.com" className="underline" style={{ color: "var(--fg)" }}>
-                  rafael.rincong@gmail.com
+                <a href="mailto:soporte@rumea.app" className="underline" style={{ color: "var(--fg)" }}>
+                  soporte@rumea.app
                 </a>
                 .
               </p>
@@ -144,8 +144,8 @@ export default function PrivacidadPage() {
             <Section n="8" title="Cómo ejercer tus derechos">
               <p>
                 Escríbenos a{" "}
-                <a href="mailto:rafael.rincong@gmail.com" className="underline" style={{ color: "var(--fg)" }}>
-                  rafael.rincong@gmail.com
+                <a href="mailto:soporte@rumea.app" className="underline" style={{ color: "var(--fg)" }}>
+                  soporte@rumea.app
                 </a>{" "}
                 indicando tu nombre, el correo de tu cuenta y qué quieres hacer (conocer, actualizar,
                 rectificar, suprimir o revocar). Responderemos dentro de los términos que establece la ley
@@ -185,8 +185,8 @@ export default function PrivacidadPage() {
             <Section n="12" title="Contacto">
               <p>
                 Para cualquier duda sobre esta política o sobre el tratamiento de tus datos, escríbenos a{" "}
-                <a href="mailto:rafael.rincong@gmail.com" className="underline" style={{ color: "var(--fg)" }}>
-                  rafael.rincong@gmail.com
+                <a href="mailto:soporte@rumea.app" className="underline" style={{ color: "var(--fg)" }}>
+                  soporte@rumea.app
                 </a>
                 . También puedes leer nuestros{" "}
                 <Link href="/terminos" className="underline" style={{ color: "var(--fg)" }}>

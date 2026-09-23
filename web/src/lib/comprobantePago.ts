@@ -27,35 +27,32 @@ export const CUENTA_PAGO = {
   nequi: process.env.NEXT_PUBLIC_CUENTA_NEQUI ?? "Configura NEXT_PUBLIC_CUENTA_NEQUI",
 };
 
-export interface ComprobanteSubido {
-  signedUrl: string;
-  path: string;
-}
-
 /**
- * Sube el comprobante al bucket privado `comprobantes-pago` (RLS: solo
- * miembros de esa finca pueden subir/leer sus propios archivos), registra
- * la solicitud en `comprobantes_pago` para trazabilidad, y devuelve un
- * link firmado (30 días) para incluir en el correo a Rafael.
+ * Registra la solicitud de cambio de plan en `comprobantes_pago` y, si el
+ * cliente adjuntó comprobante, lo sube al bucket privado `comprobantes-pago`
+ * (RLS: solo miembros de esa finca suben/leen sus archivos). Un trigger de
+ * la base de datos le manda un correo al admin con el link al comprobante.
  */
-export async function subirComprobantePago(opts: {
+export async function registrarSolicitudPlan(opts: {
   fincaId: string;
   planSolicitado: Extract<PlanFinca, "ganadero" | "hacienda">;
-  file: File;
-}): Promise<ComprobanteSubido> {
+  file?: File | null;
+}): Promise<void> {
   const sb = getSupabase();
-
-  const ext = opts.file.name.split(".").pop()?.toLowerCase() || "bin";
-  const nombreSeguro = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const path = `${opts.fincaId}/${nombreSeguro}`;
-
-  const { error: uploadErr } = await sb.storage
-    .from("comprobantes-pago")
-    .upload(path, opts.file, { upsert: false, contentType: opts.file.type || undefined });
-  if (uploadErr) throw new Error(`No se pudo subir el archivo: ${uploadErr.message}`);
 
   const { data: userData, error: userErr } = await sb.auth.getUser();
   if (userErr || !userData.user) throw new Error("No se pudo identificar tu sesión");
+
+  let path: string | null = null;
+  if (opts.file) {
+    const ext = opts.file.name.split(".").pop()?.toLowerCase() || "bin";
+    const nombreSeguro = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    path = `${opts.fincaId}/${nombreSeguro}`;
+    const { error: uploadErr } = await sb.storage
+      .from("comprobantes-pago")
+      .upload(path, opts.file, { upsert: false, contentType: opts.file.type || undefined });
+    if (uploadErr) throw new Error(`No se pudo subir el archivo: ${uploadErr.message}`);
+  }
 
   const { error: insertErr } = await sb.from("comprobantes_pago").insert({
     finca_id: opts.fincaId,
@@ -64,13 +61,4 @@ export async function subirComprobantePago(opts: {
     storage_path: path,
   });
   if (insertErr) throw new Error(`No se pudo registrar la solicitud: ${insertErr.message}`);
-
-  const { data: signedData, error: signErr } = await sb.storage
-    .from("comprobantes-pago")
-    .createSignedUrl(path, 60 * 60 * 24 * 30);
-  if (signErr || !signedData) {
-    throw new Error(signErr?.message ?? "No se pudo generar el link del comprobante");
-  }
-
-  return { signedUrl: signedData.signedUrl, path };
 }

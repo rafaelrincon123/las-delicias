@@ -25,6 +25,7 @@ import {
 } from "./icons";
 import PasswordInput from "./PasswordInput";
 import PricingCards, { PromoBanner } from "./PricingCards";
+import CalculadoraPerdidas from "./CalculadoraPerdidas";
 
 interface Props {
   onLogin: () => void;
@@ -102,6 +103,7 @@ export default function LandingPage({ onLogin }: Props) {
       <PhonesShowcase />
       <AIAssistantSection />
       <AnimalCedulaSection />
+      <CalculadoraPerdidas onLogin={onLogin} />
       <Pricing onLogin={onLogin} />
       <FAQ />
       <LoginEmbed />
@@ -599,6 +601,7 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
   const links = [
     { id: "modulos", label: "Módulos" },
     { id: "pilares", label: "Pilares" },
+    { id: "calculadora", label: "Calculadora" },
     { id: "precios", label: "Precios" },
     { id: "faq", label: "FAQ" },
   ];

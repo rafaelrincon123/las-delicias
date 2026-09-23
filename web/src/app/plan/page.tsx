@@ -15,7 +15,7 @@ import {
   tienePromo,
   fmtUSD,
 } from "@/lib/plans";
-import { CUENTA_PAGO, subirComprobantePago } from "@/lib/comprobantePago";
+import { CUENTA_PAGO, registrarSolicitudPlan } from "@/lib/comprobantePago";
 import type { PlanFinca } from "@/lib/types";
 import Modal from "@/components/Modal";
 import PricingCards, { PromoBanner } from "@/components/PricingCards";
@@ -111,7 +111,18 @@ export default function PlanPage() {
 
       <PromoBanner />
 
-      <PricingCards planActual={planActual} onSelect={setPagando} />
+      <PricingCards
+        planActual={planActual}
+        onSelect={(p) => {
+          if (PLAN_LIMITS[p].precioUSD > 0) return setPagando(p);
+          // Bajar al plan gratis no requiere pago: se pide por correo.
+          const asunto = encodeURIComponent(`Cambiar a plan Ranchero — ${activa.nombre}`);
+          const cuerpo = encodeURIComponent(
+            `Hola,\n\nQuiero pasar mi finca "${activa.nombre}" (id: ${activa.id}) al plan Ranchero gratis.\n\nGracias.`
+          );
+          window.location.href = `mailto:soporte@rumea.app?subject=${asunto}&body=${cuerpo}`;
+        }}
+      />
 
       <p className="text-[0.7rem] text-subtle text-center">
         Los pagos automáticos llegarán próximamente. Por ahora los cambios se procesan
@@ -122,9 +133,7 @@ export default function PlanPage() {
       {pagando && (
         <PagoManualModal
           destino={pagando}
-          planActual={planActual}
           fincaId={activa.id}
-          fincaNombre={activa.nombre}
           onClose={() => setPagando(null)}
         />
       )}
@@ -134,15 +143,11 @@ export default function PlanPage() {
 
 function PagoManualModal({
   destino,
-  planActual,
   fincaId,
-  fincaNombre,
   onClose,
 }: {
   destino: PlanFinca;
-  planActual: PlanFinca;
   fincaId: string;
-  fincaNombre: string;
   onClose: () => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
@@ -150,37 +155,12 @@ function PagoManualModal({
   const [error, setError] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
 
-  function abrirCorreo(linkComprobante?: string) {
-    const asunto = encodeURIComponent(`Upgrade a plan ${planLabel(destino)} — ${fincaNombre}`);
-    const cuerpo = encodeURIComponent(
-      `Hola,\n\nQuiero cambiarme al plan ${planLabel(destino)} para mi finca "${fincaNombre}" (id: ${fincaId}).\n\n` +
-        `Estoy usando actualmente el plan ${planLabel(planActual)}.\n\n` +
-        (tienePromo(destino)
-          ? `Aplica la oferta de lanzamiento: ${PROMO_LANZAMIENTO.pct}% de descuento los primeros ${PROMO_LANZAMIENTO.meses} meses ` +
-            `(US$${fmtUSD(precioPromoUSD(destino))}/mes, ≈ $${precioCOPAprox(precioPromoUSD(destino)).toLocaleString("es-CO")} COP).\n\n`
-          : "") +
-        (linkComprobante
-          ? `Aquí está mi comprobante de pago: ${linkComprobante}\n\n`
-          : `Voy a enviar el comprobante de pago por este mismo correo en un momento.\n\n`) +
-        `Por favor confirma y activa mi plan.\n\nGracias.`
-    );
-    window.location.href = `mailto:rafael.rincong@gmail.com?subject=${asunto}&body=${cuerpo}`;
-  }
-
   async function handleEnviar() {
     setError(null);
+    if (destino !== "ganadero" && destino !== "hacienda") return;
     setEnviando(true);
     try {
-      if (file && (destino === "ganadero" || destino === "hacienda")) {
-        const { signedUrl } = await subirComprobantePago({
-          fincaId,
-          planSolicitado: destino,
-          file,
-        });
-        abrirCorreo(signedUrl);
-      } else {
-        abrirCorreo();
-      }
+      await registrarSolicitudPlan({ fincaId, planSolicitado: destino, file });
       setEnviado(true);
     } catch (e) {
       setError((e as Error).message);
@@ -194,9 +174,19 @@ function PagoManualModal({
       <Modal open onClose={onClose} title="Solicitud enviada" eyebrow="Listo">
         <div className="space-y-4">
           <p className="text-sm">
-            Se abrió tu correo con la solicitud{file ? " y el link a tu comprobante" : ""}. En
-            cuanto Rafael lo confirme, tu plan queda activo.
+            Recibimos tu solicitud para el plan <strong>{planLabel(destino)}</strong>
+            {file ? " con tu comprobante" : ""}. Te confirmamos por correo o WhatsApp en cuanto
+            revisemos el pago, y tu plan queda activo.
           </p>
+          {!file && (
+            <p className="text-xs text-muted">
+              Si aún no has enviado el comprobante, mándalo a{" "}
+              <a href="mailto:soporte@rumea.app" className="underline">
+                soporte@rumea.app
+              </a>
+              .
+            </p>
+          )}
           <button className="btn btn-primary w-full justify-center" onClick={onClose}>
             Entendido
           </button>
@@ -215,8 +205,8 @@ function PagoManualModal({
     >
       <div className="space-y-4">
         <p className="text-sm text-muted">
-          Transfiere el valor del plan y sube tu comprobante. Te abrimos el correo listo para
-          enviarle a Rafael, quien activa tu plan en cuanto lo confirme.
+          Transfiere el valor del plan y sube tu comprobante. Te confirmamos y activamos tu
+          plan en cuanto revisemos el pago.
         </p>
 
         {PLAN_LIMITS[destino].precioUSD > 0 && (
@@ -270,7 +260,7 @@ function PagoManualModal({
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
           <span className="text-[0.68rem] text-subtle">
-            Opcional aquí — si prefieres, puedes mandarlo directo por correo o WhatsApp después.
+            Opcional aquí — si prefieres, puedes mandarlo después a soporte@rumea.app.
           </span>
         </div>
 

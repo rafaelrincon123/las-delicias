@@ -171,8 +171,8 @@ export default function TerminosPage() {
             <Section n="12" title="Contacto">
               <p>
                 Para preguntas sobre estos términos, escríbenos a{" "}
-                <a href="mailto:rafael.rincong@gmail.com" className="underline" style={{ color: "var(--fg)" }}>
-                  rafael.rincong@gmail.com
+                <a href="mailto:soporte@rumea.app" className="underline" style={{ color: "var(--fg)" }}>
+                  soporte@rumea.app
                 </a>
                 .
               </p>
