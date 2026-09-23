@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   loginWithEmail,
   signupWithEmail,
@@ -1533,7 +1534,15 @@ function Footer() {
           style={{ borderColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.55)" }}
         >
           <div>RumeApp &middot; {new Date().getFullYear()}</div>
-          <div>Hecho en Colombia</div>
+          <div className="flex items-center gap-4">
+            <Link href="/terminos" className="hover:text-white transition" style={{ color: "inherit" }}>
+              Términos
+            </Link>
+            <Link href="/privacidad" className="hover:text-white transition" style={{ color: "inherit" }}>
+              Privacidad
+            </Link>
+            <span>Hecho en Colombia</span>
+          </div>
         </div>
       </div>
     </footer>

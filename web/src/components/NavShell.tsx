@@ -21,6 +21,11 @@ export default function NavShell({ children }: { children: React.ReactNode }) {
     };
   }, [mobileOpen]);
 
+  // Páginas legales: standalone, sin sidebar/header/bottom nav de la app.
+  if (path === "/terminos" || path === "/privacidad") {
+    return <>{children}</>;
+  }
+
   return (
     <div className="flex min-h-screen relative">
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />

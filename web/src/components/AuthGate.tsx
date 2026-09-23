@@ -61,6 +61,12 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       .finally(() => setAutoCreating(false));
   }, [ready, fincaReady, hasSession, activa, autoCreating, refreshFinca]);
 
+  // Páginas legales: públicas siempre, sin spinner ni redirect a login,
+  // sin importar si hay sesión o no.
+  if (pathname === "/terminos" || pathname === "/privacidad") {
+    return <>{children}</>;
+  }
+
   if (!ready) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted text-sm">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { signupWithEmail } from "@/lib/auth";
 import { crearFinca } from "@/lib/useFincaActiva";
 import { PLAN_LIMITS, fmtPrecio } from "@/lib/plans";
@@ -425,7 +426,15 @@ export default function SignupWizard({ onBack }: Props) {
         </div>
 
         <p className="text-center text-[0.7rem] text-subtle mt-4">
-          Al continuar aceptas nuestros términos y política de privacidad.
+          Al continuar aceptas nuestros{" "}
+          <Link href="/terminos" target="_blank" className="underline">
+            términos
+          </Link>{" "}
+          y{" "}
+          <Link href="/privacidad" target="_blank" className="underline">
+            política de privacidad
+          </Link>
+          .
         </p>
       </div>
     </div>
