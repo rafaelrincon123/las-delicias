@@ -57,6 +57,21 @@ export async function listarMiembros(fincaId: string): Promise<Miembro[]> {
   }));
 }
 
+// Cuando la Edge Function responde 4xx, supabase-js solo dice "non-2xx status
+// code"; el mensaje en español viene en el body de la Response (error.context).
+async function mensajeDeError(error: { message: string; context?: unknown }): Promise<string> {
+  const ctx = error.context;
+  if (ctx instanceof Response) {
+    try {
+      const b = await ctx.json();
+      if (b?.error) return b.error as string;
+    } catch {
+      /* respuesta sin JSON */
+    }
+  }
+  return error.message;
+}
+
 export async function crearEmpleado(opts: {
   fincaId: string;
   email: string;
@@ -76,13 +91,22 @@ export async function crearEmpleado(opts: {
       telefono: opts.telefono,
     },
   });
-  if (error) {
-    // supabase-js pone el mensaje del server en error.context si existe
-    const ctx = (error as { context?: { error?: string } }).context;
-    throw new Error(ctx?.error ?? error.message);
-  }
+  if (error) throw new Error(await mensajeDeError(error));
   if (data?.error) throw new Error(data.error as string);
   return { userId: data.userId as string, email: data.email as string };
+}
+
+export async function cambiarClaveEmpleado(opts: {
+  fincaId: string;
+  userId: string;
+  password: string;
+}): Promise<void> {
+  const sb = getSupabase();
+  const { data, error } = await sb.functions.invoke("cambiar-clave-empleado", {
+    body: { finca_id: opts.fincaId, user_id: opts.userId, password: opts.password },
+  });
+  if (error) throw new Error(await mensajeDeError(error));
+  if (data?.error) throw new Error(data.error as string);
 }
 
 export async function cambiarRolMiembro(
@@ -115,9 +139,8 @@ export async function setMiembroActivo(
 
 export function generarPasswordTemporal(): string {
   const alfabeto = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  const bytes = crypto.getRandomValues(new Uint32Array(10));
   let out = "";
-  for (let i = 0; i < 10; i++) {
-    out += alfabeto[Math.floor(Math.random() * alfabeto.length)];
-  }
+  for (const b of bytes) out += alfabeto[b % alfabeto.length];
   return out;
 }

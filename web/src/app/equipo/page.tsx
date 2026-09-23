@@ -11,6 +11,7 @@ import {
   ROL_DESC,
   listarMiembros,
   crearEmpleado,
+  cambiarClaveEmpleado,
   cambiarRolMiembro,
   setMiembroActivo,
   generarPasswordTemporal,
@@ -101,7 +102,7 @@ export default function EquipoPage() {
         <div className="text-muted">Cargando equipo…</div>
       ) : (
         <div className="card p-0 overflow-x-auto">
-          <table className="table" style={{ ["--cols" as string]: "1fr 1fr 9rem 8rem 7rem" }}>
+          <table className="table" style={{ ["--cols" as string]: "1fr 1fr 9rem 8rem 10rem" }}>
             <thead>
               <tr>
                 <th>Nombre</th>
@@ -118,6 +119,7 @@ export default function EquipoPage() {
                   miembro={m}
                   esTu={m.userId === authUserId}
                   puedoGestionar={puedoGestionar}
+                  esOwner={esOwner}
                   fincaId={activa.id}
                   onChanged={reload}
                 />
@@ -145,17 +147,23 @@ function MiembroRow({
   miembro,
   esTu,
   puedoGestionar,
+  esOwner,
   fincaId,
   onChanged,
 }: {
   miembro: Miembro;
   esTu: boolean;
   puedoGestionar: boolean;
+  esOwner: boolean;
   fincaId: string;
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [cambiandoClave, setCambiandoClave] = useState(false);
   const esOwnerRow = miembro.rol === "owner";
+  // La clave de un admin solo la cambia el dueño (misma regla que la Edge Function).
+  const puedoCambiarClave =
+    puedoGestionar && !esOwnerRow && !esTu && (esOwner || miembro.rol !== "admin");
 
   async function cambiarRol(nuevoRol: RolMiembro) {
     setBusy(true);
@@ -219,10 +227,24 @@ function MiembroRow({
         </span>
       </td>
       <td>
-        {puedoGestionar && !esOwnerRow && (
-          <button className="btn btn-ghost text-xs" disabled={busy} onClick={() => void toggleActivo()}>
-            {miembro.activo ? "Desactivar" : "Reactivar"}
-          </button>
+        <div className="flex flex-col items-start gap-1">
+          {puedoCambiarClave && (
+            <button className="btn btn-ghost text-xs" disabled={busy} onClick={() => setCambiandoClave(true)}>
+              Cambiar contraseña
+            </button>
+          )}
+          {puedoGestionar && !esOwnerRow && (
+            <button className="btn btn-ghost text-xs" disabled={busy} onClick={() => void toggleActivo()}>
+              {miembro.activo ? "Desactivar" : "Reactivar"}
+            </button>
+          )}
+        </div>
+        {cambiandoClave && (
+          <CambiarClaveModal
+            fincaId={fincaId}
+            miembro={miembro}
+            onClose={() => setCambiandoClave(false)}
+          />
         )}
       </td>
     </tr>
@@ -364,6 +386,102 @@ function CrearEmpleadoModal({
 
         <button type="submit" className="btn btn-primary justify-center" disabled={loading}>
           {loading ? "Creando…" : "Crear empleado"}
+        </button>
+      </form>
+    </Modal>
+  );
+}
+
+function CambiarClaveModal({
+  fincaId,
+  miembro,
+  onClose,
+}: {
+  fincaId: string;
+  miembro: Miembro;
+  onClose: () => void;
+}) {
+  const [password, setPassword] = useState(() => generarPasswordTemporal());
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [listo, setListo] = useState(false);
+  const quien = miembro.nombre ?? miembro.email;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await cambiarClaveEmpleado({ fincaId, userId: miembro.userId, password });
+      setListo(true);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (listo) {
+    return (
+      <Modal open onClose={onClose} title="Contraseña cambiada" eyebrow="Listo">
+        <div className="space-y-4">
+          <p className="text-sm">
+            Compártele estos datos a {quien} (WhatsApp, en persona, etc.). La contraseña anterior
+            ya no sirve y esta no se vuelve a mostrar.
+          </p>
+          <div className="card bg-surface-2 space-y-2">
+            <div>
+              <span className="eyebrow">Email</span>
+              <div className="font-mono text-sm">{miembro.email}</div>
+            </div>
+            <div>
+              <span className="eyebrow">Contraseña nueva</span>
+              <div className="font-mono text-sm">{password}</div>
+            </div>
+          </div>
+          <button className="btn btn-primary w-full justify-center" onClick={onClose}>
+            Entendido
+          </button>
+        </div>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Cambiar contraseña" eyebrow={quien}>
+      <form onSubmit={handleSubmit} className="grid gap-4">
+        <p className="text-sm text-muted">
+          Úsalo cuando un empleado olvidó su contraseña. Le pones una nueva y se la compartes tú.
+        </p>
+        <FormRow label="Contraseña nueva" required hint="Mínimo 8 caracteres">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="font-mono"
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              className="btn btn-ghost shrink-0"
+              onClick={() => setPassword(generarPasswordTemporal())}
+            >
+              Generar
+            </button>
+          </div>
+        </FormRow>
+
+        {error && (
+          <div className="text-sm text-danger bg-danger/10 px-3 py-2 rounded-lg">{error}</div>
+        )}
+
+        <button type="submit" className="btn btn-primary justify-center" disabled={loading}>
+          {loading ? "Cambiando…" : "Cambiar contraseña"}
         </button>
       </form>
     </Modal>
