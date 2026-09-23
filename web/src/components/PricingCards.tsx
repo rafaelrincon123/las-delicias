@@ -1,18 +1,19 @@
 "use client";
 
 import type { PlanFinca } from "@/lib/types";
+import { useState } from "react";
 import {
   PLAN_LIMITS,
-  PROMO_LANZAMIENTO,
-  precioPromoUSD,
-  precioCOPAprox,
-  tienePromo,
-  fmtUSD,
+  DESCUENTO_ANUAL,
+  type Periodo,
+  cop,
+  precioPeriodo,
+  precioMesAnual,
 } from "@/lib/plans";
-import { IconCheck, IconCow, IconPasture, IconHome, IconSparkles } from "./icons";
+import { IconCheck, IconCow, IconPasture, IconHome } from "./icons";
 
 // Tarjetas de precios compartidas por la landing (sección Precios) y la
-// página /plan. Única fuente de textos, features y precio con promo.
+// página /plan. Única fuente de textos, features y precios (mensual y anual).
 
 export const PLAN_ORDER: PlanFinca[] = ["ranchero", "ganadero", "hacienda"];
 
@@ -70,41 +71,42 @@ function lim(n: number | null): string {
   return n === null ? "∞" : String(n);
 }
 
-/** Franja que anuncia la promo, para poner encima del grid. */
-export function PromoBanner() {
-  if (!PROMO_LANZAMIENTO.activa) return null;
+const PCT_ANUAL = Math.round(DESCUENTO_ANUAL * 100);
+
+/** Selector Mensual / Anual. */
+function SelectorPeriodo({ periodo, onChange }: { periodo: Periodo; onChange: (p: Periodo) => void }) {
+  const opciones: { v: Periodo; label: string }[] = [
+    { v: "mensual", label: "Mensual" },
+    { v: "anual", label: `Anual · −${PCT_ANUAL}%` },
+  ];
   return (
-    <div
-      className="relative overflow-hidden rounded-3xl px-5 py-4 md:px-7 md:py-5 flex items-center gap-4 flex-wrap"
-      style={{
-        background: "linear-gradient(120deg, var(--forest) 0%, var(--forest-2) 60%, var(--forest-3) 100%)",
-        color: "var(--sand)",
-        boxShadow: "0 20px 40px -24px rgba(20, 38, 26, 0.6)",
-      }}
-    >
+    <div className="flex justify-center">
       <div
-        aria-hidden
-        className="absolute -right-10 -top-16 w-56 h-56 rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(200,222,134,0.28), transparent 70%)" }}
-      />
-      <div
-        className="shrink-0 rounded-2xl px-4 py-2 text-center leading-none"
-        style={{ background: "var(--lime)", color: "var(--forest)" }}
+        role="radiogroup"
+        aria-label="Forma de pago"
+        className="inline-flex p-1 rounded-full"
+        style={{ background: "rgba(20, 38, 26, 0.07)", border: "1px solid rgba(20, 38, 26, 0.10)" }}
       >
-        <div className="text-3xl md:text-4xl font-bold tracking-tight">−{PROMO_LANZAMIENTO.pct}%</div>
-        <div className="text-[0.55rem] font-mono uppercase tracking-[0.18em] mt-1">Lanzamiento</div>
-      </div>
-      <div className="flex-1 min-w-[14rem] relative">
-        <div className="flex items-center gap-1.5 text-[0.62rem] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--lime-bright)" }}>
-          <IconSparkles size={12} /> Oferta de lanzamiento
-        </div>
-        <div className="text-base md:text-lg font-semibold mt-1 leading-snug">
-          {PROMO_LANZAMIENTO.pct}% de descuento en tus primeros {PROMO_LANZAMIENTO.meses} meses en
-          cualquier plan pago.
-        </div>
-        <div className="text-xs mt-0.5" style={{ opacity: 0.7 }}>
-          Además, 30 días de prueba gratis antes de pagar. Sin tarjeta.
-        </div>
+        {opciones.map((o) => {
+          const activo = periodo === o.v;
+          return (
+            <button
+              key={o.v}
+              type="button"
+              role="radio"
+              aria-checked={activo}
+              onClick={() => onChange(o.v)}
+              className="px-5 py-2 rounded-full text-[0.78rem] font-semibold uppercase tracking-[0.08em] transition"
+              style={
+                activo
+                  ? { background: "var(--forest)", color: "var(--sand)" }
+                  : { background: "transparent", color: "var(--forest)" }
+              }
+            >
+              {o.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -117,41 +119,48 @@ export default function PricingCards({
 }: {
   /** Plan vigente de la finca (en /plan). En la landing, omitir. */
   planActual?: PlanFinca;
-  onSelect: (plan: PlanFinca) => void;
+  onSelect: (plan: PlanFinca, periodo: Periodo) => void;
   /** Texto del botón; por defecto depende del contexto. */
   ctaLabel?: (plan: PlanFinca) => string;
 }) {
+  const [periodo, setPeriodo] = useState<Periodo>("mensual");
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-4 lg:gap-6 items-stretch pt-3">
-      {PLAN_ORDER.map((p) => (
-        <Card
-          key={p}
-          plan={p}
-          planActual={planActual}
-          onSelect={onSelect}
-          ctaLabel={ctaLabel}
-        />
-      ))}
+    <div className="space-y-8">
+      <SelectorPeriodo periodo={periodo} onChange={setPeriodo} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-4 lg:gap-6 items-stretch pt-3">
+        {PLAN_ORDER.map((p) => (
+          <Card
+            key={p}
+            plan={p}
+            periodo={periodo}
+            planActual={planActual}
+            onSelect={onSelect}
+            ctaLabel={ctaLabel}
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
 function Card({
   plan,
+  periodo,
   planActual,
   onSelect,
   ctaLabel,
 }: {
   plan: PlanFinca;
+  periodo: Periodo;
   planActual?: PlanFinca;
-  onSelect: (plan: PlanFinca) => void;
+  onSelect: (plan: PlanFinca, periodo: Periodo) => void;
   ctaLabel?: (plan: PlanFinca) => string;
 }) {
   const limits = PLAN_LIMITS[plan];
   const info = INFO[plan];
   const dark = plan === FEATURED;
-  const promo = tienePromo(plan);
-  const precio = precioPromoUSD(plan);
+  const gratis = limits.precioCOP === 0;
+  const anual = periodo === "anual" && !gratis;
   const esActual = planActual === plan;
   const esBajar =
     planActual !== undefined && PLAN_ORDER.indexOf(plan) < PLAN_ORDER.indexOf(planActual);
@@ -224,7 +233,7 @@ function Card({
 
         {/* Precio */}
         <div className="mt-6 md:min-h-[8.5rem]">
-          {limits.precioUSD === 0 ? (
+          {gratis ? (
             <>
               <div className="text-[0.62rem] font-mono uppercase tracking-[0.16em]" style={{ color: soft }}>
                 Para siempre
@@ -234,39 +243,43 @@ function Card({
                 Sin tarjeta y sin fecha de vencimiento.
               </div>
             </>
-          ) : (
+          ) : anual ? (
             <>
-              {promo && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm line-through" style={{ color: soft }}>
-                    US${fmtUSD(limits.precioUSD)}
-                  </span>
-                  <span
-                    className="text-[0.62rem] font-mono font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full"
-                    style={
-                      dark
-                        ? { background: "var(--lime)", color: "var(--forest)" }
-                        : { background: "var(--forest)", color: "var(--lime-bright)" }
-                    }
-                  >
-                    −{PROMO_LANZAMIENTO.pct}% × {PROMO_LANZAMIENTO.meses} meses
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm line-through" style={{ color: soft }}>
+                  {cop(limits.precioCOP)}
+                </span>
+                <span
+                  className="text-[0.62rem] font-mono font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full"
+                  style={
+                    dark
+                      ? { background: "var(--lime)", color: "var(--forest)" }
+                      : { background: "var(--forest)", color: "var(--lime-bright)" }
+                  }
+                >
+                  Ahorras {PCT_ANUAL}%
+                </span>
+              </div>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-lg font-semibold" style={{ color: soft }}>US$</span>
-                <span className="text-5xl font-bold tracking-tight">{fmtUSD(precio)}</span>
+                <span className="text-5xl font-bold tracking-tight">{cop(precioMesAnual(plan))}</span>
                 <span className="text-sm" style={{ color: soft }}>/mes</span>
               </div>
               <div className="text-xs mt-1.5" style={{ color: soft }}>
-                ≈ ${precioCOPAprox(precio).toLocaleString("es-CO")} COP al mes
+                Un solo pago de {cop(precioPeriodo(plan, "anual"))} al año
               </div>
-              {promo && (
-                <div className="text-[0.7rem] mt-1" style={{ color: soft }}>
-                  Desde el mes {PROMO_LANZAMIENTO.meses + 1}: US${fmtUSD(limits.precioUSD)} (≈ $
-                  {precioCOPAprox(limits.precioUSD).toLocaleString("es-CO")} COP)
-                </div>
-              )}
+            </>
+          ) : (
+            <>
+              <div className="text-[0.62rem] font-mono uppercase tracking-[0.16em]" style={{ color: soft }}>
+                Pago mensual
+              </div>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="text-5xl font-bold tracking-tight">{cop(limits.precioCOP)}</span>
+                <span className="text-sm" style={{ color: soft }}>/mes</span>
+              </div>
+              <div className="text-xs mt-1.5" style={{ color: soft }}>
+                O {cop(precioMesAnual(plan))}/mes pagando el año
+              </div>
             </>
           )}
         </div>
@@ -336,7 +349,7 @@ function Card({
         <button
           type="button"
           disabled={esActual}
-          onClick={() => onSelect(plan)}
+          onClick={() => onSelect(plan, periodo)}
           className="w-full rounded-full py-3.5 px-5 text-sm font-semibold uppercase tracking-[0.08em] transition disabled:cursor-default"
           style={
             esActual
@@ -351,12 +364,12 @@ function Card({
           {esActual ? "Plan actual" : `${cta}${esBajar ? "" : " →"}`}
         </button>
         <div className="text-[0.66rem] text-center mt-2.5" style={{ color: soft }}>
-          {limits.precioUSD === 0
+          {gratis
             ? "Sin tarjeta · Para siempre"
             : planActual === undefined
             ? "30 días gratis · Sin tarjeta · Cancela cuando quieras"
-            : promo
-            ? `Pagas US$${fmtUSD(precio)} los primeros ${PROMO_LANZAMIENTO.meses} meses`
+            : anual
+            ? "Un pago al año por transferencia"
             : "Pago mensual por transferencia"}
         </div>
       </div>

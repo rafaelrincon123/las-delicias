@@ -66,9 +66,8 @@ export default function TerminosPage() {
               <p>
                 RumeApp ofrece tres planes: <strong>Ranchero</strong> (gratis para siempre, con límites de
                 animales y personas), <strong>Ganadero</strong> y <strong>Hacienda</strong> (planes pagos,
-                con 30 días de prueba gratuita sin necesidad de tarjeta). Los precios se muestran en dólares
-                y en su equivalente aproximado en pesos colombianos; la tasa de conversión puede actualizarse
-                sin previo aviso.
+                con 30 días de prueba gratuita sin necesidad de tarjeta). Los precios se muestran en pesos
+                colombianos y se pueden pagar mes a mes o por un año completo con descuento.
               </p>
               <p className="mt-3">
                 Mientras no exista una pasarela de pago automática integrada, el cambio a un plan pago se

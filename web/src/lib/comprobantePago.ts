@@ -2,6 +2,7 @@
 
 import { getSupabase } from "./supabase";
 import type { PlanFinca } from "./types";
+import type { Periodo } from "./plans";
 
 /**
  * Datos de la cuenta a la que los clientes transfieren mientras no existe
@@ -36,6 +37,7 @@ export const CUENTA_PAGO = {
 export async function registrarSolicitudPlan(opts: {
   fincaId: string;
   planSolicitado: Extract<PlanFinca, "ganadero" | "hacienda">;
+  periodo: Periodo;
   file?: File | null;
 }): Promise<void> {
   const sb = getSupabase();
@@ -58,6 +60,7 @@ export async function registrarSolicitudPlan(opts: {
     finca_id: opts.fincaId,
     subido_por: userData.user.id,
     plan_solicitado: opts.planSolicitado,
+    periodo: opts.periodo,
     storage_path: path,
   });
   if (insertErr) throw new Error(`No se pudo registrar la solicitud: ${insertErr.message}`);

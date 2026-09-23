@@ -1,16 +1,12 @@
 import type { Finca, PlanFinca } from "./types";
 
-// Tasa usada solo para MOSTRAR el equivalente en pesos junto al precio en
-// dólares. No es una tasa de cobro real (el cobro en sí todavía no existe —
-// Fase de pagos pendiente). Actualizar a mano si el mercado se mueve mucho.
-export const USD_TO_COP = 3500;
-
 // Espejo local de plan_limits en Supabase. Si cambia allá, cambiar aquí.
 export const PLAN_LIMITS: Record<
   PlanFinca,
   {
     nombre: string;
-    precioUSD: number;
+    /** Precio mensual en pesos colombianos (0 = gratis). */
+    precioCOP: number;
     /** null = ilimitado */
     maxAnimales: number | null;
     /** null = ilimitado. Total de personas con acceso (cualquier rol). */
@@ -23,15 +19,15 @@ export const PLAN_LIMITS: Record<
   }
 > = {
   ranchero: {
-    nombre: "Ranchero", precioUSD: 0,
+    nombre: "Ranchero", precioCOP: 0,
     maxAnimales: 5, maxUsuarios: 5, maxUsuariosEditor: 1, maxFincas: 1,
   },
   ganadero: {
-    nombre: "Ganadero", precioUSD: 15,
+    nombre: "Ganadero", precioCOP: 25_000,
     maxAnimales: 50, maxUsuarios: 5, maxUsuariosEditor: null, maxFincas: 3,
   },
   hacienda: {
-    nombre: "Hacienda", precioUSD: 50,
+    nombre: "Hacienda", precioCOP: 55_000,
     maxAnimales: null, maxUsuarios: null, maxUsuariosEditor: null, maxFincas: null,
   },
 };
@@ -46,39 +42,31 @@ export function nextPlan(plan: PlanFinca): PlanFinca | null {
   return null;
 }
 
-/** COP redondeado a miles, solo para mostrar junto al precio en USD. */
-export function precioCOPAprox(precioUSD: number): number {
-  return Math.round((precioUSD * USD_TO_COP) / 1000) * 1000;
+export type Periodo = "mensual" | "anual";
+
+/** Descuento del plan anual sobre 12 meses de plan mensual. */
+export const DESCUENTO_ANUAL = 0.2;
+
+/** Lo que se paga por período (mensual o anual, este con el descuento). */
+export function precioPeriodo(plan: PlanFinca, periodo: Periodo): number {
+  const mes = PLAN_LIMITS[plan].precioCOP;
+  return periodo === "anual" ? Math.round(mes * 12 * (1 - DESCUENTO_ANUAL)) : mes;
 }
 
-// Promo de lanzamiento: % de descuento en los primeros `meses` de cualquier
-// plan pago. Se cobra a mano (pago manual), así que esto solo cambia lo que
-// se MUESTRA y el valor a transferir. Para terminar la promo: activa=false.
-export const PROMO_LANZAMIENTO = { activa: true, pct: 45, meses: 2 };
-
-/** Precio mensual en USD durante la promo (o el normal si no aplica). */
-export function precioPromoUSD(plan: PlanFinca): number {
-  const base = PLAN_LIMITS[plan].precioUSD;
-  if (!PROMO_LANZAMIENTO.activa || base === 0) return base;
-  return Math.round(base * (100 - PROMO_LANZAMIENTO.pct)) / 100;
+/** Equivalente mensual del plan anual. */
+export function precioMesAnual(plan: PlanFinca): number {
+  return Math.round(precioPeriodo(plan, "anual") / 12);
 }
 
-export function tienePromo(plan: PlanFinca): boolean {
-  return PROMO_LANZAMIENTO.activa && PLAN_LIMITS[plan].precioUSD > 0;
-}
-
-/** "8,25" / "15" — formato colombiano, decimales solo si hacen falta. */
-export function fmtUSD(n: number): string {
-  return n.toLocaleString("es-CO", {
-    minimumFractionDigits: Number.isInteger(n) ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
+/** "$25.000" */
+export function cop(n: number): string {
+  return "$" + Math.round(n).toLocaleString("es-CO");
 }
 
 export function fmtPrecio(plan: PlanFinca): string {
   const p = PLAN_LIMITS[plan];
-  if (p.precioUSD === 0) return "Gratis";
-  return `US$${p.precioUSD} · ≈$${precioCOPAprox(p.precioUSD).toLocaleString("es-CO")} COP`;
+  if (p.precioCOP === 0) return "Gratis";
+  return `${cop(p.precioCOP)} al mes`;
 }
 
 /**

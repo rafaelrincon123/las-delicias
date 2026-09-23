@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { PlanFinca } from "@/lib/types";
-import { PLAN_LIMITS, PROMO_LANZAMIENTO, USD_TO_COP, precioPromoUSD } from "@/lib/plans";
+import { PLAN_LIMITS, precioPeriodo } from "@/lib/plans";
 
 // Calculadora "¿Cuánto le cuesta no llevar el control?" de la landing.
 // Es una estimación ilustrativa: los supuestos están a la vista y el
@@ -29,12 +29,9 @@ function planPara(animales: number): PlanFinca {
   return "hacienda";
 }
 
-/** Lo que cuesta RumeApp el primer año, con la promo de lanzamiento. */
-function costoPrimerAnoCOP(plan: PlanFinca): number {
-  const full = PLAN_LIMITS[plan].precioUSD;
-  if (full === 0) return 0;
-  const meses = PROMO_LANZAMIENTO.activa ? PROMO_LANZAMIENTO.meses : 0;
-  return (meses * precioPromoUSD(plan) + (12 - meses) * full) * USD_TO_COP;
+/** Lo que cuesta RumeApp un año con el plan anual. */
+function costoAnualCOP(plan: PlanFinca): number {
+  return precioPeriodo(plan, "anual");
 }
 
 function Slider({
@@ -105,7 +102,7 @@ export default function CalculadoraPerdidas({ onLogin }: { onLogin: () => void }
     ];
     const total = lineas.reduce((s, l) => s + l.valor, 0);
     const plan = planPara(animales);
-    const costo = costoPrimerAnoCOP(plan);
+    const costo = costoAnualCOP(plan);
     return { lineas, total, plan, costo, veces: costo > 0 ? total / costo : null };
   }, [animales, valorAnimal, gastoMes, sup]);
 
@@ -256,8 +253,8 @@ export default function CalculadoraPerdidas({ onLogin }: { onLogin: () => void }
               ) : (
                 <div className="text-sm leading-relaxed">
                   Con el plan <strong>{PLAN_LIMITS[r.plan].nombre}</strong>, RumeApp le cuesta{" "}
-                  <strong>{cop(r.costo)}</strong> el primer año
-                  {PROMO_LANZAMIENTO.activa ? " (con la oferta de lanzamiento)" : ""}.
+                  <strong>{cop(r.costo)}</strong> al año con el
+                  plan anual.
                   {r.veces !== null && r.veces >= 1 && (
                     <>
                       {" "}

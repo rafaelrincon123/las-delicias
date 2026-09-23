@@ -24,7 +24,7 @@ import {
   IconSparkles,
 } from "./icons";
 import PasswordInput from "./PasswordInput";
-import PricingCards, { PromoBanner } from "./PricingCards";
+import PricingCards from "./PricingCards";
 import CalculadoraPerdidas from "./CalculadoraPerdidas";
 
 interface Props {
@@ -1104,14 +1104,11 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
           </h2>
         </div>
 
-        <div className="mb-10 md:mb-14">
-          <PromoBanner />
-        </div>
 
         <PricingCards onSelect={() => onLogin()} />
 
         <p className="text-center text-[0.7rem] font-mono uppercase tracking-widest mt-10" style={{ color: "var(--forest-3)", opacity: 0.65 }}>
-          Precios en dólares; el valor en pesos es aproximado. Pago por transferencia, Nequi o Daviplata.
+          Precios en pesos colombianos. Pago por transferencia, Nequi o Daviplata.
         </p>
       </div>
     </section>
@@ -1126,7 +1123,7 @@ function FAQ() {
   const qs = [
     {
       q: "¿Cuánto cuesta usar RumeApp?",
-      a: "Nada para arrancar. El plan Ranchero es gratis para siempre (hasta 5 animales). Los planes pagos tienen 30 días de prueba gratis y, por lanzamiento, 45% de descuento en los primeros 2 meses.",
+      a: "Nada para arrancar. El plan Ranchero es gratis para siempre (hasta 5 animales). Los planes pagos tienen 30 días de prueba gratis; pagando el año completo ahorra 20%.",
     },
     {
       q: "¿Necesito instalar la app?",

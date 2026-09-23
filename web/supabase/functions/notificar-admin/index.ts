@@ -27,6 +27,17 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
+// Espejo de PLAN_LIMITS.precioCOP y DESCUENTO_ANUAL en web/src/lib/plans.ts.
+const PRECIO_MES_COP: Record<string, number> = { ganadero: 25_000, hacienda: 55_000 };
+const DESCUENTO_ANUAL = 0.2;
+
+function valorEsperado(plan: string, periodo: string): string {
+  const mes = PRECIO_MES_COP[plan];
+  if (!mes) return "—";
+  const valor = periodo === "anual" ? Math.round(mes * 12 * (1 - DESCUENTO_ANUAL)) : mes;
+  return `$${valor.toLocaleString("es-CO")} COP ${periodo === "anual" ? "por el año" : "por el mes"}`;
+}
+
 const PLAN_NOMBRE: Record<string, string> = {
   ranchero: "Ranchero (gratis)",
   ganadero: "Ganadero",
@@ -133,7 +144,8 @@ async function correoSolicitudPago(id: string) {
       "Solicitud de cambio de plan",
       [
         ["Finca", esc(f?.nombre ?? s.finca_id)],
-        ["Plan pedido", esc(plan)],
+        ["Plan pedido", esc(`${plan} · pago ${s.periodo ?? "mensual"}`)],
+        ["Debe llegar", esc(valorEsperado(s.plan_solicitado, s.periodo ?? "mensual"))],
         ["Plan hoy", esc(f ? `${PLAN_NOMBRE[f.plan] ?? f.plan}${f.plan_pagado ? " (pagado)" : ""}` : "—")],
         ["Quién", esc(perfil?.nombre ?? "—")],
         ["Correo", email ? `<a href="mailto:${esc(email)}" style="color:#B8CE7A">${esc(email)}</a>` : "—"],

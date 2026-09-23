@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { signupWithEmail } from "@/lib/auth";
 import { crearFinca } from "@/lib/useFincaActiva";
-import { PLAN_LIMITS, PROMO_LANZAMIENTO, fmtPrecio, tienePromo } from "@/lib/plans";
+import { PLAN_LIMITS, fmtPrecio } from "@/lib/plans";
 import type { PlanFinca } from "@/lib/types";
 import { IconUser, IconLock } from "./icons";
 import PasswordInput from "./PasswordInput";
@@ -357,14 +357,6 @@ export default function SignupWizard({ onBack }: Props) {
                       <div className="text-[0.62rem] text-subtle mt-1">
                         {PLAN_LIMITS[p].maxAnimales ?? "∞"} animales
                       </div>
-                      {tienePromo(p) && (
-                        <div
-                          className="inline-block mt-1.5 text-[0.55rem] font-mono font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded"
-                          style={{ background: "var(--forest)", color: "var(--lime-bright)" }}
-                        >
-                          −{PROMO_LANZAMIENTO.pct}% × {PROMO_LANZAMIENTO.meses} meses
-                        </div>
-                      )}
                     </button>
                   ))}
                 </div>

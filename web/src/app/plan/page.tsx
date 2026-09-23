@@ -5,25 +5,23 @@ import { useDB } from "@/lib/useDB";
 import { useFincaActiva } from "@/lib/useFincaActiva";
 import {
   PLAN_LIMITS,
-  PROMO_LANZAMIENTO,
+  type Periodo,
   planLabel,
   planEfectivo,
   diasDePruebaRestantes,
   fmtPrecio,
-  precioPromoUSD,
-  precioCOPAprox,
-  tienePromo,
-  fmtUSD,
+  cop,
+  precioPeriodo,
 } from "@/lib/plans";
 import { CUENTA_PAGO, registrarSolicitudPlan } from "@/lib/comprobantePago";
 import type { PlanFinca } from "@/lib/types";
 import Modal from "@/components/Modal";
-import PricingCards, { PromoBanner } from "@/components/PricingCards";
+import PricingCards from "@/components/PricingCards";
 
 export default function PlanPage() {
   const { db, ready } = useDB();
   const { activa } = useFincaActiva();
-  const [pagando, setPagando] = useState<PlanFinca | null>(null);
+  const [pagando, setPagando] = useState<{ plan: PlanFinca; periodo: Periodo } | null>(null);
 
   const usage = useMemo(() => {
     if (!db) return null;
@@ -109,12 +107,10 @@ export default function PlanPage() {
         </div>
       </section>
 
-      <PromoBanner />
-
       <PricingCards
         planActual={planActual}
-        onSelect={(p) => {
-          if (PLAN_LIMITS[p].precioUSD > 0) return setPagando(p);
+        onSelect={(p, periodo) => {
+          if (PLAN_LIMITS[p].precioCOP > 0) return setPagando({ plan: p, periodo });
           // Bajar al plan gratis no requiere pago: se pide por correo.
           const asunto = encodeURIComponent(`Cambiar a plan Ranchero — ${activa.nombre}`);
           const cuerpo = encodeURIComponent(
@@ -126,13 +122,13 @@ export default function PlanPage() {
 
       <p className="text-[0.7rem] text-subtle text-center">
         Los pagos automáticos llegarán próximamente. Por ahora los cambios se procesan
-        manualmente: transfieres, subes el comprobante y activamos tu plan. Precios en pesos
-        son un valor aproximado de referencia.
+        manualmente: transfieres, subes el comprobante y activamos tu plan.
       </p>
 
       {pagando && (
         <PagoManualModal
-          destino={pagando}
+          destino={pagando.plan}
+          periodo={pagando.periodo}
           fincaId={activa.id}
           onClose={() => setPagando(null)}
         />
@@ -143,10 +139,12 @@ export default function PlanPage() {
 
 function PagoManualModal({
   destino,
+  periodo,
   fincaId,
   onClose,
 }: {
   destino: PlanFinca;
+  periodo: Periodo;
   fincaId: string;
   onClose: () => void;
 }) {
@@ -160,7 +158,7 @@ function PagoManualModal({
     if (destino !== "ganadero" && destino !== "hacienda") return;
     setEnviando(true);
     try {
-      await registrarSolicitudPlan({ fincaId, planSolicitado: destino, file });
+      await registrarSolicitudPlan({ fincaId, planSolicitado: destino, periodo, file });
       setEnviado(true);
     } catch (e) {
       setError((e as Error).message);
@@ -174,7 +172,8 @@ function PagoManualModal({
       <Modal open onClose={onClose} title="Solicitud enviada" eyebrow="Listo">
         <div className="space-y-4">
           <p className="text-sm">
-            Recibimos tu solicitud para el plan <strong>{planLabel(destino)}</strong>
+            Recibimos tu solicitud para el plan <strong>{planLabel(destino)}</strong>{" "}
+            ({periodo === "anual" ? "pago anual" : "pago mensual"})
             {file ? " con tu comprobante" : ""}. Te confirmamos por correo o WhatsApp en cuanto
             revisemos el pago, y tu plan queda activo.
           </p>
@@ -209,33 +208,21 @@ function PagoManualModal({
           plan en cuanto revisemos el pago.
         </p>
 
-        {PLAN_LIMITS[destino].precioUSD > 0 && (
+        {PLAN_LIMITS[destino].precioCOP > 0 && (
           <div
-            className="rounded-2xl p-4 flex items-center gap-4"
+            className="rounded-2xl p-4"
             style={{ background: "var(--forest)", color: "var(--sand)" }}
           >
-            <div className="flex-1 min-w-0">
-              <div
-                className="text-[0.62rem] font-mono uppercase tracking-[0.14em]"
-                style={{ color: "var(--lime-bright)" }}
-              >
-                Valor a transferir por mes
-              </div>
-              <div className="text-2xl font-bold mt-0.5">
-                ≈ ${precioCOPAprox(precioPromoUSD(destino)).toLocaleString("es-CO")} COP
-              </div>
-              <div className="text-xs opacity-75">
-                US${fmtUSD(precioPromoUSD(destino))}
-                {tienePromo(destino) &&
-                  ` · ${PROMO_LANZAMIENTO.pct}% de descuento los primeros ${PROMO_LANZAMIENTO.meses} meses. Luego US$${fmtUSD(PLAN_LIMITS[destino].precioUSD)} (≈ $${precioCOPAprox(PLAN_LIMITS[destino].precioUSD).toLocaleString("es-CO")} COP).`}
-              </div>
+            <div
+              className="text-[0.62rem] font-mono uppercase tracking-[0.14em]"
+              style={{ color: "var(--lime-bright)" }}
+            >
+              {periodo === "anual" ? "Valor a transferir por el año" : "Valor a transferir por mes"}
             </div>
-            {tienePromo(destino) && (
-              <div
-                className="shrink-0 rounded-xl px-3 py-1.5 text-lg font-bold"
-                style={{ background: "var(--lime)", color: "var(--forest)" }}
-              >
-                −{PROMO_LANZAMIENTO.pct}%
+            <div className="text-2xl font-bold mt-0.5">{cop(precioPeriodo(destino, periodo))} COP</div>
+            {periodo === "anual" && (
+              <div className="text-xs opacity-75">
+                En vez de {cop(PLAN_LIMITS[destino].precioCOP * 12)} pagando mes a mes.
               </div>
             )}
           </div>
