@@ -13,7 +13,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://las-delicias-mddw.vercel.app"),
+  metadataBase: new URL("https://rumeapp.vercel.app"),
   title: "RumeApp · Gestión ganadera",
   description: "Registra tu finca y controla tu hato: animales, sanidad, gastos y más.",
   openGraph: {
