@@ -25,6 +25,20 @@
   --accent-soft: rgba(209, 146, 85, 0.12);
   --danger: #D97757;
   --success: #7CAF6D;
+
+  /* Paleta de marca (verde bosque + lime) usada en la landing y en
+     paginas de la app (plan/equipo/socios). Valores fijos, no varian
+     por tema — antes solo vivian dentro de .landing-root en
+     LandingPage.tsx, por eso cualquier componente fuera de esa
+     seccion (todo lo que esta detras de login) los resolvia a nada:
+     "background: var(--forest)" quedaba transparente con texto
+     blanco encima, practicamente invisible. */
+  --forest: #14261A;
+  --forest-2: #22402A;
+  --forest-3: #345A3E;
+  --lime: #B8CE7A;
+  --lime-bright: #C8DE86;
+  --sand: #EFE8D8;
 }
 
 :root[data-theme="light"] {
