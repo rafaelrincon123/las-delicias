@@ -185,6 +185,10 @@ export interface Finca {
   plan: PlanFinca;
   timezone: string;
   createdAt: string;
+  /** Fin de la prueba gratis de 30 días (null = sin prueba activa/nunca tuvo). */
+  trialEndsAt: string | null;
+  /** true cuando Rafael confirmó un pago real (manual, hasta que exista Stripe/Wompi/PayU). */
+  planPagado: boolean;
 }
 
 export type RolFinca = "owner" | "admin" | "operario" | "viewer";

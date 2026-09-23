@@ -3,35 +3,43 @@
 import { useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { useFincaActiva } from "@/lib/useFincaActiva";
-import { PLAN_LIMITS, planLabel } from "@/lib/plans";
+import { PLAN_LIMITS, planLabel, planEfectivo, diasDePruebaRestantes, fmtPrecio } from "@/lib/plans";
 import type { PlanFinca } from "@/lib/types";
 
 const ORDER: PlanFinca[] = ["ranchero", "ganadero", "hacienda"];
 
-const FEATURES: Record<PlanFinca, string[]> = {
+interface Feature {
+  texto: string;
+  proximamente?: boolean;
+}
+
+const FEATURES: Record<PlanFinca, Feature[]> = {
   ranchero: [
-    "Hasta 15 animales",
-    "1 usuario",
-    "Hato, sanidad, gastos y tareas",
-    "1 finca",
-    "Soporte por email",
+    { texto: "Hasta 5 animales" },
+    { texto: "1 persona con permiso de edición (el owner)" },
+    { texto: "Hasta 4 personas más en modo solo lectura" },
+    { texto: "Hato, sanidad, gastos y tareas" },
+    { texto: "1 finca" },
+    { texto: "Soporte por email" },
   ],
   ganadero: [
-    "Hasta 200 animales",
-    "5 usuarios",
-    "Todo lo del plan Ranchero",
-    "Reportes exportables (Excel/PDF)",
-    "Alertas por WhatsApp",
-    "Soporte prioritario",
+    { texto: "Hasta 50 animales" },
+    { texto: "Hasta 5 personas con acceso (cualquier rol)" },
+    { texto: "Hasta 3 fincas" },
+    { texto: "Todo lo del plan Ranchero" },
+    { texto: "Reportes en PDF de cada sección" },
+    { texto: "Alertas por WhatsApp", proximamente: true },
+    { texto: "Soporte prioritario" },
   ],
   hacienda: [
-    "Animales ilimitados",
-    "Usuarios ilimitados",
-    "Múltiples fincas",
-    "Todo lo del plan Ganadero",
-    "API para integraciones",
-    "Backups automáticos diarios",
-    "Soporte dedicado por WhatsApp",
+    { texto: "Animales ilimitados" },
+    { texto: "Personas con acceso ilimitadas" },
+    { texto: "Fincas ilimitadas" },
+    { texto: "Todo lo del plan Ganadero" },
+    { texto: "Reportes en PDF de cada sección" },
+    { texto: "Alertas por WhatsApp", proximamente: true },
+    { texto: "App móvil (Android / iOS)", proximamente: true },
+    { texto: "Soporte dedicado" },
   ],
 };
 
@@ -50,8 +58,11 @@ export default function PlanPage() {
 
   if (!ready || !activa) return <div className="text-muted">Cargando…</div>;
 
-  const planActual = activa.plan;
+  const planActual = planEfectivo(activa);
   const limits = PLAN_LIMITS[planActual];
+  const diasPrueba = diasDePruebaRestantes(activa);
+  const enPrueba = diasPrueba > 0 && activa.plan === planActual;
+  const pruebaVencida = !activa.planPagado && !enPrueba && activa.plan !== "ranchero";
 
   function abrirUpgrade(destino: PlanFinca) {
     setPidiendo(destino);
@@ -63,15 +74,8 @@ export default function PlanPage() {
         `Estoy usando actualmente el plan ${planLabel(planActual)}.\n\n` +
         `Por favor cuéntame cómo procedo con el pago.\n\nGracias.`
     );
-    const waCuerpo = encodeURIComponent(
-      `Hola, quiero upgrade al plan ${planLabel(destino)} para mi finca "${activa!.nombre}".`
-    );
     const mailto = `mailto:rafael.rincong@gmail.com?subject=${emailAsunto}&body=${emailCuerpo}`;
-    const wa = `https://wa.me/573000000000?text=${waCuerpo}`; // TODO: número real cuando lo tengas
-    // Abre email por default. El botón alternativo abre WhatsApp.
     window.location.href = mailto;
-    // Guardamos en state para mostrar CTA de WA también
-    void wa;
   }
 
   return (
@@ -82,6 +86,26 @@ export default function PlanPage() {
           Elige el plan que se ajusta al tamaño de tu operación. Puedes cambiar cuando quieras.
         </p>
       </header>
+
+      {enPrueba && (
+        <div
+          className="rounded-2xl px-4 py-3 text-sm"
+          style={{ background: "rgba(184, 206, 122, 0.2)", border: "1px solid rgba(20,38,26,0.15)" }}
+        >
+          Estás probando el plan <strong>{planLabel(activa.plan)}</strong> gratis — quedan{" "}
+          <strong>{diasPrueba} día{diasPrueba === 1 ? "" : "s"}</strong>. Cuando termine, tu finca
+          vuelve al plan Ranchero salvo que la cambies a un plan pago.
+        </div>
+      )}
+      {pruebaVencida && (
+        <div
+          className="rounded-2xl px-4 py-3 text-sm"
+          style={{ background: "rgba(200, 60, 60, 0.10)", border: "1px solid rgba(200, 60, 60, 0.30)" }}
+        >
+          Tu prueba de 30 días terminó. Ahora estás en el plan <strong>Ranchero</strong>. Elige un
+          plan abajo para seguir con más cupo.
+        </div>
+      )}
 
       {/* Estado actual */}
       <section
@@ -110,15 +134,15 @@ export default function PlanPage() {
                   <strong>
                     {usage.propietarios} / {limits.maxUsuarios}
                   </strong>{" "}
-                  usuarios
+                  personas
                 </>
               )}
               .
             </div>
           )}
         </div>
-        <div className="text-3xl font-bold" style={{ color: "var(--lime-bright)" }}>
-          {formatPrecio(limits.precioCOP)}
+        <div className="text-2xl font-bold text-right" style={{ color: "var(--lime-bright)" }}>
+          {fmtPrecio(planActual)}
         </div>
       </section>
 
@@ -151,15 +175,22 @@ export default function PlanPage() {
               <div className="text-xl font-bold uppercase tracking-tight mt-1" style={{ color: "var(--forest)" }}>
                 {info.nombre}
               </div>
-              <div className="mt-3 text-3xl font-bold" style={{ color: "var(--forest)" }}>
-                {formatPrecio(info.precioCOP)}
-                {info.precioCOP > 0 && <span className="text-sm font-normal text-muted"> / mes</span>}
+              <div className="mt-3 text-2xl font-bold" style={{ color: "var(--forest)" }}>
+                {fmtPrecio(p)}
+                {info.precioUSD > 0 && <span className="text-sm font-normal text-muted"> /mes</span>}
               </div>
               <ul className="mt-4 space-y-1.5 text-sm flex-1">
                 {FEATURES[p].map((f) => (
-                  <li key={f} className="flex gap-2">
+                  <li key={f.texto} className="flex gap-2">
                     <span aria-hidden style={{ color: "var(--forest-3)" }}>✓</span>
-                    <span>{f}</span>
+                    <span className={f.proximamente ? "text-muted" : undefined}>
+                      {f.texto}
+                      {f.proximamente && (
+                        <span className="text-[0.62rem] font-mono uppercase tracking-widest ml-1.5 text-accent">
+                          Próximamente
+                        </span>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -214,14 +245,9 @@ export default function PlanPage() {
       )}
 
       <p className="text-[0.7rem] text-subtle text-center">
-        Los pagos automáticos con tarjeta y PSE llegarán próximamente. Por ahora los cambios se
-        procesan manualmente por email.
+        Los pagos automáticos llegarán próximamente. Por ahora los cambios se procesan
+        manualmente por email. Precios en pesos son un valor aproximado de referencia.
       </p>
     </div>
   );
-}
-
-function formatPrecio(cop: number): string {
-  if (cop === 0) return "Gratis";
-  return `$${cop.toLocaleString("es-CO")} COP`;
 }

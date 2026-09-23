@@ -15,7 +15,7 @@ import {
   setMiembroActivo,
   generarPasswordTemporal,
 } from "@/lib/equipo";
-import { PLAN_LIMITS } from "@/lib/plans";
+import { PLAN_LIMITS, planEfectivo } from "@/lib/plans";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import { IconUser } from "@/components/icons";
@@ -56,7 +56,8 @@ export default function EquipoPage() {
   const puedoGestionar = esOwner || miMiembro?.rol === "admin";
 
   const activos = miembros.filter((m) => m.activo);
-  const limit = activa ? PLAN_LIMITS[activa.plan].maxUsuarios : null;
+  const limit = activa ? PLAN_LIMITS[planEfectivo(activa)].maxUsuarios : null;
+  const limitEditor = activa ? PLAN_LIMITS[planEfectivo(activa)].maxUsuariosEditor : null;
 
   if (!activa) return <div className="text-muted">Cargando…</div>;
 
@@ -83,6 +84,12 @@ export default function EquipoPage() {
         {!puedoGestionar && (
           <p className="text-xs text-muted mt-2">
             Solo el owner o un admin de la finca pueden agregar o gestionar empleados.
+          </p>
+        )}
+        {limitEditor !== null && (
+          <p className="text-xs text-muted mt-2">
+            Tu plan solo permite {limitEditor} persona con permiso de edición (el owner). Las
+            demás deben quedar en &quot;Solo lectura&quot;.
           </p>
         )}
         {err && (

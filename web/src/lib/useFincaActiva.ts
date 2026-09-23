@@ -16,6 +16,8 @@ interface RowFinca {
   plan: PlanFinca;
   timezone: string;
   created_at: string;
+  trial_ends_at: string | null;
+  plan_pagado: boolean;
 }
 
 function fromRow(row: RowFinca): Finca {
@@ -26,6 +28,8 @@ function fromRow(row: RowFinca): Finca {
     plan: row.plan,
     timezone: row.timezone,
     createdAt: row.created_at,
+    trialEndsAt: row.trial_ends_at,
+    planPagado: row.plan_pagado,
   };
 }
 
@@ -44,7 +48,7 @@ async function fetchFincas(): Promise<Finca[]> {
   if (!sessionData.session) return [];
   const { data, error } = await sb
     .from("fincas")
-    .select("id, nombre, owner_user_id, plan, timezone, created_at")
+    .select("id, nombre, owner_user_id, plan, timezone, created_at, trial_ends_at, plan_pagado")
     .order("created_at", { ascending: true });
   if (error) {
     console.error("[useFincaActiva] fetch fincas", error);
@@ -171,6 +175,8 @@ export async function crearFinca(opts: {
   departamento?: string | null;
   ciudad?: string | null;
   referidoVia?: string | null;
+  /** Plan que el usuario elige probar gratis 30 días. Default: ranchero. */
+  planElegido?: PlanFinca;
 }): Promise<Finca> {
   const sb = getSupabase();
   const { data, error } = await sb.rpc("crear_finca", {
@@ -182,6 +188,7 @@ export async function crearFinca(opts: {
     p_departamento: opts.departamento ?? null,
     p_ciudad: opts.ciudad ?? null,
     p_referido_via: opts.referidoVia ?? null,
+    p_plan_elegido: opts.planElegido ?? "ranchero",
   });
   if (error) throw new Error(error.message);
   if (!data) throw new Error("La finca no fue creada");

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PLAN_LIMITS, usageStatus, nextPlan, planLabel } from "@/lib/plans";
+import { PLAN_LIMITS, usageStatus, nextPlan, planLabel, planEfectivo } from "@/lib/plans";
 import { useFincaActiva } from "@/lib/useFincaActiva";
 
 interface Props {
@@ -21,13 +21,14 @@ export default function PlanUsageBanner({ resource, used, className = "" }: Prop
   const { activa } = useFincaActiva();
   if (!activa) return null;
 
-  const limits = PLAN_LIMITS[activa.plan];
+  const plan = planEfectivo(activa);
+  const limits = PLAN_LIMITS[plan];
   const limit = resource === "animales" ? limits.maxAnimales : limits.maxUsuarios;
   const status = usageStatus(used, limit);
 
   if (limit === null || !status.nearLimit) return null;
 
-  const next = nextPlan(activa.plan);
+  const next = nextPlan(plan);
   const noun = resource === "animales" ? "animales" : "usuarios";
 
   return (
@@ -41,8 +42,8 @@ export default function PlanUsageBanner({ resource, used, className = "" }: Prop
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold" style={{ color: "var(--forest)" }}>
           {status.atLimit
-            ? `Llegaste al tope del plan ${planLabel(activa.plan)}`
-            : `Vas ${status.used}/${limit} ${noun} en tu plan ${planLabel(activa.plan)}`}
+            ? `Llegaste al tope del plan ${planLabel(plan)}`
+            : `Vas ${status.used}/${limit} ${noun} en tu plan ${planLabel(plan)}`}
         </div>
         {next && (
           <div className="text-xs mt-0.5" style={{ color: "rgba(20,38,26,0.72)" }}>

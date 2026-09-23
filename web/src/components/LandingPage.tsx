@@ -1079,11 +1079,11 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
     {
       name: "Ranchero",
       price: "0",
-      unit: "COP · siempre",
+      unit: "Para siempre",
       desc: "Para probar con una finca pequeña.",
       features: [
-        "Hasta 15 animales",
-        "1 usuario",
+        "Hasta 5 animales",
+        "1 editor + hasta 4 en solo lectura",
         "Sanidad, gastos y tareas",
         "1 finca",
       ],
@@ -1091,30 +1091,30 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
     },
     {
       name: "Ganadero",
-      price: "59.000",
-      unit: "COP / mes",
+      price: "15",
+      unit: "USD / mes · ≈$52.500 COP",
       desc: "Para fincas familiares con socios.",
       features: [
-        "Hasta 200 animales",
-        "5 usuarios",
-        "Reparto entre socios",
-        "Alertas y reportes",
+        "Hasta 50 animales",
+        "5 personas con acceso",
+        "Hasta 3 fincas",
+        "Reportes en PDF",
       ],
-      cta: "Empezar prueba",
+      cta: "Probar 30 días gratis",
       featured: true,
     },
     {
       name: "Hacienda",
-      price: "149.000",
-      unit: "COP / mes",
+      price: "50",
+      unit: "USD / mes · ≈$175.000 COP",
       desc: "Sin límites, para grupos de fincas.",
       features: [
         "Animales ilimitados",
-        "Usuarios ilimitados",
-        "Múltiples fincas",
+        "Personas ilimitadas",
+        "Fincas ilimitadas",
         "Soporte prioritario",
       ],
-      cta: "Hablar con ventas",
+      cta: "Probar 30 días gratis",
     },
   ];
   return (
@@ -1157,7 +1157,9 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
               </div>
               <h3 className="uppercase font-bold text-2xl tracking-tight">{t.name}</h3>
               <div className="mt-6 flex items-baseline gap-2">
-                <span className="text-5xl font-bold tracking-tight">${t.price}</span>
+                <span className="text-5xl font-bold tracking-tight">
+                  {t.price === "0" ? "Gratis" : `US$${t.price}`}
+                </span>
               </div>
               <div className="text-[0.75rem] font-mono uppercase tracking-widest mt-2" style={{ opacity: 0.6 }}>
                 {t.unit}
@@ -1191,7 +1193,7 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
         </div>
 
         <p className="text-center text-[0.7rem] font-mono uppercase tracking-widest mt-8" style={{ color: "var(--forest-3)", opacity: 0.65 }}>
-          Los planes pagos entran en producción pronto. Por ahora todo es gratuito.
+          Pruebe Ganadero o Hacienda 30 días gratis. El cobro automático llega pronto — por ahora, sin tarjeta.
         </p>
       </div>
     </section>
@@ -1206,7 +1208,7 @@ function FAQ() {
   const qs = [
     {
       q: "¿Cuánto cuesta usar RumeApp?",
-      a: "Nada para arrancar. El plan Ranchero es gratis para siempre (hasta 15 animales). Los planes pagos son para operaciones más grandes.",
+      a: "Nada para arrancar. El plan Ranchero es gratis para siempre (hasta 5 animales). Los planes pagos tienen 30 días de prueba gratis.",
     },
     {
       q: "¿Necesito instalar la app?",

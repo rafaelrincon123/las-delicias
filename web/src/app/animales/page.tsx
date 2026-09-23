@@ -18,7 +18,7 @@ import FormRow from "@/components/FormRow";
 import PhotoInput from "@/components/PhotoInput";
 import HeroStat from "@/components/HeroStat";
 import PlanUsageBanner from "@/components/PlanUsageBanner";
-import { PLAN_LIMITS, planLabel } from "@/lib/plans";
+import { PLAN_LIMITS, planLabel, planEfectivo } from "@/lib/plans";
 import { useFincaActiva } from "@/lib/useFincaActiva";
 
 const ESTADOS: { value: EstadoAnimal; label: string }[] = [
@@ -778,10 +778,11 @@ function AnimalForm({
     }
     // Bloqueo por plan solo al AGREGAR (edición no chequea porque no cambia count).
     if (!initial && db && activa) {
-      const limit = PLAN_LIMITS[activa.plan].maxAnimales;
+      const plan = planEfectivo(activa);
+      const limit = PLAN_LIMITS[plan].maxAnimales;
       if (limit !== null && db.animales.length >= limit) {
         alert(
-          `Alcanzaste el límite de ${limit} animales del plan ${planLabel(activa.plan)}. Ve a la sección Plan para cambiar de plan.`
+          `Alcanzaste el límite de ${limit} animales del plan ${planLabel(plan)}. Ve a la sección Plan para cambiar de plan.`
         );
         return;
       }

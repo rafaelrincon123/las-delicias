@@ -4,7 +4,18 @@ import { useState } from "react";
 import Image from "next/image";
 import { signupWithEmail } from "@/lib/auth";
 import { crearFinca } from "@/lib/useFincaActiva";
+import { PLAN_LIMITS, fmtPrecio } from "@/lib/plans";
+import type { PlanFinca } from "@/lib/types";
 import { IconUser, IconLock } from "./icons";
+
+const PLAN_ORDER: PlanFinca[] = ["ranchero", "ganadero", "hacienda"];
+
+function planRecomendado(n: number | null): PlanFinca {
+  if (n === null || n <= 0) return "ranchero";
+  if (n > PLAN_LIMITS.ganadero.maxAnimales!) return "hacienda";
+  if (n > PLAN_LIMITS.ranchero.maxAnimales!) return "ganadero";
+  return "ranchero";
+}
 
 // Departamentos de Colombia (orden alfabético, incluye Bogotá D.C.)
 const DEPARTAMENTOS_CO = [
@@ -48,6 +59,7 @@ export interface PendingSignup {
   nombreFinca: string;
   tamanoAprox: number | null;
   timezone: string;
+  planElegido: PlanFinca;
 }
 
 interface Props {
@@ -69,6 +81,8 @@ export default function SignupWizard({ onBack }: Props) {
   const [nombreFinca, setNombreFinca] = useState("");
   const [tamanoAprox, setTamanoAprox] = useState<string>("");
   const [timezone, setTimezone] = useState("America/Bogota");
+  const [plan, setPlan] = useState<PlanFinca>("ranchero");
+  const [planTocadoAMano, setPlanTocadoAMano] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -128,6 +142,7 @@ export default function SignupWizard({ onBack }: Props) {
         nombreFinca: nombreFinca.trim(),
         tamanoAprox: tamanoNum,
         timezone,
+        planElegido: plan,
       };
 
       if (signup.needsConfirmation) {
@@ -313,12 +328,51 @@ export default function SignupWizard({ onBack }: Props) {
                   type="number"
                   inputMode="numeric"
                   value={tamanoAprox}
-                  onChange={(e) => setTamanoAprox(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setTamanoAprox(v);
+                    if (!planTocadoAMano) {
+                      setPlan(planRecomendado(v.trim() ? Number(v) : null));
+                    }
+                  }}
                   placeholder="Ej. 25"
                   min={0}
                   max={100000}
                 />
-                <PlanRecomendado n={tamanoAprox.trim() ? Number(tamanoAprox) : null} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="eyebrow">Elige un plan para probar 30 días gratis</span>
+                <div className="grid grid-cols-3 gap-2 mt-1">
+                  {PLAN_ORDER.map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => {
+                        setPlan(p);
+                        setPlanTocadoAMano(true);
+                      }}
+                      className="rounded-xl border p-3 text-left transition"
+                      style={{
+                        borderColor: plan === p ? "var(--forest)" : "var(--rule)",
+                        borderWidth: plan === p ? 2 : 1,
+                        background: plan === p ? "var(--primary-soft)" : "transparent",
+                      }}
+                    >
+                      <div className="text-sm font-bold" style={{ color: "var(--forest)" }}>
+                        {PLAN_LIMITS[p].nombre}
+                      </div>
+                      <div className="text-[0.68rem] text-muted mt-0.5">{fmtPrecio(p)}</div>
+                      <div className="text-[0.62rem] text-subtle mt-1">
+                        {PLAN_LIMITS[p].maxAnimales ?? "∞"} animales
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <span className="text-[0.68rem] text-subtle mt-1">
+                  {plan === "ranchero"
+                    ? "El plan Ranchero es gratis para siempre — sin límite de tiempo."
+                    : "30 días gratis. Después, tu finca sigue con el plan Ranchero salvo que pagues."}
+                </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="eyebrow">Zona horaria</span>
@@ -393,30 +447,13 @@ export async function completarCreacionFinca(p: PendingSignup): Promise<void> {
     departamento: p.departamento || null,
     ciudad: p.ciudad || null,
     referidoVia: p.referidoVia || null,
+    planElegido: p.planElegido ?? "ranchero",
   });
   try {
     localStorage.removeItem(PENDING_SIGNUP_KEY);
   } catch {
     /* ignore */
   }
-}
-
-function PlanRecomendado({ n }: { n: number | null }) {
-  if (n === null || n <= 0) {
-    return (
-      <span className="text-[0.68rem] text-subtle">
-        Nos ayuda a recomendarte el plan adecuado.
-      </span>
-    );
-  }
-  let plan = "Ranchero", detalle = "Gratis, hasta 15 animales.";
-  if (n > 15) { plan = "Ganadero"; detalle = "$59.000 COP/mes, hasta 200 animales."; }
-  if (n > 200) { plan = "Hacienda"; detalle = "$149.000 COP/mes, sin límite."; }
-  return (
-    <span className="text-[0.72rem] text-accent mt-1">
-      Plan recomendado: <strong>{plan}</strong> — {detalle}
-    </span>
-  );
 }
 
 function traducirError(e: string): string {
