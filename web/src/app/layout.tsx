@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     siteName: "RumeApp",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "RumeApp — Gestión ganadera",
     description: "Registra tu finca y controla tu hato.",
   },
