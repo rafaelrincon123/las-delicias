@@ -105,6 +105,7 @@ export default function PrivacidadPage() {
                 <li><strong>Supabase</strong> — base de datos, autenticación y almacenamiento de archivos.</li>
                 <li><strong>Vercel</strong> — hosting de la aplicación web.</li>
                 <li><strong>Resend</strong> — envío de correos transaccionales (confirmación, recuperación de contraseña).</li>
+                <li><strong>Meta (Facebook e Instagram)</strong> — medición de nuestros anuncios mediante el píxel de Meta (ver sección 10).</li>
               </ul>
               <p className="mt-3">
                 No compartimos tus datos con terceros para fines comerciales propios de ellos.
@@ -160,7 +161,7 @@ export default function PrivacidadPage() {
 
             <Section n="9" title="Transferencia internacional de datos">
               <p>
-                Nuestros proveedores de infraestructura (Supabase, Vercel, Resend) pueden alojar o procesar
+                Nuestros proveedores (Supabase, Vercel, Resend y Meta) pueden alojar o procesar
                 datos en servidores fuera de Colombia. En todos los casos exigimos que estos proveedores
                 mantengan estándares de seguridad adecuados para proteger tu información.
               </p>
@@ -169,8 +170,13 @@ export default function PrivacidadPage() {
             <Section n="10" title="Cookies y almacenamiento local">
               <p>
                 RumeApp usa almacenamiento local del navegador (localStorage) para recordar tu sesión y
-                algunas preferencias (como la finca activa), y no usa cookies de rastreo publicitario de
-                terceros.
+                algunas preferencias (como la finca activa). Además usamos el píxel de Meta, que guarda
+                cookies para saber qué anuncios de Facebook e Instagram llevan a la gente a registrarse y
+                así mostrarlos mejor. Al píxel solo le enviamos qué pasos se completan (por ejemplo,
+                &quot;creó su cuenta&quot; o &quot;empezó una prueba&quot;), nunca tu nombre, correo,
+                teléfono ni los datos de tu finca. También medimos visitas de forma anónima con Vercel
+                Analytics, que no usa cookies. Puedes bloquear las cookies de terceros desde la
+                configuración de tu navegador o desde las preferencias de anuncios de tu cuenta de Meta.
               </p>
             </Section>
 

@@ -2,7 +2,8 @@
 
 import { getSupabase } from "./supabase";
 import type { PlanFinca } from "./types";
-import type { Periodo } from "./plans";
+import { type Periodo, precioPeriodo } from "./plans";
+import { trackPixel } from "./pixel";
 
 /**
  * Datos de la cuenta a la que los clientes transfieren mientras no existe
@@ -64,4 +65,9 @@ export async function registrarSolicitudPlan(opts: {
     storage_path: path,
   });
   if (insertErr) throw new Error(`No se pudo registrar la solicitud: ${insertErr.message}`);
+  trackPixel("InitiateCheckout", {
+    value: precioPeriodo(opts.planSolicitado, opts.periodo),
+    currency: "COP",
+    content_name: `${opts.planSolicitado} ${opts.periodo}`,
+  });
 }

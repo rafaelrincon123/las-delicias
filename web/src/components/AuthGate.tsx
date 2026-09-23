@@ -14,6 +14,7 @@ import {
 import { IconLock, IconUser } from "./icons";
 import OnboardingWizard from "./OnboardingWizard";
 import LandingPage from "./LandingPage";
+import { trackPixel } from "@/lib/pixel";
 import SignupWizard, {
   PENDING_SIGNUP_KEY,
   PendingSignup,
@@ -95,7 +96,10 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     return (
       <LoginScreen
         onBackToLanding={canGoBack ? () => setShowLogin(false) : undefined}
-        onGoSignup={() => setShowSignup(true)}
+        onGoSignup={() => {
+          trackPixel("Lead");
+          setShowSignup(true);
+        }}
       />
     );
   }

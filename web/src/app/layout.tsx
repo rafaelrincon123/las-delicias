@@ -5,6 +5,7 @@ import "./globals.css";
 import NavShell from "@/components/NavShell";
 import AuthGate from "@/components/AuthGate";
 import ErrorReporter from "@/components/ErrorReporter";
+import MetaPixel from "@/components/MetaPixel";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -58,6 +59,7 @@ export default function RootLayout({
           <NavShell>{children}</NavShell>
         </AuthGate>
         <ErrorReporter />
+        <MetaPixel />
         <Analytics />
         <SpeedInsights />
       </body>

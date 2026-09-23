@@ -3,6 +3,7 @@
 import { Propietario } from "./types";
 import { getSupabase } from "./supabase";
 import { getCachedDB } from "./db";
+import { trackPixel } from "./pixel";
 
 const AUTH_EVENT = "auth:changed";
 export const AUTH_EVENT_NAME = AUTH_EVENT;
@@ -50,6 +51,7 @@ export async function signupWithEmail(
   });
   if (error) return { ok: false, error: error.message };
   emit();
+  trackPixel("CompleteRegistration");
   const needsConfirmation = !data.session;
   return { ok: true, needsConfirmation };
 }
