@@ -24,6 +24,7 @@ import {
   IconSparkles,
 } from "./icons";
 import PasswordInput from "./PasswordInput";
+import PricingCards, { PromoBanner } from "./PricingCards";
 
 interface Props {
   onLogin: () => void;
@@ -1077,52 +1078,10 @@ function ThreePillars() {
 // ---------------------------------------------------------------------------
 function Pricing({ onLogin }: { onLogin: () => void }) {
   const ref = useReveal<HTMLDivElement>();
-  const tiers = [
-    {
-      name: "Ranchero",
-      price: "0",
-      unit: "Para siempre",
-      desc: "Para probar con una finca pequeña.",
-      features: [
-        "Hasta 5 animales",
-        "1 editor + hasta 4 en solo lectura",
-        "Sanidad, gastos y tareas",
-        "1 finca",
-      ],
-      cta: "Empezar gratis",
-    },
-    {
-      name: "Ganadero",
-      price: "15",
-      unit: "USD / mes · ≈$52.500 COP",
-      desc: "Para fincas familiares con socios.",
-      features: [
-        "Hasta 50 animales",
-        "5 personas con acceso",
-        "Hasta 3 fincas",
-        "Reportes en PDF",
-      ],
-      cta: "Probar 30 días gratis",
-      featured: true,
-    },
-    {
-      name: "Hacienda",
-      price: "50",
-      unit: "USD / mes · ≈$175.000 COP",
-      desc: "Sin límites, para grupos de fincas.",
-      features: [
-        "Animales ilimitados",
-        "Personas ilimitadas",
-        "Fincas ilimitadas",
-        "Soporte prioritario",
-      ],
-      cta: "Probar 30 días gratis",
-    },
-  ];
   return (
     <section id="precios" className="relative py-24 md:py-32" style={{ background: "var(--sand)" }}>
       <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6">
-        <div className="text-center mb-14 md:mb-20">
+        <div className="text-center mb-10 md:mb-12">
           <h2
             className="display-lg uppercase"
             style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", color: "var(--forest)" }}
@@ -1132,70 +1091,14 @@ function Pricing({ onLogin }: { onLogin: () => void }) {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4 md:gap-5 items-stretch">
-          {tiers.map((t) => (
-            <div
-              key={t.name}
-              className="rounded-3xl p-8 flex flex-col relative"
-              style={{
-                background: t.featured ? "var(--forest)" : "white",
-                color: t.featured ? "white" : "var(--forest)",
-                border: t.featured ? "2px solid var(--lime)" : "2px solid rgba(20,38,26,0.08)",
-                boxShadow: t.featured
-                  ? "0 30px 60px -20px rgba(20, 38, 26, 0.35)"
-                  : "0 10px 30px -12px rgba(20, 38, 26, 0.10)",
-              }}
-            >
-              {t.featured && (
-                <div
-                  className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[0.62rem] font-mono uppercase tracking-[0.14em] font-semibold"
-                  style={{ background: "var(--lime)", color: "var(--forest)" }}
-                >
-                  Más popular
-                </div>
-              )}
-              <div className="text-[0.62rem] font-mono uppercase tracking-[0.14em] mb-3" style={{ opacity: 0.7 }}>
-                Plan
-              </div>
-              <h3 className="uppercase font-bold text-2xl tracking-tight">{t.name}</h3>
-              <div className="mt-6 flex items-baseline gap-2">
-                <span className="text-5xl font-bold tracking-tight">
-                  {t.price === "0" ? "Gratis" : `US$${t.price}`}
-                </span>
-              </div>
-              <div className="text-[0.75rem] font-mono uppercase tracking-widest mt-2" style={{ opacity: 0.6 }}>
-                {t.unit}
-              </div>
-              <p className="text-sm mt-4" style={{ opacity: 0.75 }}>{t.desc}</p>
-
-              <ul className="mt-6 space-y-2.5 flex-1">
-                {t.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm">
-                    <span
-                      className="mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center"
-                      style={{
-                        background: t.featured ? "var(--lime)" : "var(--forest-2)",
-                        color: t.featured ? "var(--forest)" : "white",
-                      }}
-                    >
-                      <IconCheck size={10} />
-                    </span>
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                className={t.featured ? "btn-lime mt-8 justify-center w-full" : "btn-forest mt-8 justify-center w-full"}
-                onClick={onLogin}
-              >
-                {t.cta}
-              </button>
-            </div>
-          ))}
+        <div className="mb-10 md:mb-14">
+          <PromoBanner />
         </div>
 
-        <p className="text-center text-[0.7rem] font-mono uppercase tracking-widest mt-8" style={{ color: "var(--forest-3)", opacity: 0.65 }}>
-          Pruebe Ganadero o Hacienda 30 días gratis. El cobro automático llega pronto — por ahora, sin tarjeta.
+        <PricingCards onSelect={() => onLogin()} />
+
+        <p className="text-center text-[0.7rem] font-mono uppercase tracking-widest mt-10" style={{ color: "var(--forest-3)", opacity: 0.65 }}>
+          Precios en dólares; el valor en pesos es aproximado. Pago por transferencia, Nequi o Daviplata.
         </p>
       </div>
     </section>
@@ -1210,7 +1113,7 @@ function FAQ() {
   const qs = [
     {
       q: "¿Cuánto cuesta usar RumeApp?",
-      a: "Nada para arrancar. El plan Ranchero es gratis para siempre (hasta 5 animales). Los planes pagos tienen 30 días de prueba gratis.",
+      a: "Nada para arrancar. El plan Ranchero es gratis para siempre (hasta 5 animales). Los planes pagos tienen 30 días de prueba gratis y, por lanzamiento, 45% de descuento en los primeros 2 meses.",
     },
     {
       q: "¿Necesito instalar la app?",

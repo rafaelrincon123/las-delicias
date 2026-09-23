@@ -3,47 +3,22 @@
 import { useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { useFincaActiva } from "@/lib/useFincaActiva";
-import { PLAN_LIMITS, planLabel, planEfectivo, diasDePruebaRestantes, fmtPrecio } from "@/lib/plans";
+import {
+  PLAN_LIMITS,
+  PROMO_LANZAMIENTO,
+  planLabel,
+  planEfectivo,
+  diasDePruebaRestantes,
+  fmtPrecio,
+  precioPromoUSD,
+  precioCOPAprox,
+  tienePromo,
+  fmtUSD,
+} from "@/lib/plans";
 import { CUENTA_PAGO, subirComprobantePago } from "@/lib/comprobantePago";
 import type { PlanFinca } from "@/lib/types";
 import Modal from "@/components/Modal";
-
-const ORDER: PlanFinca[] = ["ranchero", "ganadero", "hacienda"];
-
-interface Feature {
-  texto: string;
-  proximamente?: boolean;
-}
-
-const FEATURES: Record<PlanFinca, Feature[]> = {
-  ranchero: [
-    { texto: "Hasta 5 animales" },
-    { texto: "1 persona con permiso de edición (el owner)" },
-    { texto: "Hasta 4 personas más en modo solo lectura" },
-    { texto: "Hato, sanidad, gastos y tareas" },
-    { texto: "1 finca" },
-    { texto: "Soporte por email" },
-  ],
-  ganadero: [
-    { texto: "Hasta 50 animales" },
-    { texto: "Hasta 5 personas con acceso (cualquier rol)" },
-    { texto: "Hasta 3 fincas" },
-    { texto: "Todo lo del plan Ranchero" },
-    { texto: "Reportes en PDF de cada sección" },
-    { texto: "Alertas por WhatsApp", proximamente: true },
-    { texto: "Soporte prioritario" },
-  ],
-  hacienda: [
-    { texto: "Animales ilimitados" },
-    { texto: "Personas con acceso ilimitadas" },
-    { texto: "Fincas ilimitadas" },
-    { texto: "Todo lo del plan Ganadero" },
-    { texto: "Reportes en PDF de cada sección" },
-    { texto: "Alertas por WhatsApp", proximamente: true },
-    { texto: "App móvil (Android / iOS)", proximamente: true },
-    { texto: "Soporte dedicado" },
-  ],
-};
+import PricingCards, { PromoBanner } from "@/components/PricingCards";
 
 export default function PlanPage() {
   const { db, ready } = useDB();
@@ -134,79 +109,9 @@ export default function PlanPage() {
         </div>
       </section>
 
-      {/* Grid de planes */}
-      <section className="grid md:grid-cols-3 gap-4">
-        {ORDER.map((p) => {
-          const info = PLAN_LIMITS[p];
-          const isCurrent = p === planActual;
-          const isDowngrade = ORDER.indexOf(p) < ORDER.indexOf(planActual);
-          return (
-            <div
-              key={p}
-              className="card p-5 flex flex-col relative"
-              style={{
-                borderColor: isCurrent ? "var(--forest)" : undefined,
-                borderWidth: isCurrent ? 2 : undefined,
-              }}
-            >
-              {p === "ganadero" && !isCurrent && (
-                <div
-                  className="absolute -top-2 right-4 text-[0.6rem] font-mono uppercase tracking-widest px-2 py-1 rounded-full"
-                  style={{ background: "var(--forest)", color: "var(--lime-bright)" }}
-                >
-                  Más popular
-                </div>
-              )}
-              <div className="text-[0.68rem] font-mono uppercase tracking-[0.14em]" style={{ color: "var(--forest)" }}>
-                Plan
-              </div>
-              <div className="text-xl font-bold uppercase tracking-tight mt-1" style={{ color: "var(--forest)" }}>
-                {info.nombre}
-              </div>
-              <div className="mt-3 text-2xl font-bold" style={{ color: "var(--forest)" }}>
-                {fmtPrecio(p)}
-                {info.precioUSD > 0 && <span className="text-sm font-normal text-muted"> /mes</span>}
-              </div>
-              <ul className="mt-4 space-y-1.5 text-sm flex-1">
-                {FEATURES[p].map((f) => (
-                  <li key={f.texto} className="flex gap-2">
-                    <span aria-hidden style={{ color: "var(--forest-3)" }}>✓</span>
-                    <span className={f.proximamente ? "text-muted" : undefined}>
-                      {f.texto}
-                      {f.proximamente && (
-                        <span className="text-[0.62rem] font-mono uppercase tracking-widest ml-1.5 text-accent">
-                          Próximamente
-                        </span>
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-5">
-                {isCurrent ? (
-                  <button className="btn w-full justify-center" disabled>
-                    Plan actual
-                  </button>
-                ) : isDowngrade ? (
-                  <button
-                    className="btn btn-ghost w-full justify-center"
-                    onClick={() => setPagando(p)}
-                  >
-                    Cambiar a {info.nombre}
-                  </button>
-                ) : (
-                  <button
-                    className="btn btn-primary w-full justify-center"
-                    onClick={() => setPagando(p)}
-                  >
-                    Cambiar a {info.nombre} →
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </section>
+      <PromoBanner />
+
+      <PricingCards planActual={planActual} onSelect={setPagando} />
 
       <p className="text-[0.7rem] text-subtle text-center">
         Los pagos automáticos llegarán próximamente. Por ahora los cambios se procesan
@@ -250,6 +155,10 @@ function PagoManualModal({
     const cuerpo = encodeURIComponent(
       `Hola,\n\nQuiero cambiarme al plan ${planLabel(destino)} para mi finca "${fincaNombre}" (id: ${fincaId}).\n\n` +
         `Estoy usando actualmente el plan ${planLabel(planActual)}.\n\n` +
+        (tienePromo(destino)
+          ? `Aplica la oferta de lanzamiento: ${PROMO_LANZAMIENTO.pct}% de descuento los primeros ${PROMO_LANZAMIENTO.meses} meses ` +
+            `(US$${fmtUSD(precioPromoUSD(destino))}/mes, ≈ $${precioCOPAprox(precioPromoUSD(destino)).toLocaleString("es-CO")} COP).\n\n`
+          : "") +
         (linkComprobante
           ? `Aquí está mi comprobante de pago: ${linkComprobante}\n\n`
           : `Voy a enviar el comprobante de pago por este mismo correo en un momento.\n\n`) +
@@ -309,6 +218,38 @@ function PagoManualModal({
           Transfiere el valor del plan y sube tu comprobante. Te abrimos el correo listo para
           enviarle a Rafael, quien activa tu plan en cuanto lo confirme.
         </p>
+
+        {PLAN_LIMITS[destino].precioUSD > 0 && (
+          <div
+            className="rounded-2xl p-4 flex items-center gap-4"
+            style={{ background: "var(--forest)", color: "var(--sand)" }}
+          >
+            <div className="flex-1 min-w-0">
+              <div
+                className="text-[0.62rem] font-mono uppercase tracking-[0.14em]"
+                style={{ color: "var(--lime-bright)" }}
+              >
+                Valor a transferir por mes
+              </div>
+              <div className="text-2xl font-bold mt-0.5">
+                ≈ ${precioCOPAprox(precioPromoUSD(destino)).toLocaleString("es-CO")} COP
+              </div>
+              <div className="text-xs opacity-75">
+                US${fmtUSD(precioPromoUSD(destino))}
+                {tienePromo(destino) &&
+                  ` · ${PROMO_LANZAMIENTO.pct}% de descuento los primeros ${PROMO_LANZAMIENTO.meses} meses. Luego US$${fmtUSD(PLAN_LIMITS[destino].precioUSD)} (≈ $${precioCOPAprox(PLAN_LIMITS[destino].precioUSD).toLocaleString("es-CO")} COP).`}
+              </div>
+            </div>
+            {tienePromo(destino) && (
+              <div
+                className="shrink-0 rounded-xl px-3 py-1.5 text-lg font-bold"
+                style={{ background: "var(--lime)", color: "var(--forest)" }}
+              >
+                −{PROMO_LANZAMIENTO.pct}%
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="card bg-surface-2 space-y-2 text-sm">
           <div className="eyebrow">Cuenta bancaria</div>

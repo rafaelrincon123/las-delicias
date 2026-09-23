@@ -51,6 +51,30 @@ export function precioCOPAprox(precioUSD: number): number {
   return Math.round((precioUSD * USD_TO_COP) / 1000) * 1000;
 }
 
+// Promo de lanzamiento: % de descuento en los primeros `meses` de cualquier
+// plan pago. Se cobra a mano (pago manual), así que esto solo cambia lo que
+// se MUESTRA y el valor a transferir. Para terminar la promo: activa=false.
+export const PROMO_LANZAMIENTO = { activa: true, pct: 45, meses: 2 };
+
+/** Precio mensual en USD durante la promo (o el normal si no aplica). */
+export function precioPromoUSD(plan: PlanFinca): number {
+  const base = PLAN_LIMITS[plan].precioUSD;
+  if (!PROMO_LANZAMIENTO.activa || base === 0) return base;
+  return Math.round(base * (100 - PROMO_LANZAMIENTO.pct)) / 100;
+}
+
+export function tienePromo(plan: PlanFinca): boolean {
+  return PROMO_LANZAMIENTO.activa && PLAN_LIMITS[plan].precioUSD > 0;
+}
+
+/** "8,25" / "15" — formato colombiano, decimales solo si hacen falta. */
+export function fmtUSD(n: number): string {
+  return n.toLocaleString("es-CO", {
+    minimumFractionDigits: Number.isInteger(n) ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export function fmtPrecio(plan: PlanFinca): string {
   const p = PLAN_LIMITS[plan];
   if (p.precioUSD === 0) return "Gratis";
