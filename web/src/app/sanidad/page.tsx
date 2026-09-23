@@ -493,7 +493,7 @@ function SanidadForm({
   }
 
   return (
-    <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+    <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <fieldset disabled={readOnly} className="contents">
       <FormRow label="Estado" required colspan={2}>
         <div className="flex flex-wrap gap-1.5">

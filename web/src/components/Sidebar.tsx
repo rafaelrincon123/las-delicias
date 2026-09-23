@@ -93,7 +93,7 @@ export default function Sidebar(props: SidebarProps) {
         className={asideClass}
         style={{
           background: "var(--surface-solid)",
-          height: "100vh",
+          height: "100dvh",
           overflowY: "auto",
         }}
       >

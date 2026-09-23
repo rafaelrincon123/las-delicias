@@ -134,7 +134,7 @@ export default function CalculadoraPerdidas({ onLogin }: { onLogin: () => void }
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_1.1fr] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-6 items-start">
           {/* Entradas */}
           <div
             className="rounded-[1.75rem] p-6 md:p-8 space-y-7"

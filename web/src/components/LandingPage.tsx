@@ -448,15 +448,14 @@ function LandingStyles() {
         background: var(--lime-bright);
         box-shadow: 0 0 8px var(--lime-bright);
       }
+      /* En celular la barra flotante tapaba botones (p. ej. los de Precios)
+         y no cabía: ".sticky-bar .item" le ganaba a "hidden sm:inline-flex"
+         y salían los 3 mensajes. Es decorativa: se oculta en pantallas chicas. */
       @media (max-width: 640px) {
-        .sticky-bar {
-          bottom: 10px;
-          padding: 0.42rem 0.85rem;
-          gap: 0.75rem;
-        }
-        .sticky-bar .item {
-          font-size: 0.56rem;
-        }
+        .sticky-bar { display: none; }
+      }
+      @media (min-width: 641px) and (max-width: 767px) {
+        .sticky-bar .item:nth-child(3) { display: none; }
       }
 
       /* Inputs redondeados */
@@ -725,6 +724,17 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
                 {l.label}
               </button>
             ))}
+            {/* En celular el botón "Ingresar" del header está oculto (sm:inline-flex):
+                sin esto, quien ya tiene cuenta no tenía cómo entrar desde el menú. */}
+            <button
+              className="btn-forest sm:hidden mt-2 justify-center w-full"
+              onClick={() => {
+                scrollToId("ingreso");
+                setMenuOpen(false);
+              }}
+            >
+              Ingresar a mi finca
+            </button>
           </div>
         </div>
       )}
@@ -745,7 +755,7 @@ function Hero({ onLogin }: { onLogin: () => void }) {
       </div>
 
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 md:px-6 pt-32 md:pt-36 pb-24">
-        <div ref={ref} className="reveal grid lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
+        <div ref={ref} className="reveal grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
           <div className="text-white">
             <h1
               className="display-xxl uppercase text-white"
@@ -864,7 +874,7 @@ function AppSummary() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4 md:gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           {items.map((it) => (
             <SummaryItem key={it.verb} {...it} />
           ))}
@@ -939,7 +949,7 @@ function ModulesOverview() {
       style={{ background: "var(--forest)", color: "white" }}
     >
       <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 py-24 md:py-32">
-        <div className="grid lg:grid-cols-[1fr_1.4fr] gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-12 items-center">
           <div>
             <h2
               className="display-lg uppercase text-white"
@@ -1012,7 +1022,7 @@ function ThreePillars() {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {pillars.map((p) => (
             <div
               key={p.title}
@@ -1238,7 +1248,7 @@ function LoginEmbed() {
 
   return (
     <section id="ingreso" className="relative max-w-4xl mx-auto px-4 md:px-6 py-24 md:py-32">
-      <div ref={ref} className="reveal grid md:grid-cols-2 gap-10 items-center">
+      <div ref={ref} className="reveal grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
         <div>
           <h2 className="display-lg uppercase" style={{ fontSize: "clamp(1.75rem, 4.5vw, 2.75rem)", color: "var(--forest)" }}>
             {mode === "login" ? <>Entre a<br /><em style={{ color: "var(--forest-3)", fontStyle: "normal" }}>su finca.</em></>
@@ -1395,7 +1405,7 @@ function Footer() {
   return (
     <footer className="relative" style={{ background: "var(--forest)", color: "white" }}>
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-16 md:py-20">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
               <Image
@@ -1515,7 +1525,7 @@ function SociosSection() {
   ];
   return (
     <section id="socios" className="relative py-24 md:py-32" style={{ background: "var(--cream)" }}>
-      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-[1fr_1.1fr] gap-12 items-center">
+      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 items-center">
         <div>
           <span
             className="inline-block text-[0.65rem] font-mono uppercase tracking-[0.14em] px-3 py-1.5 rounded-full mb-6"
@@ -1671,7 +1681,7 @@ function PhonesShowcase() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 md:gap-10 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 items-start">
           <PhoneHato />
           <PhoneGastos />
           <PhoneActividades />
@@ -2014,7 +2024,7 @@ function AIAssistantSection() {
   const ref = useReveal<HTMLDivElement>();
   return (
     <section id="ia" className="relative py-24 md:py-32" style={{ background: "var(--cream)" }}>
-      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-[1fr_1.1fr] gap-12 items-center">
+      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-12 items-center">
         <div>
           <span
             className="inline-block text-[0.65rem] font-mono uppercase tracking-[0.14em] px-3 py-1.5 rounded-full mb-6 font-semibold"
@@ -2107,7 +2117,7 @@ function AnimalCedulaSection() {
   const ref = useReveal<HTMLDivElement>();
   return (
     <section className="relative py-24 md:py-32" style={{ background: "var(--forest)", color: "white" }}>
-      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-[1.1fr_1fr] gap-12 items-center">
+      <div ref={ref} className="reveal max-w-6xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 items-center">
         <div
           className="rounded-3xl p-6 md:p-7"
           style={{ background: "white", color: "var(--forest)", boxShadow: "0 30px 60px -20px rgba(0,0,0,0.35)" }}

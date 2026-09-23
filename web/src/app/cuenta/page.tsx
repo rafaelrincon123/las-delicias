@@ -168,7 +168,7 @@ function PerfilCard({ inicial, email }: { inicial: MiPerfil; email: string }) {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormRow label="Nombre">
           <input
             type="text"
@@ -328,7 +328,7 @@ function PasswordCard() {
         <div className="eyebrow">Seguridad</div>
         <div className="text-base font-semibold mt-1">Cambiar contraseña</div>
       </div>
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormRow label="Contraseña actual">
           <PasswordInput
             value={actual}

@@ -204,6 +204,12 @@ input, select, textarea {
   transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
   backdrop-filter: blur(10px);
 }
+/* iPhone (Safari) hace zoom automático al tocar un campo con letra < 16px
+   y la página queda ampliada y descuadrada. En celular, 16px siempre
+   (el !important le gana a text-xs y a .landing-input). */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px !important; }
+}
 input::placeholder, textarea::placeholder { color: var(--subtle); }
 input:hover, select:hover, textarea:hover { border-color: var(--rule-strong); }
 input:focus, select:focus, textarea:focus {

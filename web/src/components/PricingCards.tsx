@@ -122,7 +122,7 @@ export default function PricingCards({
   ctaLabel?: (plan: PlanFinca) => string;
 }) {
   return (
-    <div className="grid md:grid-cols-3 gap-5 md:gap-4 lg:gap-6 items-stretch pt-3">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-4 lg:gap-6 items-stretch pt-3">
       {PLAN_ORDER.map((p) => (
         <Card
           key={p}

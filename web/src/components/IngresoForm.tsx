@@ -64,7 +64,7 @@ export default function IngresoForm({
   }
 
   return (
-    <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+    <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <fieldset disabled={readOnly} className="contents">
         <FormRow label="Fecha" required>
           <input

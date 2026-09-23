@@ -246,7 +246,7 @@ export default function Dashboard() {
       </section>
 
       {/* ═══════════════════ TWO COLUMNS ═══════════════════ */}
-      <section className="grid lg:grid-cols-2 gap-3">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         <div className="card">
           <div className="card-head">
             <div>

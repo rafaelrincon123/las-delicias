@@ -42,7 +42,7 @@ export default function Modal({ open, onClose, title, eyebrow, size = "md", chil
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
       <div
-        className={`relative bg-surface-solid border border-rule rounded-2xl w-full ${SIZE_MAX[size]} max-h-[90vh] overflow-y-auto`}
+        className={`relative bg-surface-solid border border-rule rounded-2xl w-full ${SIZE_MAX[size]} max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain`}
         style={{
           boxShadow: "0 20px 60px -12px rgba(0,0,0,0.6), 0 0 0 1px var(--rule)",
         }}

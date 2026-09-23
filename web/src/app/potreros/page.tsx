@@ -48,7 +48,7 @@ export default function PotrerosPage() {
         </button>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {db!.potreros.map((p) => {
           const animalesAqui = db!.animales.filter(
             (a) => a.potreroId === p.id && a.estado === "activo"
@@ -234,7 +234,7 @@ function PotreroForm({
   }
 
   return (
-    <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+    <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <fieldset disabled={readOnly} className="contents">
       <FormRow label="Nombre" required colspan={2}>
         <input

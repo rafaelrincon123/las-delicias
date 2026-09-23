@@ -822,7 +822,7 @@ function AnimalForm({
   }
 
   return (
-    <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+    <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormRow label="Foto" colspan={2}>
         <PhotoInput
           value={form.fotoUrl}

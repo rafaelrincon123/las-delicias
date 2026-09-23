@@ -239,7 +239,7 @@ export default function SociosPage() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {socios.map((p) => {
           const s = stats[p.id] ?? { animales: 0, gastos: 0, tareas: 0 };
           const isMe = p.authUserId === authUserId;
@@ -518,7 +518,7 @@ function SocioForm({
   }
 
   return (
-    <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+    <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormRow label="Nombre" required colspan={2}>
         <input
           value={form.nombre}
