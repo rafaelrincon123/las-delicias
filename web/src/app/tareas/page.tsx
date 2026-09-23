@@ -18,6 +18,7 @@ import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import HeroStat from "@/components/HeroStat";
 import { IconCheck, IconAlert, IconHealth, IconRepro } from "@/components/icons";
+import ExportarPDFButton from "@/components/ExportarPDFButton";
 
 type UnifiedItem = {
   key: string;
@@ -305,13 +306,29 @@ export default function TareasPage() {
           </div>
         )}
 
-        <button
-          className="btn btn-primary w-full md:w-auto md:self-start"
-          onClick={openNueva}
-          style={{ padding: "0.65rem 1.1rem", fontSize: "0.92rem", fontWeight: 600 }}
-        >
-          + Nueva actividad
-        </button>
+        <div className="flex gap-2 w-full md:w-auto">
+          <ExportarPDFButton
+            titulo="Actividades"
+            subtitulo={view === "lista" ? (tab === "hechas" ? "Hechas" : "Pendientes") : "Todas (vista calendario)"}
+            columnas={[
+              { header: "Fecha", value: (i: UnifiedItem) => fmtDate(i.fecha) },
+              { header: "Título", value: (i: UnifiedItem) => i.titulo },
+              { header: "Detalle", value: (i: UnifiedItem) => i.subtitulo ?? "—" },
+              { header: "Categoría", value: (i: UnifiedItem) => CATEGORIAS_TAREA.find((c) => c.value === i.categoria)?.label ?? i.categoria },
+              { header: "Prioridad", value: (i: UnifiedItem) => PRIORIDADES_TAREA.find((p) => p.value === i.prioridad)?.label ?? i.prioridad },
+              { header: "Estado", value: (i: UnifiedItem) => (i.completada ? "Completada" : "Pendiente") },
+            ]}
+            filas={view === "lista" ? visibles : visiblesCal}
+            nombreArchivo="actividades"
+          />
+          <button
+            className="btn btn-primary w-full md:w-auto md:self-start"
+            onClick={openNueva}
+            style={{ padding: "0.65rem 1.1rem", fontSize: "0.92rem", fontWeight: 600 }}
+          >
+            + Nueva actividad
+          </button>
+        </div>
       </div>
 
       {/* Main content */}

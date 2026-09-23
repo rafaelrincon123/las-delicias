@@ -13,6 +13,7 @@ import FormRow from "@/components/FormRow";
 import { IconUser } from "@/components/icons";
 import PlanUsageBanner from "@/components/PlanUsageBanner";
 import { Miembro, listarMiembros } from "@/lib/equipo";
+import ExportarPDFButton from "@/components/ExportarPDFButton";
 
 interface SocioStats {
   animales: number;
@@ -215,13 +216,27 @@ export default function SociosPage() {
             {err}
           </div>
         )}
-        {puedoGestionar && (
-          <div className="mt-3 flex justify-end">
+        <div className="mt-3 flex justify-end gap-2">
+          <ExportarPDFButton
+            titulo="Socios"
+            columnas={[
+              { header: "Nombre", value: (p: Propietario) => p.nombre },
+              { header: "Email", value: (p: Propietario) => p.email },
+              { header: "Participación", value: (p: Propietario) => fmtPct(p.participacionPct) },
+              { header: "Animales", value: (p: Propietario) => String(stats[p.id]?.animales ?? 0) },
+              { header: "Gastos", value: (p: Propietario) => String(stats[p.id]?.gastos ?? 0) },
+              { header: "Tareas", value: (p: Propietario) => String(stats[p.id]?.tareas ?? 0) },
+              { header: "Vinculado", value: (p: Propietario) => (p.authUserId ? "Sí" : "No") },
+            ]}
+            filas={socios}
+            nombreArchivo="socios"
+          />
+          {puedoGestionar && (
             <button className="btn btn-primary" onClick={() => setCreating(true)}>
               + Nuevo socio
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-3">

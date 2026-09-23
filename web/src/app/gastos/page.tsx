@@ -17,6 +17,7 @@ import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import HeroStat from "@/components/HeroStat";
 import IngresoForm, { TIPOS_INGRESO } from "@/components/IngresoForm";
+import ExportarPDFButton from "@/components/ExportarPDFButton";
 import {
   participantesGasto,
   cuotasPorPropietario,
@@ -131,29 +132,60 @@ export default function GastosPage() {
             Ingresos ({ingresos.length})
           </button>
         </div>
-        <div>
+        <div className="flex gap-2">
           {tab === "gastos" ? (
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                setEditG(null);
-                setModeG("edit");
-                setOpenG(true);
-              }}
-            >
-              + Nuevo gasto
-            </button>
+            <>
+              <ExportarPDFButton
+                titulo="Gastos"
+                columnas={[
+                  { header: "Fecha", value: (g: Gasto) => fmtDate(g.fecha) },
+                  { header: "Categoría", value: (g: Gasto) => CATEGORIAS_GASTO.find((c) => c.value === g.categoria)?.label ?? g.categoria },
+                  { header: "Concepto", value: (g: Gasto) => g.concepto },
+                  { header: "Proveedor", value: (g: Gasto) => g.proveedor ?? "—" },
+                  { header: "Monto", value: (g: Gasto) => fmtCOP(g.monto) },
+                  { header: "Pagó", value: (g: Gasto) => db?.propietarios.find((p) => p.id === g.pagadoPor)?.nombre ?? "—" },
+                ]}
+                filas={gastos}
+                resumen={[{ label: "Total", valor: fmtCOP(gastos.reduce((s, g) => s + g.monto, 0)) }]}
+                nombreArchivo="gastos"
+              />
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setEditG(null);
+                  setModeG("edit");
+                  setOpenG(true);
+                }}
+              >
+                + Nuevo gasto
+              </button>
+            </>
           ) : (
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                setEditI(null);
-                setModeI("edit");
-                setOpenI(true);
-              }}
-            >
-              + Nuevo ingreso
-            </button>
+            <>
+              <ExportarPDFButton
+                titulo="Ingresos"
+                columnas={[
+                  { header: "Fecha", value: (i: Ingreso) => fmtDate(i.fecha) },
+                  { header: "Tipo", value: (i: Ingreso) => TIPOS_INGRESO.find((t) => t.value === i.tipo)?.label ?? i.tipo },
+                  { header: "Concepto", value: (i: Ingreso) => i.concepto },
+                  { header: "Comprador", value: (i: Ingreso) => i.comprador ?? "—" },
+                  { header: "Monto", value: (i: Ingreso) => fmtCOP(i.monto) },
+                ]}
+                filas={ingresos}
+                resumen={[{ label: "Total", valor: fmtCOP(ingresos.reduce((s, i) => s + i.monto, 0)) }]}
+                nombreArchivo="ingresos"
+              />
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setEditI(null);
+                  setModeI("edit");
+                  setOpenI(true);
+                }}
+              >
+                + Nuevo ingreso
+              </button>
+            </>
           )}
         </div>
       </div>

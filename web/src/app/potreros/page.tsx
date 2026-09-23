@@ -8,6 +8,7 @@ import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import { participacionPorPotrero } from "@/lib/participacion";
 import { fmtPct } from "@/lib/format";
+import ExportarPDFButton from "@/components/ExportarPDFButton";
 
 export default function PotrerosPage() {
   const { db, ready } = useDB();
@@ -19,7 +20,22 @@ export default function PotrerosPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <ExportarPDFButton
+          titulo="Potreros"
+          columnas={[
+            { header: "Nombre", value: (p: Potrero) => p.nombre },
+            { header: "Área (ha)", value: (p: Potrero) => String(p.areaHectareas) },
+            { header: "Capacidad", value: (p: Potrero) => String(p.capacidad) },
+            {
+              header: "Animales activos",
+              value: (p: Potrero) => String(db!.animales.filter((a) => a.potreroId === p.id && a.estado === "activo").length),
+            },
+            { header: "Notas", value: (p: Potrero) => p.notas ?? "—" },
+          ]}
+          filas={db!.potreros}
+          nombreArchivo="potreros"
+        />
         <button
           className="btn btn-primary"
           onClick={() => {

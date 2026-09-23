@@ -18,6 +18,7 @@ import FormRow from "@/components/FormRow";
 import PhotoInput from "@/components/PhotoInput";
 import HeroStat from "@/components/HeroStat";
 import PlanUsageBanner from "@/components/PlanUsageBanner";
+import ExportarPDFButton from "@/components/ExportarPDFButton";
 import { PLAN_LIMITS, planLabel, planEfectivo } from "@/lib/plans";
 import { useFincaActiva } from "@/lib/useFincaActiva";
 
@@ -115,15 +116,34 @@ export default function AnimalesPage() {
             ))}
           </select>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setEdit(null);
-            setOpen(true);
-          }}
-        >
-          + Nuevo animal
-        </button>
+        <div className="flex gap-2">
+          <ExportarPDFButton
+            titulo="Animales"
+            subtitulo={`${filtered.length} animal${filtered.length === 1 ? "" : "es"} · filtro: ${filtroEstado || "todos"}${filtroCat ? ` · ${filtroCat}` : ""}`}
+            columnas={[
+              { header: "N°", value: (a: Animal) => a.nroIdentificacion },
+              { header: "Nombre", value: (a: Animal) => a.nombre ?? "—" },
+              { header: "Sexo", value: (a: Animal) => (a.sexo === "hembra" ? "Hembra" : "Macho") },
+              { header: "Raza", value: (a: Animal) => a.raza },
+              { header: "Categoría", value: (a: Animal) => CATEGORIAS_ANIMAL.find((c) => c.value === a.categoria)?.label ?? a.categoria },
+              { header: "Edad", value: (a: Animal) => edadTexto(a.fechaNacimiento) },
+              { header: "Estado", value: (a: Animal) => ESTADOS.find((e) => e.value === a.estado)?.label ?? a.estado },
+              { header: "Potrero", value: (a: Animal) => db?.potreros.find((p) => p.id === a.potreroId)?.nombre ?? "—" },
+              { header: "Dueño", value: (a: Animal) => db?.propietarios.find((p) => p.id === a.propietarioId)?.nombre ?? "—" },
+            ]}
+            filas={filtered}
+            nombreArchivo="animales"
+          />
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setEdit(null);
+              setOpen(true);
+            }}
+          >
+            + Nuevo animal
+          </button>
+        </div>
       </div>
 
       {/* Desktop: table */}

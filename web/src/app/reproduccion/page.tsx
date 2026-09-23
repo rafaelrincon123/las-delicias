@@ -15,6 +15,7 @@ import {
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import { IconCheck } from "@/components/icons";
+import ExportarPDFButton from "@/components/ExportarPDFButton";
 
 export default function ReproduccionPage() {
   const { db, ready } = useDB();
@@ -96,27 +97,57 @@ export default function ReproduccionPage() {
         </div>
         <div className="flex gap-2">
           {tab === "servicios" ? (
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                setEditServ(null);
-                setModeServ("edit");
-                setOpenServ(true);
-              }}
-            >
-              + Nuevo servicio
-            </button>
+            <>
+              <ExportarPDFButton
+                titulo="Reproducción — Servicios"
+                columnas={[
+                  { header: "Fecha", value: (s: ServicioReproductivo) => fmtDate(s.fechaServicio) },
+                  { header: "Hembra", value: (s: ServicioReproductivo) => db?.animales.find((a) => a.id === s.hembraId)?.nroIdentificacion ?? "—" },
+                  { header: "Tipo", value: (s: ServicioReproductivo) => (s.tipo === "monta_natural" ? "Monta natural" : "Inseminación") },
+                  { header: "Macho/Referencia", value: (s: ServicioReproductivo) => s.machoIdOReferencia },
+                  { header: "Resultado", value: (s: ServicioReproductivo) => s.resultado === "prenada" ? "Preñada" : s.resultado === "vacia" ? "Vacía" : "Pendiente" },
+                  { header: "FPP", value: (s: ServicioReproductivo) => fmtDate(s.fechaProbableParto) },
+                ]}
+                filas={servicios}
+                nombreArchivo="reproduccion-servicios"
+              />
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setEditServ(null);
+                  setModeServ("edit");
+                  setOpenServ(true);
+                }}
+              >
+                + Nuevo servicio
+              </button>
+            </>
           ) : (
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                setEditPar(null);
-                setModePar("edit");
-                setOpenPar(true);
-              }}
-            >
-              + Registrar parto
-            </button>
+            <>
+              <ExportarPDFButton
+                titulo="Reproducción — Partos"
+                columnas={[
+                  { header: "Fecha", value: (p: Parto) => fmtDate(p.fecha) },
+                  { header: "Madre", value: (p: Parto) => db?.animales.find((a) => a.id === p.madreId)?.nroIdentificacion ?? "—" },
+                  { header: "Cría", value: (p: Parto) => db?.animales.find((a) => a.id === p.terneroId)?.nroIdentificacion ?? "—" },
+                  { header: "Peso cría (kg)", value: (p: Parto) => p.pesoTerneroKg !== undefined ? String(p.pesoTerneroKg) : "—" },
+                  { header: "Sexo cría", value: (p: Parto) => p.sexoTernero === "hembra" ? "Hembra" : p.sexoTernero === "macho" ? "Macho" : "—" },
+                  { header: "Complicaciones", value: (p: Parto) => p.complicaciones ?? "—" },
+                ]}
+                filas={partos}
+                nombreArchivo="reproduccion-partos"
+              />
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setEditPar(null);
+                  setModePar("edit");
+                  setOpenPar(true);
+                }}
+              >
+                + Registrar parto
+              </button>
+            </>
           )}
         </div>
       </div>

@@ -8,6 +8,7 @@ import { SanidadEvento, TIPOS_SANIDAD, TipoSanidad } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import { IconCheck } from "@/components/icons";
+import ExportarPDFButton from "@/components/ExportarPDFButton";
 
 export default function SanidadPage() {
   const { db, ready } = useDB();
@@ -98,16 +99,34 @@ export default function SanidadPage() {
             Historial ({eventos.length})
           </button>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setEdit(null);
-            setMode("edit");
-            setOpen(true);
-          }}
-        >
-          + Nuevo evento
-        </button>
+        <div className="flex gap-2">
+          <ExportarPDFButton
+            titulo="Sanidad"
+            subtitulo={tab === "proximos" ? "Eventos pendientes" : "Historial completo"}
+            columnas={[
+              { header: "Fecha", value: (e: SanidadEvento) => fmtDate(e.fecha) },
+              { header: "Animal", value: (e: SanidadEvento) => db?.animales.find((a) => a.id === e.animalId)?.nroIdentificacion ?? "—" },
+              { header: "Tipo", value: (e: SanidadEvento) => TIPOS_SANIDAD.find((t) => t.value === e.tipo)?.label ?? e.tipo },
+              { header: "Producto", value: (e: SanidadEvento) => e.producto },
+              { header: "Dosis", value: (e: SanidadEvento) => e.dosis ?? "—" },
+              { header: "Veterinario", value: (e: SanidadEvento) => e.veterinario ?? "—" },
+              { header: "Costo", value: (e: SanidadEvento) => fmtCOP(e.costo) },
+              { header: "Estado", value: (e: SanidadEvento) => (e.completada ? "Completado" : "Pendiente") },
+            ]}
+            filas={tab === "proximos" ? proximos : eventos}
+            nombreArchivo="sanidad"
+          />
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setEdit(null);
+              setMode("edit");
+              setOpen(true);
+            }}
+          >
+            + Nuevo evento
+          </button>
+        </div>
       </div>
 
       <div className="card card-tight">

@@ -9,6 +9,7 @@ import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import AreaChart from "@/components/AreaChart";
 import Sparkline from "@/components/Sparkline";
+import ExportarPDFButton from "@/components/ExportarPDFButton";
 
 const TIPOS_PESAJE: { value: TipoPesaje; label: string }[] = [
   { value: "nacimiento", label: "Nacimiento" },
@@ -162,16 +163,30 @@ export default function PesoPage() {
               } animales con peso registrado`
             : ""}
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setEdit(null);
-            setMode("edit");
-            setOpen(true);
-          }}
-        >
-          + Registrar pesaje
-        </button>
+        <div className="flex gap-2">
+          <ExportarPDFButton
+            titulo="Control de peso"
+            columnas={[
+              { header: "Fecha", value: (p: Pesaje) => fmtDate(p.fecha) },
+              { header: "Animal", value: (p: Pesaje) => db?.animales.find((a) => a.id === p.animalId)?.nroIdentificacion ?? "—" },
+              { header: "Peso (kg)", value: (p: Pesaje) => fmtNumber(p.pesoKg, 0) },
+              { header: "Tipo", value: (p: Pesaje) => TIPOS_PESAJE.find((t) => t.value === p.tipo)?.label ?? p.tipo },
+              { header: "Notas", value: (p: Pesaje) => p.notas ?? "—" },
+            ]}
+            filas={pesajesFiltrados}
+            nombreArchivo="pesajes"
+          />
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setEdit(null);
+              setMode("edit");
+              setOpen(true);
+            }}
+          >
+            + Registrar pesaje
+          </button>
+        </div>
       </div>
 
       {stats && (

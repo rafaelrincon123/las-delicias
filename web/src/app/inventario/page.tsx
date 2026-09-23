@@ -16,6 +16,7 @@ import {
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import { IconAlert, IconArrowUp, IconArrowDown } from "@/components/icons";
+import ExportarPDFButton from "@/components/ExportarPDFButton";
 
 export default function InventarioPage() {
   const { db, ready } = useDB();
@@ -107,6 +108,35 @@ export default function InventarioPage() {
                 </option>
               ))}
             </select>
+          )}
+          {tab === "stock" ? (
+            <ExportarPDFButton
+              titulo="Inventario — Stock"
+              columnas={[
+                { header: "Insumo", value: (i: Insumo) => i.nombre },
+                { header: "Categoría", value: (i: Insumo) => CATEGORIAS_INSUMO.find((c) => c.value === i.categoria)?.label ?? i.categoria },
+                { header: "Stock", value: (i: Insumo) => `${fmtNumber(i.stock)} ${UNIDADES_INSUMO.find((u) => u.value === i.unidad)?.label ?? i.unidad}` },
+                { header: "Mínimo", value: (i: Insumo) => fmtNumber(i.minimo) },
+                { header: "Costo unit.", value: (i: Insumo) => fmtCOP(i.costoUnitario) },
+                { header: "Proveedor", value: (i: Insumo) => i.proveedor ?? "—" },
+              ]}
+              filas={insumosVisibles}
+              nombreArchivo="inventario-stock"
+            />
+          ) : (
+            <ExportarPDFButton
+              titulo="Inventario — Movimientos"
+              columnas={[
+                { header: "Fecha", value: (m: MovimientoInsumo) => fmtDate(m.fecha) },
+                { header: "Insumo", value: (m: MovimientoInsumo) => db?.insumos.find((i) => i.id === m.insumoId)?.nombre ?? "—" },
+                { header: "Tipo", value: (m: MovimientoInsumo) => m.tipo === "entrada" ? "Entrada" : m.tipo === "salida" ? "Salida" : "Ajuste" },
+                { header: "Cantidad", value: (m: MovimientoInsumo) => fmtNumber(m.cantidad) },
+                { header: "Costo total", value: (m: MovimientoInsumo) => fmtCOP(m.costoTotal) },
+                { header: "Motivo", value: (m: MovimientoInsumo) => m.motivo ?? "—" },
+              ]}
+              filas={movimientos}
+              nombreArchivo="inventario-movimientos"
+            />
           )}
           <button
             className="btn btn-ghost"

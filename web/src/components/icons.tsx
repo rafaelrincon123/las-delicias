@@ -204,3 +204,11 @@ export const IconSparkles = ({ className, size, strokeWidth }: Props) => (
     <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" />
   </svg>
 );
+
+export const IconFile = ({ className, size, strokeWidth }: Props) => (
+  <svg {...base(size, strokeWidth)} className={className}>
+    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+    <path d="M14 3v5h5" />
+    <path d="M9 13h6M9 17h6" />
+  </svg>
+);

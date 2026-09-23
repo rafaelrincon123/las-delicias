@@ -8,6 +8,7 @@ import { ProduccionLeche } from "@/lib/types";
 import Modal from "@/components/Modal";
 import FormRow from "@/components/FormRow";
 import AreaChart from "@/components/AreaChart";
+import ExportarPDFButton from "@/components/ExportarPDFButton";
 
 export default function ProduccionPage() {
   const { db, ready } = useDB();
@@ -64,16 +65,31 @@ export default function ProduccionPage() {
         <div className="text-sm text-muted">
           {leche.length} registro{leche.length === 1 ? "" : "s"} de ordeño
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setEditLec(null);
-            setModeLec("edit");
-            setOpenLec(true);
-          }}
-        >
-          + Registrar ordeño
-        </button>
+        <div className="flex gap-2">
+          <ExportarPDFButton
+            titulo="Producción de leche"
+            columnas={[
+              { header: "Fecha", value: (l: ProduccionLeche) => fmtDate(l.fecha) },
+              { header: "Animal", value: (l: ProduccionLeche) => db?.animales.find((a) => a.id === l.animalId)?.nroIdentificacion ?? "—" },
+              { header: "Mañana (L)", value: (l: ProduccionLeche) => fmtNumber(l.litrosManana) },
+              { header: "Tarde (L)", value: (l: ProduccionLeche) => fmtNumber(l.litrosTarde) },
+              { header: "Total (L)", value: (l: ProduccionLeche) => fmtNumber(l.litrosManana + l.litrosTarde) },
+            ]}
+            filas={leche}
+            resumen={[{ label: "Total litros", valor: fmtNumber(leche.reduce((s, l) => s + l.litrosManana + l.litrosTarde, 0)) }]}
+            nombreArchivo="produccion-leche"
+          />
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setEditLec(null);
+              setModeLec("edit");
+              setOpenLec(true);
+            }}
+          >
+            + Registrar ordeño
+          </button>
+        </div>
       </div>
 
       <div className="card card-tight">
