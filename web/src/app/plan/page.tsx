@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { useFincaActiva } from "@/lib/useFincaActiva";
 import { PLAN_LIMITS, planLabel, planEfectivo, diasDePruebaRestantes, fmtPrecio } from "@/lib/plans";
+import { CUENTA_PAGO, subirComprobantePago } from "@/lib/comprobantePago";
 import type { PlanFinca } from "@/lib/types";
+import Modal from "@/components/Modal";
 
 const ORDER: PlanFinca[] = ["ranchero", "ganadero", "hacienda"];
 
@@ -46,7 +48,7 @@ const FEATURES: Record<PlanFinca, Feature[]> = {
 export default function PlanPage() {
   const { db, ready } = useDB();
   const { activa } = useFincaActiva();
-  const [pidiendo, setPidiendo] = useState<PlanFinca | null>(null);
+  const [pagando, setPagando] = useState<PlanFinca | null>(null);
 
   const usage = useMemo(() => {
     if (!db) return null;
@@ -63,20 +65,6 @@ export default function PlanPage() {
   const diasPrueba = diasDePruebaRestantes(activa);
   const enPrueba = diasPrueba > 0 && activa.plan === planActual;
   const pruebaVencida = !activa.planPagado && !enPrueba && activa.plan !== "ranchero";
-
-  function abrirUpgrade(destino: PlanFinca) {
-    setPidiendo(destino);
-    const emailAsunto = encodeURIComponent(
-      `Upgrade a plan ${planLabel(destino)} — ${activa!.nombre}`
-    );
-    const emailCuerpo = encodeURIComponent(
-      `Hola,\n\nQuiero cambiarme al plan ${planLabel(destino)} para mi finca "${activa!.nombre}" (id: ${activa!.id}).\n\n` +
-        `Estoy usando actualmente el plan ${planLabel(planActual)}.\n\n` +
-        `Por favor cuéntame cómo procedo con el pago.\n\nGracias.`
-    );
-    const mailto = `mailto:rafael.rincong@gmail.com?subject=${emailAsunto}&body=${emailCuerpo}`;
-    window.location.href = mailto;
-  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -202,16 +190,14 @@ export default function PlanPage() {
                 ) : isDowngrade ? (
                   <button
                     className="btn btn-ghost w-full justify-center"
-                    onClick={() => abrirUpgrade(p)}
-                    disabled={pidiendo !== null}
+                    onClick={() => setPagando(p)}
                   >
                     Cambiar a {info.nombre}
                   </button>
                 ) : (
                   <button
                     className="btn btn-primary w-full justify-center"
-                    onClick={() => abrirUpgrade(p)}
-                    disabled={pidiendo !== null}
+                    onClick={() => setPagando(p)}
                   >
                     Cambiar a {info.nombre} →
                   </button>
@@ -222,32 +208,143 @@ export default function PlanPage() {
         })}
       </section>
 
-      {pidiendo && (
-        <div className="card p-5" style={{ background: "var(--surface-2)" }}>
-          <div className="font-semibold" style={{ color: "var(--forest)" }}>
-            Se abrió tu app de correo con la solicitud.
-          </div>
-          <div className="text-sm text-muted mt-2">
-            Si no se abrió automáticamente, escríbenos a{" "}
-            <a href="mailto:rafael.rincong@gmail.com" className="underline">
-              rafael.rincong@gmail.com
-            </a>{" "}
-            pidiendo el cambio al plan <strong>{planLabel(pidiendo)}</strong>. Cambiaremos tu plan
-            manualmente en cuanto confirmemos el pago.
-          </div>
-          <button
-            className="btn btn-ghost mt-3"
-            onClick={() => setPidiendo(null)}
-          >
-            Cerrar
-          </button>
-        </div>
-      )}
-
       <p className="text-[0.7rem] text-subtle text-center">
         Los pagos automáticos llegarán próximamente. Por ahora los cambios se procesan
-        manualmente por email. Precios en pesos son un valor aproximado de referencia.
+        manualmente: transfieres, subes el comprobante y activamos tu plan. Precios en pesos
+        son un valor aproximado de referencia.
       </p>
+
+      {pagando && (
+        <PagoManualModal
+          destino={pagando}
+          planActual={planActual}
+          fincaId={activa.id}
+          fincaNombre={activa.nombre}
+          onClose={() => setPagando(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function PagoManualModal({
+  destino,
+  planActual,
+  fincaId,
+  fincaNombre,
+  onClose,
+}: {
+  destino: PlanFinca;
+  planActual: PlanFinca;
+  fincaId: string;
+  fincaNombre: string;
+  onClose: () => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [enviado, setEnviado] = useState(false);
+
+  function abrirCorreo(linkComprobante?: string) {
+    const asunto = encodeURIComponent(`Upgrade a plan ${planLabel(destino)} — ${fincaNombre}`);
+    const cuerpo = encodeURIComponent(
+      `Hola,\n\nQuiero cambiarme al plan ${planLabel(destino)} para mi finca "${fincaNombre}" (id: ${fincaId}).\n\n` +
+        `Estoy usando actualmente el plan ${planLabel(planActual)}.\n\n` +
+        (linkComprobante
+          ? `Aquí está mi comprobante de pago: ${linkComprobante}\n\n`
+          : `Voy a enviar el comprobante de pago por este mismo correo en un momento.\n\n`) +
+        `Por favor confirma y activa mi plan.\n\nGracias.`
+    );
+    window.location.href = `mailto:rafael.rincong@gmail.com?subject=${asunto}&body=${cuerpo}`;
+  }
+
+  async function handleEnviar() {
+    setError(null);
+    setEnviando(true);
+    try {
+      if (file && (destino === "ganadero" || destino === "hacienda")) {
+        const { signedUrl } = await subirComprobantePago({
+          fincaId,
+          planSolicitado: destino,
+          file,
+        });
+        abrirCorreo(signedUrl);
+      } else {
+        abrirCorreo();
+      }
+      setEnviado(true);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  if (enviado) {
+    return (
+      <Modal open onClose={onClose} title="Solicitud enviada" eyebrow="Listo">
+        <div className="space-y-4">
+          <p className="text-sm">
+            Se abrió tu correo con la solicitud{file ? " y el link a tu comprobante" : ""}. En
+            cuanto Rafael lo confirme, tu plan queda activo.
+          </p>
+          <button className="btn btn-primary w-full justify-center" onClick={onClose}>
+            Entendido
+          </button>
+        </div>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={`Cambiar a ${planLabel(destino)}`}
+      eyebrow="Pago manual"
+      size="md"
+    >
+      <div className="space-y-4">
+        <p className="text-sm text-muted">
+          Transfiere el valor del plan y sube tu comprobante. Te abrimos el correo listo para
+          enviarle a Rafael, quien activa tu plan en cuanto lo confirme.
+        </p>
+
+        <div className="card bg-surface-2 space-y-2 text-sm">
+          <div className="eyebrow">Cuenta bancaria</div>
+          <div><strong>Banco:</strong> {CUENTA_PAGO.banco}</div>
+          <div><strong>Tipo de cuenta:</strong> {CUENTA_PAGO.tipoCuenta}</div>
+          <div><strong>Número:</strong> {CUENTA_PAGO.numeroCuenta}</div>
+          <div><strong>Titular:</strong> {CUENTA_PAGO.titular}</div>
+          <div className="pt-2 border-t border-rule">
+            <strong>Nequi / Daviplata:</strong> {CUENTA_PAGO.nequi}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <span className="eyebrow">Comprobante de pago (foto o PDF)</span>
+          <input
+            type="file"
+            accept="image/*,application/pdf"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+          <span className="text-[0.68rem] text-subtle">
+            Opcional aquí — si prefieres, puedes mandarlo directo por correo o WhatsApp después.
+          </span>
+        </div>
+
+        {error && (
+          <div className="text-sm text-danger bg-danger/10 px-3 py-2 rounded-lg">{error}</div>
+        )}
+
+        <button
+          className="btn btn-primary w-full justify-center"
+          onClick={() => void handleEnviar()}
+          disabled={enviando}
+        >
+          {enviando ? "Enviando…" : "Enviar solicitud"}
+        </button>
+      </div>
+    </Modal>
   );
 }
