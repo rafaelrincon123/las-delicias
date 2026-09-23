@@ -759,7 +759,7 @@ function Hero({ onLogin }: { onLogin: () => void }) {
               style={{ color: "rgba(255,255,255,0.90)", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
             >
               Registre animales, sanidad, reproducción y gastos con reparto real
-              entre socios. Todo desde el celular, con o sin señal.
+              entre socios. Todo desde el celular, incluso con señal débil.
             </p>
 
             <div className="mt-10 flex gap-3 flex-wrap items-center">
@@ -1217,7 +1217,7 @@ function FAQ() {
     },
     {
       q: "¿Sirve sin señal en el potrero?",
-      a: "Sí. Consulta datos offline. Los registros se sincronizan cuando vuelve la conexión.",
+      a: "Necesita internet para guardar, pero aguanta bien la señal débil o intermitente: si la conexión se cae mientras registra algo, la app le avisa y guarda el cambio sola apenas vuelve la señal (mientras no cierre la app). El modo 100% sin conexión está en desarrollo.",
     },
     {
       q: "¿Mis datos están seguros?",
@@ -1584,7 +1584,7 @@ function StickyValueBar() {
   return (
     <div className="sticky-bar">
       <span className="item">
-        <span className="dot" /> Offline &middot; Funciona sin señal
+        <span className="dot" /> Señal débil &middot; Guarda al reconectar
       </span>
       <span className="item hidden sm:inline-flex">
         <span className="dot" /> Cifrado &middot; RLS por finca

@@ -58,7 +58,7 @@ export default function ExportarPDFButton<T>({
     try {
       // jsPDF + autotable pesan ~150kB — se cargan solo al hacer click, no
       // en el bundle inicial de cada página (la app está pensada para
-      // celular "con o sin señal", no queremos ese peso en cada visita).
+      // celular con señal débil, no queremos ese peso en cada visita).
       const { generarReportePDF } = await import("@/lib/pdfReport");
       generarReportePDF({
         finca: activa!.nombre,

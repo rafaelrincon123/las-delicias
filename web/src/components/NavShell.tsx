@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
+import SyncToaster from "./SyncToaster";
 
 export default function NavShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -36,6 +37,7 @@ export default function NavShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <BottomNav />
+      <SyncToaster />
     </div>
   );
 }

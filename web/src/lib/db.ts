@@ -498,7 +498,273 @@ function applyRealtimeEvent<K extends keyof DBState>(
 //  updateCollection: mantiene la API sync usada por los componentes.
 //  Actualiza el cache local optimistamente y sincroniza a Supabase en
 //  segundo plano (upserts + deletes basados en diff por id).
+//
+//  Si la sincronización falla:
+//   - por red (sin señal, timeout, 5xx): el cambio se queda en pantalla,
+//     queda pendiente y se reintenta solo (al volver la conexión y cada
+//     20 s). Lo pendiente vive solo en memoria, así que mientras haya algo
+//     pendiente cerrar o recargar la pestaña pide confirmación.
+//   - por un rechazo definitivo (permiso del rol, límite del plan, una
+//     restricción de la base): se revierte al estado real del servidor.
+//  En ambos casos se avisa a la UI (SyncToaster).
 // ---------------------------------------------------------------------------
+
+type WriteOp =
+  | {
+      kind: "upsert";
+      key: keyof DBState;
+      id: string;
+      row: Record<string, unknown>;
+      seq: number;
+      fincaId: string | null;
+    }
+  | { kind: "delete"; key: keyof DBState; id: string; seq: number; fincaId: string | null };
+
+/** Última operación fallida por red, por registro (`tabla:id`). */
+const _pending = new Map<string, WriteOp>();
+/** Secuencia de la última escritura lanzada por registro: evita que la
+ *  respuesta tardía de una escritura vieja pise una edición más nueva. */
+const _latestSeq = new Map<string, number>();
+let _seq = 0;
+
+export interface SyncStatus {
+  pending: number;
+  online: boolean;
+}
+export const SYNC_STATUS_EVENT = "db:sync-status";
+export const SYNC_ERROR_EVENT = "db:sync-error";
+
+export function getSyncStatus(): SyncStatus {
+  return {
+    pending: _pending.size,
+    online: typeof navigator === "undefined" ? true : navigator.onLine,
+  };
+}
+
+function recKey(key: keyof DBState, id: string): string {
+  return `${TABLE_DEFS[key].table}:${id}`;
+}
+
+function onBeforeUnload(e: BeforeUnloadEvent): void {
+  e.preventDefault();
+  e.returnValue = "";
+}
+let _unloadGuard = false;
+
+function emitSyncStatus(): void {
+  if (typeof window === "undefined") return;
+  const need = _pending.size > 0;
+  if (need !== _unloadGuard) {
+    if (need) window.addEventListener("beforeunload", onBeforeUnload);
+    else window.removeEventListener("beforeunload", onBeforeUnload);
+    _unloadGuard = need;
+  }
+  window.dispatchEvent(new CustomEvent<SyncStatus>(SYNC_STATUS_EVENT, { detail: getSyncStatus() }));
+}
+
+function emitSyncError(message: string): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent<{ message: string }>(SYNC_ERROR_EVENT, { detail: { message } }));
+}
+
+function isNetworkError(err: unknown): boolean {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return true;
+  const e = err as { name?: string; message?: string } | null;
+  return /failed to fetch|networkerror|network request failed|load failed|fetch failed|timeout|aborted/i.test(
+    `${e?.name ?? ""} ${e?.message ?? ""}`
+  );
+}
+
+function friendlyWriteError(err: unknown): string {
+  const e = err as { code?: string; message?: string } | null;
+  switch (e?.code) {
+    case "42501":
+      return "No se guardó: tu rol en la finca no permite hacer este cambio.";
+    case "P0001":
+      // Mensajes de los triggers del server (p. ej. límites del plan), ya en español.
+      return e.message
+        ? `No se guardó: ${e.message.charAt(0).toLowerCase()}${e.message.slice(1)}`
+        : "No se guardó: el servidor rechazó el cambio.";
+    case "23505":
+      return "No se guardó: ya existe un registro con esos datos.";
+    case "23503":
+      return "No se guardó: depende de un registro que ya no existe.";
+    default:
+      return "No se pudo guardar el cambio. Intenta de nuevo.";
+  }
+}
+
+type WriteResult =
+  | { ok: true; data: unknown }
+  | { ok: false; retryable: boolean; message: string };
+
+async function runWrite(
+  fn: () => PromiseLike<{ data: unknown; error: { code?: string; message?: string } | null; status: number }>
+): Promise<WriteResult> {
+  try {
+    const { data, error, status } = await fn();
+    if (!error) return { ok: true, data };
+    // status 0 = el fetch ni siquiera llegó (postgrest-js no lanza, devuelve esto).
+    const retryable = status === 0 || status === 401 || status >= 500 || isNetworkError(error);
+    if (!retryable) console.error("[db] escritura rechazada", error);
+    return { ok: false, retryable, message: friendlyWriteError(error) };
+  } catch (e) {
+    return { ok: false, retryable: true, message: friendlyWriteError(e) };
+  }
+}
+
+/** La escritura llegó al server: ya no está pendiente. */
+function settle(op: WriteOp): void {
+  const rk = recKey(op.key, op.id);
+  const p = _pending.get(rk);
+  if (p && p.seq <= op.seq) _pending.delete(rk);
+}
+
+/** Falló por red: queda pendiente para reintentar (salvo que haya una más nueva). */
+function keepPending(op: WriteOp): void {
+  clearLocalOp(`${TABLE_DEFS[op.key].table}:${op.kind}:${op.id}`);
+  const rk = recKey(op.key, op.id);
+  if ((_latestSeq.get(rk) ?? 0) > op.seq) return;
+  _pending.set(rk, op);
+}
+
+/** Rechazo definitivo: se descarta (el cache se reconcilia con el server). */
+function drop(op: WriteOp): void {
+  clearLocalOp(`${TABLE_DEFS[op.key].table}:${op.kind}:${op.id}`);
+  settle(op);
+}
+
+/**
+ * Vuelve a leer la tabla del server y reaplica encima lo que siga pendiente
+ * por red, para deshacer un cambio rechazado sin perder los demás.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function reconcileTable(key: keyof DBState): Promise<any[] | null> {
+  const def = TABLE_DEFS[key];
+  let query = getSupabase().from(def.table).select("*");
+  if (_activeFincaId) query = query.eq("finca_id", _activeFincaId);
+  const { data, error } = await query;
+  if (error || !_cache) return null;
+  let list = ((data ?? []) as Record<string, unknown>[]).map((r) => fromRow(r, def.map));
+  _pending.forEach((op) => {
+    if (op.key !== key || op.fincaId !== _activeFincaId) return;
+    if (op.kind === "delete") {
+      list = list.filter((x) => x.id !== op.id);
+    } else {
+      const item = fromRow(op.row, def.map);
+      const idx = list.findIndex((x) => x.id === op.id);
+      if (idx >= 0) list[idx] = item;
+      else list.push(item);
+    }
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _cache = { ..._cache, [key]: list as any };
+  emit();
+  return list;
+}
+
+async function sendOps(key: keyof DBState, ops: WriteOp[]): Promise<void> {
+  const def = TABLE_DEFS[key];
+  const sb = getSupabase();
+  const upserts = ops.filter((o): o is Extract<WriteOp, { kind: "upsert" }> => o.kind === "upsert");
+  const deletes = ops.filter((o) => o.kind === "delete");
+
+  // Marcar como locales para que Realtime no los re-aplique
+  upserts.forEach((o) => markLocalOp(`${def.table}:upsert:${o.id}`));
+  deletes.forEach((o) => markLocalOp(`${def.table}:delete:${o.id}`));
+
+  let revertMsg: string | null = null;
+  let notDeleted: string[] = [];
+
+  if (upserts.length > 0) {
+    const res = await runWrite(() =>
+      sb.from(def.table).upsert(upserts.map((o) => o.row), { onConflict: "id" })
+    );
+    if (res.ok) upserts.forEach(settle);
+    else if (res.retryable) upserts.forEach(keepPending);
+    else {
+      upserts.forEach(drop);
+      revertMsg = res.message;
+    }
+  }
+
+  if (deletes.length > 0) {
+    const ids = deletes.map((o) => o.id);
+    const res = await runWrite(() => sb.from(def.table).delete().in("id", ids).select("id"));
+    if (res.ok) {
+      // RLS no da error al borrar sin permiso: simplemente no borra. Lo que
+      // no volvió en la respuesta no se borró.
+      const borrados = new Set(((res.data ?? []) as { id: string }[]).map((r) => r.id));
+      deletes.forEach((o) => (borrados.has(o.id) ? settle(o) : drop(o)));
+      notDeleted = ids.filter((id) => !borrados.has(id));
+    } else if (res.retryable) deletes.forEach(keepPending);
+    else {
+      deletes.forEach(drop);
+      revertMsg = revertMsg ?? res.message;
+    }
+  }
+
+  if (revertMsg || notDeleted.length > 0) {
+    const fresh = await reconcileTable(key);
+    if (revertMsg) {
+      emitSyncError(revertMsg);
+    } else if (fresh && notDeleted.some((id) => fresh.some((x) => x.id === id))) {
+      // Si ya no está en el server, otro lo borró antes: no hay nada que avisar.
+      emitSyncError("No se eliminó: tu rol en la finca no permite borrar este registro.");
+    }
+  }
+
+  emitSyncStatus();
+  scheduleRetry();
+}
+
+let _retryTimer: ReturnType<typeof setTimeout> | null = null;
+let _retrying = false;
+const RETRY_MS = 20000;
+
+function scheduleRetry(): void {
+  if (_retryTimer || _pending.size === 0 || typeof window === "undefined") return;
+  _retryTimer = setTimeout(() => {
+    _retryTimer = null;
+    void retryPendingWrites();
+  }, RETRY_MS);
+}
+
+/** Reintenta todo lo pendiente. La llama el reintento automático y el botón del aviso. */
+export async function retryPendingWrites(): Promise<void> {
+  if (_retrying || _pending.size === 0) return;
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    scheduleRetry();
+    return;
+  }
+  _retrying = true;
+  try {
+    const keys = Object.keys(TABLE_DEFS) as (keyof DBState)[];
+    const ops = Array.from(_pending.values());
+    // Al crear, padres antes que hijos (el orden de TABLE_DEFS ya lo respeta:
+    // potreros → animales → sanidad…); al borrar, hijos antes que padres.
+    for (const key of keys) {
+      const ups = ops.filter((o) => o.key === key && o.kind === "upsert");
+      if (ups.length > 0) await sendOps(key, ups);
+    }
+    for (const key of [...keys].reverse()) {
+      const dels = ops.filter((o) => o.key === key && o.kind === "delete");
+      if (dels.length > 0) await sendOps(key, dels);
+    }
+  } finally {
+    _retrying = false;
+    emitSyncStatus();
+    scheduleRetry();
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("online", () => {
+    emitSyncStatus();
+    void retryPendingWrites();
+  });
+  window.addEventListener("offline", () => emitSyncStatus());
+}
 
 export function updateCollection<K extends keyof DBState>(
   key: K,
@@ -524,7 +790,6 @@ async function syncCollection<K extends keyof DBState>(
   newList: DBState[K]
 ): Promise<void> {
   const def = TABLE_DEFS[key];
-  const sb = getSupabase();
 
   const oldById: Record<string, Record<string, unknown>> = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -533,45 +798,21 @@ async function syncCollection<K extends keyof DBState>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (newList as any[]).forEach((it) => { newById[it.id] = it; });
 
-  const upserts: Record<string, unknown>[] = [];
-  const upsertIds: string[] = [];
+  const ops: WriteOp[] = [];
   Object.keys(newById).forEach((id) => {
     const item = newById[id];
     const prev = oldById[id];
     if (!prev || JSON.stringify(prev) !== JSON.stringify(item)) {
-      upserts.push(toRow(item, def.map));
-      upsertIds.push(id);
+      ops.push({ kind: "upsert", key, id, row: toRow(item, def.map), seq: ++_seq, fincaId: _activeFincaId });
     }
   });
+  Object.keys(oldById)
+    .filter((id) => !(id in newById))
+    .forEach((id) => ops.push({ kind: "delete", key, id, seq: ++_seq, fincaId: _activeFincaId }));
 
-  const deletes: string[] = Object.keys(oldById).filter((id) => !(id in newById));
-
-  // Marcar como locales para que Realtime no los re-aplique
-  upsertIds.forEach((id) => markLocalOp(`${def.table}:upsert:${id}`));
-  deletes.forEach((id) => markLocalOp(`${def.table}:delete:${id}`));
-
-  try {
-    if (upserts.length > 0) {
-      const { error } = await sb.from(def.table).upsert(upserts, { onConflict: "id" });
-      if (error) {
-        console.error(`[db] upsert ${def.table}`, error);
-        // La escritura falló: soltamos las marcas para que si llega un evento
-        // Realtime del estado real del servidor, sí se aplique al cache.
-        upsertIds.forEach((id) => clearLocalOp(`${def.table}:upsert:${id}`));
-      }
-    }
-    if (deletes.length > 0) {
-      const { error } = await sb.from(def.table).delete().in("id", deletes);
-      if (error) {
-        console.error(`[db] delete ${def.table}`, error);
-        deletes.forEach((id) => clearLocalOp(`${def.table}:delete:${id}`));
-      }
-    }
-  } catch (e) {
-    console.error(`[db] sync ${def.table} falló`, e);
-    upsertIds.forEach((id) => clearLocalOp(`${def.table}:upsert:${id}`));
-    deletes.forEach((id) => clearLocalOp(`${def.table}:delete:${id}`));
-  }
+  if (ops.length === 0) return;
+  ops.forEach((op) => _latestSeq.set(recKey(op.key, op.id), op.seq));
+  await sendOps(key, ops);
 }
 
 // ---------------------------------------------------------------------------
