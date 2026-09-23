@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/useAuth";
 import { useDB } from "@/lib/useDB";
 import { useFincaActiva } from "@/lib/useFincaActiva";
 import { logout } from "@/lib/auth";
+import { useMiPerfil } from "@/lib/cuenta";
 import { miParticipacion } from "@/lib/participacion";
 import { fmtPct } from "@/lib/format";
 import {
@@ -42,6 +43,7 @@ const NAV = [
   { href: "/mi-operacion", label: "Mi operación", section: "Mi operación", Icon: IconUser },
   { href: "/panel", label: "Panel general", section: "Mi operación", Icon: IconPanel },
   { href: "/socios", label: "Socios", section: "Mi operación", Icon: IconUser },
+  { href: "/cuenta", label: "Mi cuenta", section: "Cuenta", Icon: IconUser },
   { href: "/equipo", label: "Equipo", section: "Cuenta", Icon: IconUser },
   { href: "/plan", label: "Plan y facturación", section: "Cuenta", Icon: IconPanel },
 ];
@@ -59,6 +61,7 @@ export default function Sidebar(props: SidebarProps) {
   const { db } = useDB();
   const { activa, fincas, setActiva } = useFincaActiva();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const perfil = useMiPerfil();
   const sections = Array.from(new Set(NAV.map((n) => n.section)));
   const initials = user ? user.nombre.slice(0, 2).toUpperCase() : "";
   const share =
@@ -189,8 +192,14 @@ export default function Sidebar(props: SidebarProps) {
         <div className="px-4 py-4 border-t border-rule">
           {user ? (
             <div className="flex items-center gap-2.5">
+              <Link
+                href="/cuenta"
+                prefetch={false}
+                title="Mi cuenta"
+                className="flex items-center gap-2.5 flex-1 min-w-0"
+              >
               <div
-                className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-mono font-semibold shrink-0"
+                className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center text-[11px] font-mono font-semibold shrink-0"
                 style={{
                   background: "var(--primary-soft)",
                   color: "var(--primary)",
@@ -198,7 +207,12 @@ export default function Sidebar(props: SidebarProps) {
                   boxShadow: "0 0 12px -4px var(--primary-glow)",
                 }}
               >
-                {initials}
+                {perfil?.avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={perfil.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  initials
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium truncate">{user.nombre}</div>
@@ -207,6 +221,7 @@ export default function Sidebar(props: SidebarProps) {
                   {share.count === 1 ? "cabeza" : "cabezas"}
                 </div>
               </div>
+              </Link>
               <button
                 onClick={logout}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-danger hover:bg-surface-2 transition shrink-0"

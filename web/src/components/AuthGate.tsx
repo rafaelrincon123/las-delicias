@@ -19,6 +19,7 @@ import SignupWizard, {
   PendingSignup,
   completarCreacionFinca,
 } from "./SignupWizard";
+import PasswordInput from "./PasswordInput";
 
 function readPendingSignup(): PendingSignup | null {
   if (typeof window === "undefined") return null;
@@ -242,8 +243,7 @@ function LoginScreen({
                   <IconLock size={11} />
                   Contraseña
                 </span>
-                <input
-                  type="password"
+                <PasswordInput
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Tu contraseña"
@@ -371,8 +371,7 @@ function SetNewPasswordScreen({
                 <IconLock size={11} />
                 Nueva contraseña
               </span>
-              <input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Al menos 8 caracteres"
@@ -385,8 +384,7 @@ function SetNewPasswordScreen({
                 <IconLock size={11} />
                 Confirma
               </span>
-              <input
-                type="password"
+              <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repite la contraseña"

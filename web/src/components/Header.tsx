@@ -22,6 +22,7 @@ const TITLES: Record<string, { title: string; sub: string }> = {
   "/inventario": { title: "Inventario", sub: "Insumos, stock y movimientos" },
   "/socios": { title: "Socios", sub: "Propietarios y participaciones" },
   "/equipo": { title: "Equipo", sub: "Quién tiene acceso a tu finca" },
+  "/cuenta": { title: "Mi cuenta", sub: "Tus datos, contraseña y plan" },
   "/plan": { title: "Plan y facturación", sub: "Elige el plan de tu operación" },
 };
 

@@ -8,6 +8,8 @@ import { crearFinca } from "@/lib/useFincaActiva";
 import { PLAN_LIMITS, fmtPrecio } from "@/lib/plans";
 import type { PlanFinca } from "@/lib/types";
 import { IconUser, IconLock } from "./icons";
+import PasswordInput from "./PasswordInput";
+import { DEPARTAMENTOS_CO } from "@/lib/colombia";
 
 const PLAN_ORDER: PlanFinca[] = ["ranchero", "ganadero", "hacienda"];
 
@@ -17,16 +19,6 @@ function planRecomendado(n: number | null): PlanFinca {
   if (n > PLAN_LIMITS.ranchero.maxAnimales!) return "ganadero";
   return "ranchero";
 }
-
-// Departamentos de Colombia (orden alfabético, incluye Bogotá D.C.)
-const DEPARTAMENTOS_CO = [
-  "Amazonas", "Antioquia", "Arauca", "Atlántico", "Bogotá D.C.", "Bolívar",
-  "Boyacá", "Caldas", "Caquetá", "Casanare", "Cauca", "Cesar", "Chocó",
-  "Córdoba", "Cundinamarca", "Guainía", "Guaviare", "Huila", "La Guajira",
-  "Magdalena", "Meta", "Nariño", "Norte de Santander", "Putumayo", "Quindío",
-  "Risaralda", "San Andrés y Providencia", "Santander", "Sucre", "Tolima",
-  "Valle del Cauca", "Vaupés", "Vichada",
-];
 
 const TZS = [
   { value: "America/Bogota", label: "Colombia (Bogotá)" },
@@ -246,8 +238,7 @@ export default function SignupWizard({ onBack }: Props) {
                   <IconLock size={11} />
                   Contraseña
                 </span>
-                <input
-                  type="password"
+                <PasswordInput
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Al menos 8 caracteres"

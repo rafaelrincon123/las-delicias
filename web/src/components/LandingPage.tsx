@@ -23,6 +23,7 @@ import {
   IconLock,
   IconSparkles,
 } from "./icons";
+import PasswordInput from "./PasswordInput";
 
 interface Props {
   onLogin: () => void;
@@ -1372,9 +1373,8 @@ function LoginEmbed() {
                 <label className="text-[0.65rem] font-mono uppercase tracking-widest" style={{ color: "var(--forest-2)" }}>
                   Contraseña
                 </label>
-                <input
+                <PasswordInput
                   className="landing-input"
-                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={mode === "signup" ? "Al menos 8 caracteres" : "Tu contraseña"}
