@@ -5,15 +5,26 @@ import type { PlanFinca } from "./types";
 
 /**
  * Datos de la cuenta a la que los clientes transfieren mientras no existe
- * un procesador de pagos real (Wompi/PayU). Ajustar aquí cuando Rafael
- * confirme/cambie la cuenta — es el único lugar que hay que tocar.
+ * un procesador de pagos real (Wompi/PayU). Se leen de variables de
+ * entorno NEXT_PUBLIC_* — NUNCA hardcodeadas aquí — porque este repo es
+ * público en GitHub: un número de cuenta o Nequi en el código fuente
+ * queda visible para cualquiera, para siempre, aunque se borre después
+ * (sigue en el historial de git).
+ *
+ * Configurar en:
+ *  - web/.env.local (desarrollo local, ya está en .gitignore)
+ *  - Vercel → Project Settings → Environment Variables (producción)
+ *
+ * Variables: NEXT_PUBLIC_CUENTA_BANCO, NEXT_PUBLIC_CUENTA_TIPO,
+ * NEXT_PUBLIC_CUENTA_NUMERO, NEXT_PUBLIC_CUENTA_TITULAR,
+ * NEXT_PUBLIC_CUENTA_NEQUI.
  */
 export const CUENTA_PAGO = {
-  banco: "PENDIENTE — confirmar banco",
-  tipoCuenta: "PENDIENTE",
-  numeroCuenta: "PENDIENTE",
-  titular: "PENDIENTE — confirmar titular",
-  nequi: "PENDIENTE — confirmar número Nequi/Daviplata",
+  banco: process.env.NEXT_PUBLIC_CUENTA_BANCO ?? "Configura NEXT_PUBLIC_CUENTA_BANCO",
+  tipoCuenta: process.env.NEXT_PUBLIC_CUENTA_TIPO ?? "Configura NEXT_PUBLIC_CUENTA_TIPO",
+  numeroCuenta: process.env.NEXT_PUBLIC_CUENTA_NUMERO ?? "Configura NEXT_PUBLIC_CUENTA_NUMERO",
+  titular: process.env.NEXT_PUBLIC_CUENTA_TITULAR ?? "Configura NEXT_PUBLIC_CUENTA_TITULAR",
+  nequi: process.env.NEXT_PUBLIC_CUENTA_NEQUI ?? "Configura NEXT_PUBLIC_CUENTA_NEQUI",
 };
 
 export interface ComprobanteSubido {
