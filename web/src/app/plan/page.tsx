@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDB } from "@/lib/useDB";
 import { useFincaActiva } from "@/lib/useFincaActiva";
 import {
@@ -12,6 +12,7 @@ import {
   fmtPrecio,
   cop,
   precioPeriodo,
+  CURSO_REGALO,
 } from "@/lib/plans";
 import { CUENTA_PAGO, registrarSolicitudPlan } from "@/lib/comprobantePago";
 import type { PlanFinca } from "@/lib/types";
@@ -22,6 +23,15 @@ export default function PlanPage() {
   const { db, ready } = useDB();
   const { activa } = useFincaActiva();
   const [pagando, setPagando] = useState<{ plan: PlanFinca; periodo: Periodo } | null>(null);
+
+  // Desde el registro: /plan?activar=ganadero abre directo el pago del plan elegido.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get("activar");
+    if (p === "ganadero" || p === "hacienda") {
+      setPagando({ plan: p, periodo: "mensual" });
+      window.history.replaceState(null, "", "/plan");
+    }
+  }, []);
 
   const usage = useMemo(() => {
     if (!db) return null;
@@ -177,6 +187,9 @@ function PagoManualModal({
             {file ? " con tu comprobante" : ""}. Te confirmamos por correo o WhatsApp en cuanto
             revisemos el pago, y tu plan queda activo.
           </p>
+          <p className="text-sm">
+            🎓 Con la activación le enviamos a su correo el <strong>{CURSO_REGALO}</strong> de regalo.
+          </p>
           {!file && (
             <p className="text-xs text-muted">
               Si aún no has enviado el comprobante, mándalo a{" "}
@@ -206,6 +219,9 @@ function PagoManualModal({
         <p className="text-sm text-muted">
           Transfiere el valor del plan y sube tu comprobante. Te confirmamos y activamos tu
           plan en cuanto revisemos el pago.
+        </p>
+        <p className="text-sm rounded-xl px-3 py-2" style={{ background: "rgba(184, 206, 122, 0.22)" }}>
+          🎓 De regalo: al confirmar tu pago te enviamos el <strong>{CURSO_REGALO}</strong>.
         </p>
 
         {PLAN_LIMITS[destino].precioCOP > 0 && (

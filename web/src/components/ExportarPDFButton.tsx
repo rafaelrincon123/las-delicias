@@ -19,7 +19,7 @@ interface Props<T> {
 
 /**
  * Botón "Exportar PDF" para las páginas de sección. Gratis para
- * Ganadero/Hacienda (incluida la prueba de 30 días); en Ranchero se ve
+ * Ganadero/Hacienda (y fincas que aún están en una prueba antigua); en Ranchero se ve
  * deshabilitado con un tooltip que manda a /plan.
  */
 export default function ExportarPDFButton<T>({

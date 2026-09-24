@@ -47,6 +47,9 @@ export type Periodo = "mensual" | "anual";
 /** Descuento del plan anual sobre 12 meses de plan mensual. */
 export const DESCUENTO_ANUAL = 0.2;
 
+/** Regalo de los planes pagos: se envía al correo al confirmar el primer pago. */
+export const CURSO_REGALO = "Curso intensivo de ganadería digital";
+
 /** Lo que se paga por período (mensual o anual, este con el descuento). */
 export function precioPeriodo(plan: PlanFinca, periodo: Periodo): number {
   const mes = PLAN_LIMITS[plan].precioCOP;

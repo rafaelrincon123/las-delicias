@@ -9,6 +9,7 @@ import {
   cop,
   precioPeriodo,
   precioMesAnual,
+  CURSO_REGALO,
 } from "@/lib/plans";
 import { IconCheck, IconCow, IconPasture, IconHome } from "./icons";
 
@@ -174,7 +175,7 @@ function Card({
     : planActual === undefined
     ? plan === "ranchero"
       ? "Empezar gratis"
-      : "Probar 30 días gratis"
+      : `Elegir ${limits.nombre}`
     : `Cambiar a ${limits.nombre}`;
 
   return (
@@ -308,6 +309,30 @@ function Card({
         </div>
       </div>
 
+      {!gratis && (
+        <div className="px-6 md:px-7 pb-5">
+          <div
+            className="rounded-2xl px-4 py-3 flex items-start gap-3"
+            style={
+              dark
+                ? { background: "rgba(200, 222, 134, 0.14)", border: "1px solid rgba(200, 222, 134, 0.45)" }
+                : { background: "rgba(184, 206, 122, 0.22)", border: "1px solid rgba(34, 64, 42, 0.18)" }
+            }
+          >
+            <span className="text-xl leading-none mt-0.5" aria-hidden>🎓</span>
+            <div className="min-w-0">
+              <div className="text-[0.6rem] font-mono font-semibold uppercase tracking-[0.16em]" style={{ color: dark ? "var(--lime-bright)" : "var(--forest-3)" }}>
+                De regalo
+              </div>
+              <div className="text-sm font-bold leading-snug">{CURSO_REGALO}</div>
+              <div className="text-[0.7rem] mt-0.5" style={{ color: soft }}>
+                Se lo enviamos al correo cuando confirmamos su pago.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Features */}
       <div className="px-6 md:px-7 pt-5 pb-2 flex-1" style={{ borderTop: `1px solid ${line}` }}>
         <p className="text-[0.78rem] leading-relaxed" style={{ color: soft }}>
@@ -366,8 +391,6 @@ function Card({
         <div className="text-[0.66rem] text-center mt-2.5" style={{ color: soft }}>
           {gratis
             ? "Sin tarjeta · Para siempre"
-            : planActual === undefined
-            ? "30 días gratis · Sin tarjeta · Cancela cuando quieras"
             : anual
             ? "Un pago al año por transferencia"
             : "Pago mensual por transferencia"}

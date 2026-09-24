@@ -154,7 +154,8 @@ async function correoSolicitudPago(id: string) {
         ["Fecha", esc(fecha(s.created_at))],
       ],
       `<div style="margin-top:16px;color:#EFE8D8;font-size:13px">Cuando confirmes el pago, actívalo en Supabase → SQL Editor:</div>
-<div style="margin-top:8px;background:#14261A;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:12px;color:#B8CE7A">${esc(sql)}</div>`
+<div style="margin-top:8px;background:#14261A;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:12px;color:#B8CE7A">${esc(sql)}</div>
+<div style="margin-top:16px;color:#EFE8D8;font-size:13px">🎓 Y envíale el <strong>Curso intensivo de ganadería digital</strong> a ${email ? esc(email) : "su correo"}: es el regalo del plan pago.</div>`
     ),
   };
 }

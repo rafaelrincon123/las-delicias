@@ -5,8 +5,6 @@ import { getSupabase } from "./supabase";
 import { AUTH_EVENT_NAME } from "./auth";
 import { setActiveFincaId, initDB } from "./db";
 import type { Finca, PlanFinca } from "./types";
-import { trackPixel } from "./pixel";
-import { PLAN_LIMITS } from "./plans";
 
 const STORAGE_KEY = "rumeapp:activaId";
 const CHANGED_EVENT = "finca:changed";
@@ -177,7 +175,7 @@ export async function crearFinca(opts: {
   departamento?: string | null;
   ciudad?: string | null;
   referidoVia?: string | null;
-  /** Plan que el usuario elige probar gratis 30 días. Default: ranchero. */
+  /** Plan que el usuario quiere (la finca igual arranca en Ranchero hasta que pague). */
   planElegido?: PlanFinca;
 }): Promise<Finca> {
   const sb = getSupabase();
@@ -196,10 +194,6 @@ export async function crearFinca(opts: {
   if (!data) throw new Error("La finca no fue creada");
   const row = Array.isArray(data) ? data[0] : data;
   const finca = fromRow(row as RowFinca);
-  const plan = opts.planElegido ?? "ranchero";
-  if (plan !== "ranchero") {
-    trackPixel("StartTrial", { value: PLAN_LIMITS[plan].precioCOP, currency: "COP", predicted_ltv: PLAN_LIMITS[plan].precioCOP * 12 });
-  }
   writeStoredId(finca.id);
 
   // Activar la finca YA (no esperar al próximo refresh de useFincaActiva)

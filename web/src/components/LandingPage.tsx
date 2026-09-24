@@ -1139,7 +1139,7 @@ function FAQ() {
   const qs = [
     {
       q: "¿Cuánto cuesta usar RumeApp?",
-      a: "Nada para arrancar. El plan Ranchero es gratis para siempre (hasta 5 animales). Los planes pagos tienen 30 días de prueba gratis; pagando el año completo ahorra 20%.",
+      a: "Nada para arrancar. El plan Ranchero es gratis para siempre (hasta 5 animales). Los planes pagos traen de regalo el Curso intensivo de ganadería digital; pagando el año completo ahorra 20%.",
     },
     {
       q: "¿Necesito instalar la app?",

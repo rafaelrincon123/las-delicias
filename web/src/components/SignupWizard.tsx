@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { signupWithEmail } from "@/lib/auth";
 import { crearFinca } from "@/lib/useFincaActiva";
-import { PLAN_LIMITS, fmtPrecio } from "@/lib/plans";
+import { PLAN_LIMITS, fmtPrecio, CURSO_REGALO } from "@/lib/plans";
 import type { PlanFinca } from "@/lib/types";
 import { IconUser, IconLock } from "./icons";
 import PasswordInput from "./PasswordInput";
@@ -333,7 +333,7 @@ export default function SignupWizard({ onBack }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="eyebrow">Elige un plan para probar 30 días gratis</span>
+                <span className="eyebrow">¿Qué plan quiere?</span>
                 <div className="grid grid-cols-3 gap-2 mt-1">
                   {PLAN_ORDER.map((p) => (
                     <button
@@ -363,7 +363,7 @@ export default function SignupWizard({ onBack }: Props) {
                 <span className="text-[0.68rem] text-subtle mt-1">
                   {plan === "ranchero"
                     ? "El plan Ranchero es gratis para siempre — sin límite de tiempo."
-                    : "30 días gratis. Después, tu finca sigue con el plan Ranchero salvo que pagues."}
+                    : `Su finca arranca gratis en Ranchero. Al terminar lo llevamos a activar ${PLAN_LIMITS[plan].nombre}, y al confirmar su pago le enviamos de regalo el ${CURSO_REGALO}.`}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
@@ -453,6 +453,12 @@ export async function completarCreacionFinca(p: PendingSignup): Promise<void> {
     localStorage.removeItem(PENDING_SIGNUP_KEY);
   } catch {
     /* ignore */
+  }
+  // Toda finca nueva arranca en Ranchero (ya no hay prueba gratis). Si eligió
+  // un plan pago, lo llevamos directo a activarlo.
+  const plan = p.planElegido ?? "ranchero";
+  if (plan !== "ranchero" && typeof window !== "undefined") {
+    window.location.assign(`/plan?activar=${plan}`);
   }
 }
 
