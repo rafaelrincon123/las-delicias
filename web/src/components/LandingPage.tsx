@@ -1414,6 +1414,21 @@ function FinalCTA({ onLogin }: { onLogin: () => void }) {
 // ---------------------------------------------------------------------------
 //  Footer
 // ---------------------------------------------------------------------------
+const REDES = [
+  {
+    nombre: "Instagram",
+    url: "https://www.instagram.com/rumea.app/",
+    icono:
+      "M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 4.7a5.1 5.1 0 1 0 0 10.2 5.1 5.1 0 0 0 0-10.2zm0 8.4a3.3 3.3 0 1 1 0-6.6 3.3 3.3 0 0 1 0 6.6zm5.3-9.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z",
+  },
+  {
+    nombre: "Facebook",
+    url: "https://www.facebook.com/profile.php?id=61594430472677",
+    icono:
+      "M24 12a12 12 0 1 0-13.9 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.7 4.5-4.7 1.3 0 2.7.2 2.7.2v3h-1.5c-1.5 0-2 .9-2 1.9V12h3.4l-.5 3.5h-2.9v8.4A12 12 0 0 0 24 12z",
+  },
+];
+
 function Footer() {
   return (
     <footer className="relative" style={{ background: "var(--forest)", color: "white" }}>
@@ -1436,6 +1451,24 @@ function Footer() {
               Latinoamérica. Hato, sanidad, gastos entre socios &mdash; todo en
               un solo lugar.
             </p>
+            <div className="mt-6 flex items-center gap-3">
+              {REDES.map((r) => (
+                <a
+                  key={r.nombre}
+                  href={r.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`RumeApp en ${r.nombre}`}
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition hover:opacity-90"
+                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", color: "white" }}
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" style={{ color: "var(--lime)" }}>
+                    <path d={r.icono} />
+                  </svg>
+                  {r.nombre}
+                </a>
+              ))}
+            </div>
           </div>
           <div>
             <div className="text-[0.65rem] font-mono uppercase tracking-widest mb-4" style={{ color: "var(--lime)" }}>
