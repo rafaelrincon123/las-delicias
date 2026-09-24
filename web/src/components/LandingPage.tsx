@@ -673,9 +673,19 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
           >
             Ingresar
           </button>
-          <button className="btn-lime" style={{ padding: "0.55rem 1.15rem", fontSize: "0.72rem" }} onClick={onLogin}>
-            Empieza gratis
-          </button>
+          {/* En celular no caben los dos: "Ingresar" arriba (quien ya tiene cuenta no
+              lo encontraba) y "Empieza gratis" queda grande en la portada. */}
+          {/* Envueltos en <span>: .btn-lime fuerza display:inline-flex y le gana a hidden. */}
+          <span className="sm:hidden">
+            <button className="btn-lime" style={{ padding: "0.55rem 1.15rem", fontSize: "0.72rem" }} onClick={onLogin}>
+              Ingresar
+            </button>
+          </span>
+          <span className="hidden sm:inline">
+            <button className="btn-lime" style={{ padding: "0.55rem 1.15rem", fontSize: "0.72rem" }} onClick={onLogin}>
+              Empieza gratis
+            </button>
+          </span>
           <button
             className="lg:hidden ml-1 p-2 rounded-full"
             style={{
@@ -729,8 +739,8 @@ function TopNav({ onLogin }: { onLogin: () => void }) {
             <button
               className="btn-forest sm:hidden mt-2 justify-center w-full"
               onClick={() => {
-                scrollToId("ingreso");
                 setMenuOpen(false);
+                onLogin();
               }}
             >
               Ingresar a mi finca
@@ -785,6 +795,12 @@ function Hero({ onLogin }: { onLogin: () => void }) {
                 Ver módulos
               </button>
             </div>
+            <p className="mt-5 text-sm" style={{ color: "rgba(255,255,255,0.85)", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>
+              ¿Ya tiene cuenta?{" "}
+              <button onClick={onLogin} className="font-semibold underline underline-offset-4" style={{ color: "var(--lime-bright)" }}>
+                Ingrese aquí
+              </button>
+            </p>
           </div>
 
           {/* Badges: grid 2x2 con separación */}
